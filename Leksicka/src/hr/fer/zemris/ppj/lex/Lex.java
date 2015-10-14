@@ -9,6 +9,9 @@ public class Lex {
 
     private String startState;
     private HashMap<String, List<LexRule>> states;
+    
+    private int lineNumber;
+    
     private InputStream input;
     private OutputStream output;
 

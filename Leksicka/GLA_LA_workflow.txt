@@ -8,3 +8,5 @@ LA:
 	- use an ObjectStream to read objects
 	- create a new Lex object
 	- Lex.analyzeInput()
+	
+P.S. use FileInputStream as initial stream to avoid tedious typing. Later change it to STDIN
