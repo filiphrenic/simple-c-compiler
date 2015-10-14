@@ -1,0 +1,10 @@
+We need to have a GLA.java and analizator/LA.java classes
+
+GLA:
+	- create a Input Parser
+	- use an ObjectStream to print objects needed for the Lex class
+
+LA:
+	- use an ObjectStream to read objects
+	- create a new Lex object
+	- Lex.analyzeInput()
