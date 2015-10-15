@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 
+import hr.fer.zemris.ppj.lex.Lex;
 import hr.fer.zemris.ppj.lex.LexRule;
 import hr.fer.zemris.ppj.stream.Streamer;
 
@@ -33,11 +34,10 @@ public class LA {
     public void lexicalAnalysis() {
         try (ObjectInputStream stream = Streamer.getInput()) {
             String startState = (String) stream.readObject();
-            HashMap<String, List<LexRule>> states = 
-                    (HashMap<String, List<LexRule>>) stream.readObject();
-            
-            
-
+            HashMap<String, List<LexRule>> states = (HashMap<String, List<LexRule>>) stream
+                    .readObject();
+            Lex lex = new Lex(startState, states, input, output);
+            lex.analyzeInput();
         } catch (IOException | ClassNotFoundException ex) {
             // TODO: handle exception
         }
