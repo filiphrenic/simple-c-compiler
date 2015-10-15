@@ -1,4 +1,4 @@
-package hr.fer.zemris.ppj.input;
+package hr.fer.zemris.ppj.stream;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -25,6 +25,10 @@ public class InputParser {
      */
 
     public List<String> getStates() {
+        return null;
+    }
+
+    public String getStartState() {
         return null;
     }
 
