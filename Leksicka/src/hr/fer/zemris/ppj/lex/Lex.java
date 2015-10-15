@@ -9,9 +9,13 @@ public class Lex {
 
     private String startState;
     private HashMap<String, List<LexRule>> states;
-    
+
+    private int startIndex;
+    private int endIndex;
+    private int lastIndex;
+
     private int lineNumber;
-    
+
     private InputStream input;
     private OutputStream output;
 
@@ -24,7 +28,7 @@ public class Lex {
     }
 
     public void analyzeInput() {
-        // we should maybe save the table that we need to print out
+        // we should save the table that we need to print out
         // maybe it will be needed in later exercises so we won't 
         // have to parse it
     }
