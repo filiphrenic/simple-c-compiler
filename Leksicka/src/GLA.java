@@ -16,6 +16,7 @@ public class GLA {
 
     public static void main(String[] args) {
         // TODO
+    	return;
     }
 
     private InputStream input;
