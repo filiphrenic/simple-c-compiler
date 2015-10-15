@@ -7,9 +7,6 @@ import hr.fer.zemris.ppj.stream.Streamer;
 
 /**
  * 
- */
-
-/**
  * @author fhrenic
  */
 public class GLA {
