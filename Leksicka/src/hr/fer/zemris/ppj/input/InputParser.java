@@ -6,6 +6,10 @@ import java.util.List;
 
 import hr.fer.zemris.ppj.lex.LexRule;
 
+/**
+ * 
+ * @author fhrenic
+ */
 public class InputParser {
 
     private InputStream input;

@@ -2,6 +2,10 @@ package hr.fer.zemris.ppj.lex.actions;
 
 import hr.fer.zemris.ppj.lex.Lex;
 
+/**
+ * 
+ * @author fhrenic
+ */
 public class AddLexClassAction implements IAction {
 
 	private String className;

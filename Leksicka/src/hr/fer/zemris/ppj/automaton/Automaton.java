@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * 
+ * @author fhrenic
+ */
 public class Automaton {
 
     private static int state;
@@ -30,9 +34,10 @@ public class Automaton {
     private HashMap<Integer, List<Integer>> epsilonTransitions;
 
     /**
-     * Creates a new automaton for a given <code>regex</code>. 
-     * <code>regDefName</code> can be either <code>null</code> or a definitions name.
-     * If it is <code>null</code>, regex isn't saved in the regdef table
+     * Creates a new automaton for a given <code>regex</code>.
+     * <code>regDefName</code> can be either <code>null</code> or a definitions
+     * name. If it is <code>null</code>, regex isn't saved in the regdef table
+     * 
      * @param regex
      * @param regDefName
      */

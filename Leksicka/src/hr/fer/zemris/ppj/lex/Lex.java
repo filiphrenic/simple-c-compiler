@@ -5,6 +5,10 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * 
+ * @author fhrenic
+ */
 public class Lex {
 
     private String startState;
