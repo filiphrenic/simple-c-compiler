@@ -1,14 +1,19 @@
 package hr.fer.zemris.ppj.lex;
 
-import java.util.List;
-
-import hr.fer.zemris.ppj.automaton.AutomatonHandler;
+import hr.fer.zemris.ppj.automaton.Automaton;
 import hr.fer.zemris.ppj.lex.actions.IAction;
+
+import java.util.List;
 
 public class LexRule {
 
     private List<IAction> actions;
-    private AutomatonHandler automaton;
+    private Automaton automaton;
+    
+    public LexRule(Automaton automaton, List<IAction> actions) {
+    	this.automaton = automaton;
+    	this.actions = actions;
+    }
 
     public void execute(Lex lex) {
         for (IAction action : actions) {
