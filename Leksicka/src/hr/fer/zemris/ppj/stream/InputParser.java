@@ -30,8 +30,6 @@ public class InputParser {
      * handler.fromString( regex, regDefName ); 
      * so regdef will be in the table
      * 
-     * to add a regex to an existing automate (only when parsing rules), call:
-     * handler.addChoice( previousAutomaton, newAutomaton ) 
      */
 
     public AutomatonHandler getAutomatonHandler() {
