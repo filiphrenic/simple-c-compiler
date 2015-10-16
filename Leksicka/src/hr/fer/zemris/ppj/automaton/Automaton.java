@@ -10,6 +10,20 @@ import java.util.TreeSet;
  */
 public class Automaton {
 
+    public static void main(String[] args) {
+        int N = 10;
+        int[] states = new int[N];
+        for (int i = 0; i < N; i++) {
+            states[i] = getNewState();
+        }
+
+        Automaton a = epsilon();
+        System.out.println(a.accepts);
+        System.out.println(a.currentStates);
+
+    }
+
+    // main automaton representation, all automatons are in these maps
     private static int state = 0;
     // state -> ( symbol -> set of states )
     private static HashMap<Integer, HashMap<Character, Integer>> transitions;
@@ -19,30 +33,37 @@ public class Automaton {
     private static HashMap<String, Automaton> regularDefinitions;
 
     static {
+        state = 0;
         transitions = new HashMap<>();
         epsilonTransitions = new HashMap<>();
         regularDefinitions = new HashMap<>();
     }
 
-    private static int getState() {
+    private static int getNewState() {
         return state++;
     }
 
     // ########################################################################
 
-    private int startState;
-    private int endState;
+    private int leftState;
+    private int rightState;
     private Set<Integer> currentStates;
     private boolean accepts;
 
-    private Automaton(int startState, int endState) {
-        this.startState = startState;
-        this.endState = endState;
-        currentStates = new TreeSet<>();
+    private Automaton(int leftState, int rightState) {
+        this(leftState, rightState, new TreeSet<Integer>(), true);
+    }
+
+    private Automaton(int leftState, int rightState, Set<Integer> currentStates, boolean update) {
+        this.leftState = leftState;
+        this.rightState = rightState;
         accepts = false;
 
-        currentStates.add(startState);
-        updateCurrentStates();
+        this.currentStates = currentStates;
+        this.currentStates.add(leftState);
+        if (update) {
+            updateCurrentStates();
+        }
     }
 
     /**
@@ -53,19 +74,21 @@ public class Automaton {
      * @param regex
      * @param regDefName
      */
-    public Automaton generate(String regex, String regDefName) {
+    public static Automaton fromString(String regex, String regDefName) {
         // TODO create automaton
         // use regDef table
 
+        Automaton a = null;
+
         if (regDefName != null) {
-            regularDefinitions.put(regDefName, this);
+            regularDefinitions.put(regDefName, a);
         }
-        return this;
+        return a;
     }
 
     /**
-     * TODO
-     * USE THIS WHEN CREATING AN AUTOMATON FOR A RULE
+     * TODO USE THIS WHEN CREATING AN AUTOMATON FOR A RULE
+     * 
      * @param regex
      */
     public void addRegex(String regex) {
@@ -84,6 +107,7 @@ public class Automaton {
 
     /**
      * Returns <code>true</code> if automaton is in acceptable state.
+     * 
      * @return
      */
     public boolean isAcceptable() {
@@ -104,13 +128,13 @@ public class Automaton {
 
     private void updateCurrentStates() {
         // epsilon environment
-        Set<Integer> states = new TreeSet<>();
+        Set<Integer> states = new TreeSet<>(currentStates);
         boolean changed = true;
 
         while (changed) {
             changed = false;
             for (Integer state : currentStates) {
-                if (state == endState) {
+                if (state == rightState) {
                     // don't need to traverse the graph any further, accepts
                     // this is the key optimization for speed
                     setAcceptable();
@@ -120,7 +144,7 @@ public class Automaton {
             }
         }
 
-        if (states.contains(endState)) {
+        if (states.contains(rightState)) {
             setAcceptable();
         } else {
             currentStates = states;
@@ -131,6 +155,85 @@ public class Automaton {
         currentStates = new TreeSet<>();
         accepts = true;
     }
+
+    // ############################################################################
+    // SIMPLE AUTOMATONS
+
+    /**
+     * Builds a simple automaton that has two states and a transition between
+     * them via given symbol.
+     * 
+     * @param symbol transition symbol
+     * @return simple automaton
+     */
+    private static Automaton simple(char symbol) {
+        int leftState = getNewState();
+        int rightState = getNewState();
+        addTransition(leftState, rightState, symbol);
+        return new Automaton(leftState, rightState);
+    }
+
+    /**
+     * Builds a simple epsilon automaton that has two states and an epsilon
+     * transition between them.
+     * 
+     * @return epsilon automaton
+     */
+    private static Automaton epsilon() {
+        int leftState = getNewState();
+        int rightState = getNewState();
+        addEpsilonTransition(leftState, rightState);
+        return new Automaton(leftState, rightState);
+    }
+
+    /**
+     * Builds an automaton given the left and right automatons that need to be
+     * added.
+     * 
+     * @param left left automaton
+     * @param right right automaton
+     * @return resulting added automaton
+     */
+    private static Automaton add(Automaton left, Automaton right) {
+        addEpsilonTransition(left.rightState, right.leftState);
+        return new Automaton(left.leftState, right.rightState);
+    }
+
+    /**
+     * Adds an automaton as a choice to the main automaton.
+     * 
+     * @param main main automaton that will have another choice
+     * @param choice choice to add
+     * @return modified main automaton
+     */
+    private static Automaton choice(Automaton main, Automaton choice) {
+        addEpsilonTransition(main.leftState, choice.leftState);
+        addEpsilonTransition(choice.rightState, main.rightState);
+        if (choice.accepts) {
+            main.setAcceptable();
+        } else {
+            main.currentStates.addAll(choice.currentStates);
+        }
+        return main;
+    }
+
+    /**
+     * Builds a new automaton that is a Kleene star of a given automaton
+     * 
+     * @param automaton automaton used to create Kleene star automaton
+     * @return new automaton
+     */
+    private static Automaton kleene(Automaton automaton) {
+        int leftState = getNewState();
+        int rightState = getNewState();
+        addEpsilonTransition(leftState, automaton.leftState);
+        addEpsilonTransition(leftState, rightState);
+        addEpsilonTransition(automaton.rightState, rightState);
+        addEpsilonTransition(automaton.rightState, automaton.leftState);
+        return new Automaton(leftState, rightState);
+    }
+
+    // ############################################################################
 
     private static void addEpsilonTransition(int leftState, int rightState) {
         Set<Integer> states = getEpsilonStates(leftState);
