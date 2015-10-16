@@ -1,99 +1,84 @@
 package hr.fer.zemris.ppj.automaton;
 
-import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
 
 /**
+ * This class represents an epsilon non deterministic finite automaton.
  * 
  * @author fhrenic
  */
 public class Automaton {
 
-    private static int state = 0;
-    // state -> ( symbol -> set of states )
-    private static HashMap<Integer, HashMap<Character, Integer>> transitions;
-    // state -> set of states
-    private static HashMap<Integer, Set<Integer>> epsilonTransitions;
-    // regular definition -> automaton
-    private static HashMap<String, Automaton> regularDefinitions;
+    // if speed optimization needed:
+    //  - consider optimizing what times is the updateStates() called
 
-    static {
-        transitions = new HashMap<>();
-        epsilonTransitions = new HashMap<>();
-        regularDefinitions = new HashMap<>();
+    public static void main(String[] args) {
+        Automaton a = null;
+        System.out.println(a.getCurrentStates());
+        a.consume('c');
+        System.out.println("\nconsumed c");
+        System.out.println(a.getCurrentStates());
+        a.consume('d');
+        System.out.println("\nconsumed d");
+        System.out.println(a.getCurrentStates());
     }
 
-    private static int getState() {
-        return state++;
+    /**
+     * This object is used for providing and storing transitions. Automatons can
+     * use transitions via this object.
+     */
+    private static AutomatonHandler handler = new AutomatonHandler();
+
+    /**
+     * Sets a new handler. This method should be called when you have an
+     * existing handler (generated and read from a file).
+     * 
+     * @param handler new handler
+     */
+    public static void setHandler(AutomatonHandler handler) {
+        Automaton.handler = handler;
     }
 
-    // ########################################################################
-
-    private int startState;
-    private int endState;
+    private int leftState;
+    private int rightState; // this state is the only final state
     private Set<Integer> currentStates;
     private boolean accepts;
 
-    private Automaton(int startState, int endState) {
-        this.startState = startState;
-        this.endState = endState;
-        currentStates = new TreeSet<>();
-        accepts = false;
-
-        currentStates.add(startState);
+    /**
+     * Creates a new automaton with given left and right state. This should be
+     * called only after you have added the transitions to the handler. If it's
+     * done the other way around, it may not work properly.
+     * 
+     * @param leftState starting state
+     * @param rightState final state
+     */
+    protected Automaton(int leftState, int rightState) {
+        this.leftState = leftState;
+        this.rightState = rightState;
+        currentStates = new TreeSet<Integer>();
+        currentStates.add(leftState);
         updateCurrentStates();
     }
 
     /**
-     * Creates a new automaton for a given <code>regex</code>.
-     * <code>regDefName</code> can be either <code>null</code> or a definitions
-     * name. If it is <code>null</code>, regex isn't saved in the regdef table
-     * 
-     * @param regex
-     * @param regDefName
-     */
-    public Automaton generate(String regex, String regDefName) {
-        // TODO create automaton
-        // use regDef table
-
-        if (regDefName != null) {
-            regularDefinitions.put(regDefName, this);
-        }
-        return this;
-    }
-
-    /**
-     * TODO
-     * USE THIS WHEN CREATING AN AUTOMATON FOR A RULE
-     * @param regex
-     */
-    public void addRegex(String regex) {
-        // this will be used in creating rules
-        // ENka newAutomaton = new ENka(regex, false);
-
-        /*
-         * new automaton -> a & b (start & end states) 
-         * this automaton -> s & e
-         * 
-         * add epsilon transitions: 
-         * s -> e 
-         * b -> e
-         */
-    }
-
-    /**
      * Returns <code>true</code> if automaton is in acceptable state.
-     * @return
+     * 
+     * @return <code>true</code> if automaton accepts a string
      */
-    public boolean isAcceptable() {
+    public boolean accepts() {
         return accepts;
     }
 
+    /**
+     * Applies transitions based on the given symbol.
+     * 
+     * @param symbol transition symbol
+     */
     public void consume(char symbol) {
         Set<Integer> states = new TreeSet<>();
         for (Integer state : currentStates) {
-            Integer transitionState = getNormalStates(state).get(symbol);
+            Integer transitionState = handler.getNormalStates(state).get(symbol);
             if (transitionState != null) {
                 states.add(transitionState);
             }
@@ -102,62 +87,59 @@ public class Automaton {
         updateCurrentStates();
     }
 
+    /**
+     * Adds a set of states to the current states
+     * 
+     * @param states states to add
+     */
+    protected void addStates(Set<Integer> states) {
+        currentStates.addAll(states);
+        updateCurrentStates();
+    }
+
+    /**
+     * @return the leftState
+     */
+    protected int leftState() {
+        return leftState;
+    }
+
+    /**
+     * @return the rightState
+     */
+    protected int rightState() {
+        return rightState;
+    }
+
+    /**
+     * @return the currentStates
+     */
+    protected Set<Integer> getCurrentStates() {
+        return currentStates;
+    }
+
+    /**
+     * Updates the current states to the epilon environment of those states.
+     */
     private void updateCurrentStates() {
         // epsilon environment
-        Set<Integer> states = new TreeSet<>();
-        boolean changed = true;
+        accepts = false;
 
+        Set<Integer> states = new TreeSet<>(currentStates);
+        boolean changed = true;
         while (changed) {
             changed = false;
             for (Integer state : currentStates) {
-                if (state == endState) {
-                    // don't need to traverse the graph any further, accepts
-                    // this is the key optimization for speed
-                    setAcceptable();
-                    return;
+                if (state == rightState) {
+                    accepts = true;
                 }
-                changed |= states.addAll(getEpsilonStates(state));
+                changed |= states.addAll(handler.getEpsilonStates(state));
             }
         }
-
-        if (states.contains(endState)) {
-            setAcceptable();
-        } else {
-            currentStates = states;
+        if (!accepts && states.contains(rightState)) {
+            accepts = true;
         }
-    }
-
-    private void setAcceptable() {
-        currentStates = new TreeSet<>();
-        accepts = true;
-    }
-
-    private static void addEpsilonTransition(int leftState, int rightState) {
-        Set<Integer> states = getEpsilonStates(leftState);
-        states.add(rightState);
-        epsilonTransitions.put(leftState, states);
-    }
-
-    private static Set<Integer> getEpsilonStates(int state) {
-        Set<Integer> states = epsilonTransitions.get(state);
-        if (states == null) {
-            states = new TreeSet<>();
-        }
-        return states;
-    }
-
-    private static void addTransition(int leftState, int rightState, char symbol) {
-        HashMap<Character, Integer> transition = getNormalStates(leftState);
-        transition.put(symbol, rightState);
-        transitions.put(leftState, transition);
-    }
-
-    private static HashMap<Character, Integer> getNormalStates(int state) {
-        HashMap<Character, Integer> transition = transitions.get(state);
-        if (transition == null) {
-            transition = new HashMap<>();
-        }
-        return transition;
+        currentStates = states;
     }
 
 }

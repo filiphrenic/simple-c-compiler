@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * This is a singleton class used only to provide utility functions
- * to the {@link Automaton} class. To keep the code more organized.
+ * to the {@link AutomatonHandler} class. To keep the code more organized.
  * 
  * @author fhrenic
  */

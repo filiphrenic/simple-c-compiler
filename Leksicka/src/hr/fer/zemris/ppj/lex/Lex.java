@@ -5,6 +5,9 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 
+import hr.fer.zemris.ppj.automaton.Automaton;
+import hr.fer.zemris.ppj.automaton.AutomatonHandler;
+
 /**
  * 
  * @author fhrenic
@@ -23,12 +26,13 @@ public class Lex {
     private InputStream input;
     private OutputStream output;
 
-    public Lex(String startState, HashMap<String, List<LexRule>> states, InputStream input,
-            OutputStream output) {
+    public Lex(String startState, HashMap<String, List<LexRule>> states, AutomatonHandler handler,
+            InputStream input, OutputStream output) {
         this.startState = startState;
         this.states = states;
         this.input = input;
         this.output = output;
+        Automaton.setHandler(handler); // don't change this
     }
 
     public void analyzeInput() {

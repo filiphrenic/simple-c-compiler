@@ -31,11 +31,15 @@ public class GLA {
         this.input = input;
     }
 
+    /**
+     * Generates objects needed by the lexical analyzer.
+     */
     public void generateLA() {
         InputParser parser = new InputParser(input);
         try (ObjectOutputStream stream = Streamer.getOutput()) {
             stream.writeObject(parser.getStartState());
             stream.writeObject(parser.getStates());
+            stream.writeObject(parser.getAutomatonHandler());
         } catch (IOException ioe) {
             // TODO: handle exception
         }

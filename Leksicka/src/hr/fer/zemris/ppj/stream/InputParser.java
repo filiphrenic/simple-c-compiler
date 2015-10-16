@@ -1,5 +1,6 @@
 package hr.fer.zemris.ppj.stream;
 
+import hr.fer.zemris.ppj.automaton.AutomatonHandler;
 import hr.fer.zemris.ppj.lex.LexRule;
 
 import java.io.InputStream;
@@ -20,6 +21,7 @@ public class InputParser {
     private List<String> states;
     private List<String> lexClasses;
     private HashMap<String, List<LexRule>> rules;
+    private AutomatonHandler handler;
 
     /**
      * Creates new instance of {@link InputParser} which can read given input. 
@@ -27,6 +29,7 @@ public class InputParser {
      */
     public InputParser(InputStream input) {
         this.input = input;
+        handler = new AutomatonHandler();
     }
 
     /**
@@ -37,15 +40,24 @@ public class InputParser {
     }
 
     /*
+     * To create an automate, call
+     * Automate a = handler.fromString (regex, null)
+     * 
+     * 
      * For regular definitions, only call
-     * new Automaton( regex, regDefName ); 
+     * handler.fromString( regex, regDefName ); 
      * so regdef will be in the table
+     * 
      */
 
-    /**
-     * Returns a list of lexical analyzer states.
-     * @return list of states of lexical analyzer 
-     */
+    public AutomatonHandler getAutomatonHandler() {
+        return handler;
+    }
+
+	/**
+	 * Returns a list of lexical analyzer states.
+	 * @return list of states of lexical analyzer 
+	 */
     public List<String> getStates() {
         return states;
     }
