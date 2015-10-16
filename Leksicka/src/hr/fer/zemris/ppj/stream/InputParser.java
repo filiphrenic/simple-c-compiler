@@ -29,6 +29,7 @@ import hr.fer.zemris.ppj.lex.actions.SkipAction;
  */
 public class InputParser {
 
+    // action names
     public static final String NEW_LINE = "NOVI_REDAK";
     public static final String CHANGE_STATE = "UDJI_U_STANJE";
     public static final String GO_BACK = "VRATI_SE";
@@ -101,10 +102,11 @@ public class InputParser {
                 break;
             }
 
-            String[] regDefs = line.split("\\s");
-            String regDefName = regDefs[0];
-            regDefName = regDefName.substring(1, regDefName.length() - 1);
-            String regEx = regDefs[1];
+            // removed splitting by space because maybe we can have
+            // {regular definition} -> regex
+            int regdefEnd = line.indexOf('}');
+            String regDefName = line.substring(1, regdefEnd);
+            String regEx = line.substring(regdefEnd + 2);
             handler.fromString(regEx, regDefName);
         }
     }
