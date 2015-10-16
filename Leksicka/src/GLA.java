@@ -34,6 +34,7 @@ public class GLA {
         try (ObjectOutputStream stream = Streamer.getOutput()) {
             stream.writeObject(parser.getStartState());
             stream.writeObject(parser.getStates());
+            stream.writeObject(parser.getAutomatonHandler());
         } catch (IOException ioe) {
             // TODO: handle exception
         }
