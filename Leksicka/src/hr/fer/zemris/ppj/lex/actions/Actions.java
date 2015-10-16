@@ -1,5 +1,12 @@
 package hr.fer.zemris.ppj.lex.actions;
 
+import hr.fer.zemris.ppj.lex.LexRule;
+
+/**
+ * Utility class which offers string constants for available actions in {@link LexRule}.
+ * @author ajuric
+ *
+ */
 public class Actions {
 	
 	public static final String NEW_LINE = "NOVI_REDAK";
