@@ -4,52 +4,78 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
+ * This class represents an epsilon non deterministic finite automaton.
+ * 
  * @author fhrenic
  */
 public class Automaton {
 
+    // if speed optimization needed:
+    //  - consider optimizing what times is the updateStates() called
+
+    public static void main(String[] args) {
+        Automaton a = null;
+        System.out.println(a.getCurrentStates());
+        a.consume('c');
+        System.out.println("\nconsumed c");
+        System.out.println(a.getCurrentStates());
+        a.consume('d');
+        System.out.println("\nconsumed d");
+        System.out.println(a.getCurrentStates());
+    }
+
+    /**
+     * This object is used for providing and storing transitions. Automatons can
+     * use transitions via this object.
+     */
     private static AutomatonHandler handler = new AutomatonHandler();
 
+    /**
+     * Sets a new handler. This method should be called when you have an
+     * existing handler (generated and read from a file).
+     * 
+     * @param handler new handler
+     */
     public static void setHandler(AutomatonHandler handler) {
         Automaton.handler = handler;
     }
 
     private int leftState;
-    private int rightState;
+    private int rightState; // this state is the only final state
     private Set<Integer> currentStates;
     private boolean accepts;
 
+    /**
+     * Creates a new automaton with given left and right state. This should be
+     * called only after you have added the transitions to the handler. If it's
+     * done the other way around, it may not work properly.
+     * 
+     * @param leftState starting state
+     * @param rightState final state
+     */
     protected Automaton(int leftState, int rightState) {
-        this(leftState, rightState, new TreeSet<Integer>(), true);
-    }
-
-    protected Automaton(int leftState, int rightState, Set<Integer> currentStates, boolean update) {
         this.leftState = leftState;
         this.rightState = rightState;
-        accepts = false;
-
-        this.currentStates = currentStates;
-        this.currentStates.add(leftState);
-        if (update) {
-            updateCurrentStates();
-        }
+        currentStates = new TreeSet<Integer>();
+        currentStates.add(leftState);
+        updateCurrentStates();
     }
 
     /**
      * Returns <code>true</code> if automaton is in acceptable state.
      * 
-     * @return
+     * @return <code>true</code> if automaton accepts a string
      */
     public boolean accepts() {
         return accepts;
     }
 
+    /**
+     * Applies transitions based on the given symbol.
+     * 
+     * @param symbol transition symbol
+     */
     public void consume(char symbol) {
-        if (accepts) {
-            accepts = false;
-            return;
-        }
-
         Set<Integer> states = new TreeSet<>();
         for (Integer state : currentStates) {
             Integer transitionState = handler.getNormalStates(state).get(symbol);
@@ -58,6 +84,16 @@ public class Automaton {
             }
         }
         currentStates = states;
+        updateCurrentStates();
+    }
+
+    /**
+     * Adds a set of states to the current states
+     * 
+     * @param states states to add
+     */
+    protected void addStates(Set<Integer> states) {
+        currentStates.addAll(states);
         updateCurrentStates();
     }
 
@@ -83,40 +119,27 @@ public class Automaton {
     }
 
     /**
-     * Puts this automaton in accepting state and it can't go out of it.
+     * Updates the current states to the epilon environment of those states.
      */
-    protected void setAcceptable() {
-        currentStates = new TreeSet<>();
-        accepts = true;
-    }
-
-    protected void addStates(Set<Integer> states) {
-        currentStates.addAll(states);
-    }
-
     private void updateCurrentStates() {
         // epsilon environment
+        accepts = false;
+
         Set<Integer> states = new TreeSet<>(currentStates);
         boolean changed = true;
-
         while (changed) {
             changed = false;
             for (Integer state : currentStates) {
                 if (state == rightState) {
-                    // don't need to traverse the graph any further, accepts
-                    // this is the key optimization for speed
-                    setAcceptable();
-                    return;
+                    accepts = true;
                 }
                 changed |= states.addAll(handler.getEpsilonStates(state));
             }
         }
-
-        if (states.contains(rightState)) {
-            setAcceptable();
-        } else {
-            currentStates = states;
+        if (!accepts && states.contains(rightState)) {
+            accepts = true;
         }
+        currentStates = states;
     }
 
 }
