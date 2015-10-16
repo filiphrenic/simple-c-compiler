@@ -57,14 +57,16 @@ public class AutomatonHandler {
      *            definition, pass <code>null</code>)
      */
     public Automaton fromString(String regex, String regDefName) {
-        Automaton automaton = null;
-
-        // TODO create automaton
-
+        Automaton automaton = transform(regex);
         if (regDefName != null) {
             regularDefinitions.put(regDefName, automaton);
         }
         return automaton;
+    }
+
+    private Automaton transform(String regex) {
+        // TODO
+        return null;
     }
 
     /**
