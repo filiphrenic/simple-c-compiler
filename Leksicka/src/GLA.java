@@ -14,6 +14,8 @@ import hr.fer.zemris.ppj.stream.Streamer;
 public class GLA {
 
     public static void main(String[] args) {
+    	
+    	System.out.println("Alo!!!");
         // TODO
     }
 
