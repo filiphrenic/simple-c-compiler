@@ -1,3 +1,5 @@
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
@@ -10,15 +12,23 @@ import hr.fer.zemris.ppj.stream.Streamer;
  * writes them to the file that will be read by the lexical analyzer.
  * 
  * @author fhrenic
+ * @author ajuric
  */
 public class GLA {
 
-    public static void main(String[] args) {
-    	
-    	System.out.println("Alo!!!");
-        // TODO
+	/**
+	 * Method which is called when program starts.
+	 * @param args not used
+	 * @throws FileNotFoundException if input file is not found
+	 */
+    public static void main(String[] args) throws FileNotFoundException {
+    	GLA generator = new GLA(new FileInputStream("minusLang.lan"));
+    	generator.generateLA();
     }
 
+    /**
+     * Source for input: it can be FileInputStream, System.in, ...
+     */
     private InputStream input;
 
     /**
