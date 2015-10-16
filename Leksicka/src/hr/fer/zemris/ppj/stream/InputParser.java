@@ -3,7 +3,13 @@ package hr.fer.zemris.ppj.stream;
 import hr.fer.zemris.ppj.automaton.Automaton;
 import hr.fer.zemris.ppj.automaton.AutomatonHandler;
 import hr.fer.zemris.ppj.lex.LexRule;
+import hr.fer.zemris.ppj.lex.actions.Actions;
+import hr.fer.zemris.ppj.lex.actions.AddLexClassAction;
+import hr.fer.zemris.ppj.lex.actions.ChangeStateAction;
+import hr.fer.zemris.ppj.lex.actions.GoBackAction;
 import hr.fer.zemris.ppj.lex.actions.IAction;
+import hr.fer.zemris.ppj.lex.actions.NewLineAction;
+import hr.fer.zemris.ppj.lex.actions.SkipAction;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -139,7 +145,7 @@ public class InputParser {
     		List<IAction> actions = new ArrayList<>();
     		while (!line.equals("}")) {
     			line = reader.readLine();
-    			actions.add(createAction());
+    			actions.add(createAction(line));
     		}
     		List<LexRule> lexRules = rules.get(state);
     		if (lexRules == null) {
@@ -150,9 +156,35 @@ public class InputParser {
     	}
 	}
 
-	private IAction createAction() {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * Recognizes action type from read line.
+	 * @param line which contains some action
+	 * @return action parsed from given line
+	 */
+	private IAction createAction(String line) {
+		String args[] = line.split("\\s");
+		// uzasna ifovnjaca ...
+		/*
+		 * This iffing can be avoided by little modification of creating abstract class which implements
+		 * IAction interface and has private variable String for argument, and a few manipulations with
+		 * creating new instances of IActions ...  
+		 */
+		/*
+		 * Also, this part is very insensitive about errors: if first argument of action is not recognized
+		 * as some action name, it is assumed that it is lexical class. But, input file is said to be
+		 * always properly formatted so there shouldn't be any errors.
+		 */
+		if (args[0].equals(Actions.NEW_LINE)) {
+			return new NewLineAction();
+		} else if (args[0].equals(Actions.SKIP)) {
+			return new SkipAction();
+		} else if (args[0].equals(Actions.GO_BACK)) {
+			return new GoBackAction(Integer.parseInt(args[1]));
+		} else if (args[0].equals(Actions.CHANGE_STATE)) {
+			return new ChangeStateAction(args[1]);
+		} else {
+			return new AddLexClassAction(args[0]);
+		}
 	}
 
 	/**
