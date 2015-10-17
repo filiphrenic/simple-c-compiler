@@ -16,14 +16,16 @@ import hr.fer.zemris.ppj.stream.Streamer;
  */
 public class GLA {
 
-	/**
-	 * Method which is called when program starts.
-	 * @param args not used
-	 * @throws FileNotFoundException if input file is not found
-	 */
+    /**
+     * Method which is called when program starts.
+     * 
+     * @param args not used
+     * @throws FileNotFoundException if input file is not found
+     */
     public static void main(String[] args) throws FileNotFoundException {
-    	GLA generator = new GLA(new FileInputStream("minusLang.lan"));
-    	generator.generateLA();
+        InputStream input = new FileInputStream("minusLang.lan");
+        GLA generator = new GLA(input);
+        generator.generateLA();
     }
 
     /**

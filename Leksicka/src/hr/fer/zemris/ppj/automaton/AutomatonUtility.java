@@ -25,7 +25,7 @@ public class AutomatonUtility {
      * @param regex regex to split
      * @return list of smaller regexes
      */
-    public static List<String> splitBy(String regex) {
+    public static List<String> splitChoices(String regex) {
         List<String> expressions = new ArrayList<>();
         int lastIdx = -1;
         int len = regex.length();
@@ -83,6 +83,25 @@ public class AutomatonUtility {
             }
         }
         return -1;
+    }
+
+    /**
+     * This method is used to un-escape escaped symbols in a regex
+     * 
+     * @param symbol escaped symbol
+     * @return un-escaped symbol
+     */
+    public static char unescape(char symbol) {
+        switch (symbol) {
+            case 't':
+                return '\t';
+            case 'n':
+                return '\n';
+            case '_':
+                return ' ';
+            default:
+                return symbol;
+        }
     }
 
 }

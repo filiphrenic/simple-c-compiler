@@ -14,14 +14,7 @@ public class Automaton {
     //  - consider optimizing what times is the updateStates() called
 
     public static void main(String[] args) {
-        Automaton a = null;
-        System.out.println(a.getCurrentStates());
-        a.consume('c');
-        System.out.println("\nconsumed c");
-        System.out.println(a.getCurrentStates());
-        a.consume('d');
-        System.out.println("\nconsumed d");
-        System.out.println(a.getCurrentStates());
+
     }
 
     /**
@@ -44,6 +37,14 @@ public class Automaton {
     private int rightState; // this state is the only final state
     private Set<Integer> currentStates;
     private boolean accepts;
+
+    /**
+     * Creates an empty {@link Automaton} that only has 2 states but no
+     * transitions.
+     */
+    public Automaton() {
+        this(handler.getNewState(), handler.getNewState());
+    }
 
     /**
      * Creates a new automaton with given left and right state. This should be

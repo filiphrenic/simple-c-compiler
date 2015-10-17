@@ -1,6 +1,7 @@
 package hr.fer.zemris.ppj.automaton;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -16,7 +17,17 @@ import java.util.TreeSet;
  */
 public class AutomatonHandler {
 
+    private static final char EPS = '$';
+
     public static void main(String[] args) {
+        //AutomatonHandler h = new AutomatonHandler();
+        AutomatonHandler h = new AutomatonHandler();
+        Automaton.setHandler(h);
+        Automaton a = h.fromString("AaA", "a");
+        Automaton b = h.fromString("bB|{a}|(cC)*", null);
+        System.out.println(h.state);
+        System.out.println(b.accepts());
+
     }
 
     // main automaton representation, all automatons are in these maps
@@ -65,64 +76,76 @@ public class AutomatonHandler {
     }
 
     private Automaton transform(String regex) {
-        // TODO
-        return null;
-    }
+        List<String> choices = AutomatonUtility.splitChoices(regex);
 
-    /**
-     * This method creates an automaton from regex and adds it as a choice to
-     * the given automaton.
-     * 
-     * @param automaton automaton to which you will add a choice
-     * @param regex used for creating choice-automaton
-     */
-    public void addChoice(Automaton automaton, String regex) {
-        Automaton choice = fromString(regex, null);
-        choice(automaton, choice);
+        if (choices.size() > 1) {
+            Automaton transformed = new Automaton();
+            for (String choice : choices) {
+                choice(transformed, transform(choice));
+            }
+            return transformed;
+        }
+
+        boolean prefixed = false;
+        int len = regex.length();
+        int leftState = getNewState();
+        int rightState = getNewState();
+        int lastState = leftState;
+
+        int state1, state2;
+        for (int idx = 0; idx < len; idx++) {
+            char symbol = regex.charAt(idx);
+            if (prefixed) {
+                prefixed = false;
+                char escape = AutomatonUtility.unescape(symbol);
+                state1 = getNewState();
+                state2 = getNewState();
+                addTransition(state1, state2, escape);
+            } else {
+                if (symbol == '\\') {
+                    prefixed = true;
+                    continue;
+                }
+                if (symbol == '(' || symbol == '{') {
+                    char closing = symbol == '(' ? ')' : '}';
+                    int close = AutomatonUtility.findCloser(regex, closing, idx + 1);
+                    String subs = regex.substring(idx + 1, close);
+                    Automaton tmp = symbol == '(' ? transform(subs) : regularDefinitions.get(subs);
+                    state1 = tmp.leftState();
+                    state2 = tmp.rightState();
+                    idx = close;
+                } else {
+                    state1 = getNewState();
+                    state2 = getNewState();
+                    if (symbol == EPS) {
+                        addEpsilonTransition(state1, state2);
+                    } else {
+                        addTransition(state1, state2, symbol);
+                    }
+                }
+            }
+
+            if (idx + 1 < len && regex.charAt(idx + 1) == '*') {
+                int stateTmp1 = state1;
+                int stateTmp2 = state2;
+                state1 = getNewState();
+                state2 = getNewState();
+                addEpsilonTransition(state1, stateTmp1);
+                addEpsilonTransition(state1, state2);
+                addEpsilonTransition(stateTmp2, stateTmp1);
+                addEpsilonTransition(stateTmp2, state2);
+                idx++;
+            }
+
+            addEpsilonTransition(lastState, state1);
+            lastState = state2;
+        }
+        addEpsilonTransition(lastState, rightState);
+        return new Automaton(leftState, rightState);
     }
 
     // ############################################################################
     // BASIC AUTOMATONS
-
-    /**
-     * Builds a simple automaton that has two states and a transition between
-     * them via given symbol.
-     * 
-     * @param symbol transition symbol
-     * @return simple automaton
-     */
-    private Automaton simple(char symbol) {
-        int leftState = getNewState();
-        int rightState = getNewState();
-        addTransition(leftState, rightState, symbol);
-        return new Automaton(leftState, rightState);
-    }
-
-    /**
-     * Builds a simple epsilon automaton that has two states and an epsilon
-     * transition between them.
-     * 
-     * @return epsilon automaton
-     */
-    private Automaton epsilon() {
-        int leftState = getNewState();
-        int rightState = getNewState();
-        addEpsilonTransition(leftState, rightState);
-        return new Automaton(leftState, rightState);
-    }
-
-    /**
-     * Builds an automaton given the left and right automatons that need to be
-     * added.
-     * 
-     * @param left left automaton
-     * @param right right automaton
-     * @return resulting added automaton
-     */
-    private Automaton add(Automaton left, Automaton right) {
-        addEpsilonTransition(left.rightState(), right.leftState());
-        return new Automaton(left.leftState(), right.rightState());
-    }
 
     /**
      * Adds an automaton as a choice to the main automaton.
@@ -135,22 +158,6 @@ public class AutomatonHandler {
         addEpsilonTransition(main.leftState(), choice.leftState());
         addEpsilonTransition(choice.rightState(), main.rightState());
         return new Automaton(main.leftState(), main.rightState());
-    }
-
-    /**
-     * Builds a new automaton that is a Kleene star of a given automaton
-     * 
-     * @param automaton automaton used to create Kleene star automaton
-     * @return new automaton
-     */
-    private Automaton kleene(Automaton automaton) {
-        int leftState = getNewState();
-        int rightState = getNewState();
-        addEpsilonTransition(leftState, automaton.leftState());
-        addEpsilonTransition(leftState, rightState);
-        addEpsilonTransition(automaton.rightState(), rightState);
-        addEpsilonTransition(automaton.rightState(), automaton.leftState());
-        return new Automaton(leftState, rightState);
     }
 
     // ############################################################################
