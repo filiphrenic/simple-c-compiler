@@ -2,7 +2,6 @@ package hr.fer.zemris.ppj.automaton;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -21,25 +20,12 @@ public class AutomatonHandler {
     private static final char EPS = '$';
 
     public static void main(String[] args) {
-        //AutomatonHandler h = new AutomatonHandler();
         AutomatonHandler h = new AutomatonHandler();
         Automaton.setHandler(h);
-        h.fromString("AaA", "a");
-
+        h.fromString("AaA", "a"); // regDef
         String regex = "bB|{a}|(cC)*";
         Automaton b = h.fromString(regex, null);
         System.out.println(b.accepts());
-        //System.out.println(b.leftState());
-        //System.out.println(b.rightState());
-        //System.out.println(b.getCurrentStates());
-
-        //print(h.epsilonTransitions);
-    }
-
-    private static <K, V> void print(HashMap<K, V> map) {
-        for (Entry<K, V> e : map.entrySet()) {
-            System.out.println(e.getKey() + " -> " + e.getValue());
-        }
     }
 
     // main automaton representation, all automatons are in these maps
@@ -87,9 +73,14 @@ public class AutomatonHandler {
         return automaton;
     }
 
+    /**
+     * Transforms the given regular expression into an {@link Automaton}
+     * 
+     * @param regex regula expression
+     * @return automaton
+     */
     private Automaton transform(String regex) {
-        System.out.println("REGEX -> " + regex);
-
+        // System.out.println("REGEX -> " + regex);
         List<String> choices = AutomatonUtility.splitChoices(regex);
         int leftState = getNewState();
         int rightState = getNewState();
