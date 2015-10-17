@@ -36,7 +36,6 @@ public class InputParser {
     public static final String GO_BACK = "VRATI_SE";
     public static final String SKIP = "-";
 
-    private InputStream input;
     private List<String> stateNames;
     private List<String> lexClasses;
     private HashMap<String, List<LexRule>> states;
@@ -51,16 +50,13 @@ public class InputParser {
      * @param input which contains definitions for generator of lexical analyzer
      */
     public InputParser(InputStream input) {
-        this.input = input;
         stateNames = new ArrayList<>();
         lexClasses = new ArrayList<String>();
         states = new LinkedHashMap<>();
+        handler = Automaton.getHandler();
 
-        handler = new AutomatonHandler();
-        Automaton.setHandler(handler);
-
-        try {
-            parse();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
+            parse(reader);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,14 +67,11 @@ public class InputParser {
      * 
      * @throws IOException
      */
-    private void parse() throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+    private void parse(BufferedReader reader) throws IOException {
         readRegDef(reader);
         readStates(reader);
         readLexClasses(reader);
         readRules(reader);
-
-        reader.close();
     }
 
     /**

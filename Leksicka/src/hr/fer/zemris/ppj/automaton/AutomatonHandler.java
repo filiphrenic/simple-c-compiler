@@ -114,13 +114,13 @@ public class AutomatonHandler implements Serializable {
                         prefixed = true;
                         continue;
                     }
-                    if (symbol == '(' || symbol == '{') {
+                    boolean bracket = symbol == '(';
+                    if (bracket || symbol == '{') {
                         // (regex) or {regDef}
-                        char closing = symbol == '(' ? ')' : '}';
+                        char closing = bracket ? ')' : '}';
                         int close = AutomatonUtility.findCloser(regex, closing, idx + 1);
                         String subs = regex.substring(idx + 1, close);
-                        Automaton tmp = symbol == '(' ? transform(subs)
-                                : regularDefinitions.get(subs);
+                        Automaton tmp = bracket ? transform(subs) : regularDefinitions.get(subs);
                         state1 = tmp.leftState();
                         state2 = tmp.rightState();
                         idx = close;

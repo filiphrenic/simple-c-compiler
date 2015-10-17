@@ -94,10 +94,12 @@ public class Lex {
     public void printLexClass(String lexClass) {
         // TODO if we'll need the output, save this
         // otherwise, no need
-        System.out.println(startIndex);
-        System.out.println(lastIndex+1);
         String sub = input.substring(startIndex, lastIndex + 1);
-        System.out.println(lexClass + " " + lineNumber + " " + sub);
+        String output = lexClass + " " + lineNumber + " " + sub;
+        try {
+            Streamer.writeToStream(output, this.output);
+        } catch (IOException e) {
+        }
     }
 
     public void goBack(int toIdx) {

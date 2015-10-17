@@ -36,6 +36,16 @@ public class Automaton implements Serializable {
         Automaton.handler = handler;
     }
 
+    /**
+     * Get the used handler. This method should be called right after all
+     * automatons have been created.
+     * 
+     * @return automaton handler
+     */
+    public static AutomatonHandler getHandler() {
+        return handler;
+    }
+
     private int leftState;
     private int rightState; // this state is the only final state
     private Set<Integer> currentStates;
