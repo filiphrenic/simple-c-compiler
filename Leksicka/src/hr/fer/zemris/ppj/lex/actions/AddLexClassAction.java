@@ -9,7 +9,7 @@ import hr.fer.zemris.ppj.lex.Lex;
 public class AddLexClassAction implements IAction {
 
     private static final long serialVersionUID = -1742670871042699238L;
-    
+
     private String className;
 
     public AddLexClassAction(String className) {
@@ -18,8 +18,7 @@ public class AddLexClassAction implements IAction {
 
     @Override
     public void execute(Lex lex) {
-        // TODO Auto-generated method stub
-
+        lex.printLexClass(className);
     }
 
 }

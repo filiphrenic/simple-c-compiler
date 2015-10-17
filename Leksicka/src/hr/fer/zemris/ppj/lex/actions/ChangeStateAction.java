@@ -9,7 +9,7 @@ import hr.fer.zemris.ppj.lex.Lex;
 public class ChangeStateAction implements IAction {
 
     private static final long serialVersionUID = -3833574174991832894L;
-    
+
     private String state;
 
     public ChangeStateAction(String state) {
@@ -18,8 +18,7 @@ public class ChangeStateAction implements IAction {
 
     @Override
     public void execute(Lex lex) {
-        // TODO Auto-generated method stub
-
+        lex.changeState(state);
     }
 
 }

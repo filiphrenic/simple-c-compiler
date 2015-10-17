@@ -50,7 +50,7 @@ public class GLA {
         InputParser parser = new InputParser(input);
         try (ObjectOutputStream stream = Streamer.getOutput()) {
             stream.writeObject(parser.getStartState());
-            stream.writeObject(parser.getRules());
+            stream.writeObject(parser.getStates());
             stream.writeObject(parser.getAutomatonHandler());
         } catch (IOException ioe) {
             // TODO: handle exception

@@ -12,8 +12,7 @@ public class NewLineAction implements IAction {
 
     @Override
     public void execute(Lex lex) {
-        // TODO Auto-generated method stub
-
+        lex.incrementLineNumber();
     }
 
 }

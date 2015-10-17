@@ -75,6 +75,24 @@ public class Automaton implements Serializable {
     }
 
     /**
+     * Automaton is dead if the current state set is empty
+     * 
+     * @return <code>true</code> if automaton is dead
+     */
+    public boolean isDead() {
+        return currentStates.isEmpty();
+    }
+
+    /**
+     * Puts the automaton in the starting position.
+     */
+    public void reset() {
+        currentStates = new TreeSet<>();
+        currentStates.add(leftState);
+        updateCurrentStates();
+    }
+
+    /**
      * Applies transitions based on the given symbol.
      * 
      * @param symbol transition symbol
