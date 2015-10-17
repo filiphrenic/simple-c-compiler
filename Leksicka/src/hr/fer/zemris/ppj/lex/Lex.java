@@ -26,15 +26,13 @@ public class Lex {
 
     private int lineNumber;
 
-    private InputStream input;
     private OutputStream output;
-    private String in;
+    private String input;
 
     public Lex(String startState, HashMap<String, List<LexRule>> states, AutomatonHandler handler,
-            InputStream input, OutputStream output) {
+            OutputStream output) {
         this.currentState = startState;
         this.states = states;
-        this.input = input;
         this.output = output;
         Automaton.setHandler(handler); // don't change this
         startIndex = 0; // pocetak
@@ -43,18 +41,18 @@ public class Lex {
         lineNumber = 1;
     }
 
-    public void analyzeInput() throws IOException {
+    public void analyzeInput(InputStream stream) throws IOException {
         // we should save the table that we need to print out
         // maybe it will be needed in later exercises so we won't 
         // have to parse it
 
-        in = Streamer.readFromStream(input);
-        int len = in.length();
+        input = Streamer.readFromStream(stream);
+        int len = input.length();
         currentRules = states.get(currentState);
         LexRule lastRule = null;
 
         while (endIndex < len) {
-            char symbol = in.charAt(endIndex);
+            char symbol = input.charAt(endIndex);
             boolean allDead = true;
             for (LexRule rule : currentRules) {
                 Automaton cur = rule.getAutomaton();
@@ -66,14 +64,16 @@ public class Lex {
                 if (cur.accepts()) {
                     lastRule = rule;
                     lastIndex = endIndex;
+                    break; // if two automatons accept on same string, use first
                 }
             }
             if (allDead) {
                 if (lastRule == null) {
+                    // neither automaton accepted string, start again
                     error();
-                    endIndex = startIndex;
-                    startIndex++;
+                    endIndex = startIndex++;
                 } else {
+                    // it got accepted
                     lastRule.execute(this);
                     startIndex = lastIndex + 1;
                     endIndex = lastIndex;
@@ -92,7 +92,11 @@ public class Lex {
     }
 
     public void printLexClass(String lexClass) {
-        String sub = in.substring(startIndex, lastIndex);
+        // TODO if we'll need the output, save this
+        // otherwise, no need
+        System.out.println(startIndex);
+        System.out.println(lastIndex+1);
+        String sub = input.substring(startIndex, lastIndex + 1);
         System.out.println(lexClass + " " + lineNumber + " " + sub);
     }
 
@@ -112,8 +116,8 @@ public class Lex {
 
     private void error() {
         int leftBound = Math.max(0, startIndex - 4);
-        int rightBound = Math.min(startIndex + 4, in.length());
-        System.err.println("Error at " + in.substring(leftBound, rightBound));
+        int rightBound = Math.min(startIndex + 4, input.length());
+        System.err.println("Error at " + input.substring(leftBound, rightBound));
     }
 
 }

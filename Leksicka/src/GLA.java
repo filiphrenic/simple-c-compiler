@@ -48,13 +48,17 @@ public class GLA {
      */
     public void generateLA() {
         InputParser parser = new InputParser(input);
+        String result;
         try (ObjectOutputStream stream = Streamer.getOutput()) {
             stream.writeObject(parser.getStartState());
             stream.writeObject(parser.getStates());
             stream.writeObject(parser.getAutomatonHandler());
+            result = "Success";
         } catch (IOException ioe) {
             // TODO: handle exception
+            result = "Error\n" + ioe.getMessage();
         }
+        System.err.println(result);
 
     }
 

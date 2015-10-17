@@ -42,6 +42,8 @@ public class InputParser {
     private HashMap<String, List<LexRule>> states;
     private AutomatonHandler handler;
 
+    private String currLine;
+
     /**
      * Creates new instance of {@link InputParser} which reads given input and
      * parses it.
@@ -50,10 +52,13 @@ public class InputParser {
      */
     public InputParser(InputStream input) {
         this.input = input;
-        handler = new AutomatonHandler();
         stateNames = new ArrayList<>();
         lexClasses = new ArrayList<String>();
         states = new LinkedHashMap<>();
+
+        handler = new AutomatonHandler();
+        Automaton.setHandler(handler);
+
         try {
             parse();
         } catch (IOException e) {
@@ -68,12 +73,10 @@ public class InputParser {
      */
     private void parse() throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        String line = null;
-
-        readRegDef(reader, line);
-        readStates(reader, line);
-        readLexClasses(reader, line);
-        readRules(reader, line);
+        readRegDef(reader);
+        readStates(reader);
+        readLexClasses(reader);
+        readRules(reader);
 
         reader.close();
     }
@@ -85,18 +88,18 @@ public class InputParser {
      * @param line read line
      * @throws IOException if error occurs while reading
      */
-    private void readRegDef(BufferedReader reader, String line) throws IOException {
+    private void readRegDef(BufferedReader reader) throws IOException {
         while (true) {
-            line = reader.readLine();
-            if (line.startsWith("%X")) {
+            currLine = reader.readLine();
+            if (currLine.startsWith("%X")) {
                 break;
             }
 
             // removed splitting by space because maybe we can have
             // {regular definition} -> regex
-            int regdefEnd = line.indexOf('}');
-            String regDefName = line.substring(1, regdefEnd);
-            String regEx = line.substring(regdefEnd + 2);
+            int regdefEnd = currLine.indexOf('}');
+            String regDefName = currLine.substring(1, regdefEnd);
+            String regEx = currLine.substring(regdefEnd + 2);
             handler.fromString(regEx, regDefName);
         }
     }
@@ -107,9 +110,9 @@ public class InputParser {
      * @param reader for
      * @param line read line
      */
-    private void readStates(BufferedReader reader, String line) {
-        line = line.substring(3);
-        String[] statesArray = line.split("\\s");
+    private void readStates(BufferedReader reader) {
+        currLine = currLine.substring(3);
+        String[] statesArray = currLine.split("\\s");
         for (String state : statesArray) {
             stateNames.add(state);
         }
@@ -122,10 +125,9 @@ public class InputParser {
      * @param line read line
      * @throws IOException if error occurs while reading
      */
-    private void readLexClasses(BufferedReader reader, String line) throws IOException {
-        line = reader.readLine();
-        line = line.substring(3);
-        String[] lexClassesArray = line.split("\\s");
+    private void readLexClasses(BufferedReader reader) throws IOException {
+        currLine = reader.readLine().substring(3);
+        String[] lexClassesArray = currLine.split("\\s");
         for (String lexClass : lexClassesArray) {
             lexClasses.add(lexClass);
         }
@@ -138,17 +140,16 @@ public class InputParser {
      * @param line read line
      * @throws IOException if error occurs while reading
      */
-    private void readRules(BufferedReader reader, String line) throws IOException {
-        while (line != null) {
-            line = reader.readLine();
-            String state = line.substring(1, line.indexOf(">"));
-            String regEx = line.substring(line.indexOf(">") + 1);
-            line = reader.readLine();
+    private void readRules(BufferedReader reader) throws IOException {
+        while ((currLine = reader.readLine()) != null) {
+            String state = currLine.substring(1, currLine.indexOf(">"));
+            String regEx = currLine.substring(currLine.indexOf(">") + 1);
+            currLine = reader.readLine();
             Automaton automaton = handler.fromString(regEx, null);
             List<IAction> actions = new LinkedList<>();
-            while (!line.equals("}")) {
-                line = reader.readLine();
-                actions.add(createAction(line));
+            while (!currLine.equals("}")) {
+                currLine = reader.readLine();
+                actions.add(createAction(currLine));
             }
             List<LexRule> lexRules = states.get(state);
             if (lexRules == null) {
