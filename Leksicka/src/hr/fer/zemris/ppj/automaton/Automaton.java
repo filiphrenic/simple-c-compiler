@@ -17,7 +17,43 @@ public class Automaton implements Serializable {
     private static final long serialVersionUID = -173462860031922118L;
 
     public static void main(String[] args) {
+        String regex;
 
+        regex = "aaaa";
+        System.out.println('\n' + regex);
+        test(regex, regex);
+
+        regex = "ab|ba";
+        System.out.println('\n' + regex);
+        test(regex, "ab");
+        test(regex, "ba");
+        test(regex, "aB");
+        test(regex, "aba");
+
+        regex = "ab*";
+        System.out.println('\n' + regex);
+        test(regex, "a");
+        test(regex, "b");
+        test(regex, "ab");
+        test(regex, "abbbbbbbbbbb");
+
+        handler.fromString("0|1", "bit");
+        handler.fromString("\\n|\\t|\\_", "space");
+        handler.fromString("{space}*", "spaces");
+        handler.fromString("+|-", "op");
+        regex = "{bit}{spaces}{op}{spaces}{bit}";
+        System.out.println('\n' + regex);
+        test(regex, "1          \n    +1");
+
+    }
+
+    private static void test(String regex, String text) {
+        System.out.print("Testing " + text + " -> ");
+        Automaton a = handler.fromString(regex, null);
+        for (Character c : text.toCharArray()) {
+            a.consume(c);
+        }
+        System.out.println(a.accepts);
     }
 
     /**
