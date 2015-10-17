@@ -21,7 +21,7 @@ public class Automaton {
      * This object is used for providing and storing transitions. Automatons can
      * use transitions via this object.
      */
-    private static AutomatonHandler handler = new AutomatonHandler();
+    protected static AutomatonHandler handler = new AutomatonHandler();
 
     /**
      * Sets a new handler. This method should be called when you have an
@@ -122,25 +122,24 @@ public class Automaton {
     /**
      * Updates the current states to the epilon environment of those states.
      */
-    private void updateCurrentStates() {
+    protected void updateCurrentStates() {
         // epsilon environment
         accepts = false;
 
-        Set<Integer> states = new TreeSet<>(currentStates);
-        boolean changed = true;
-        while (changed) {
-            changed = false;
+        Set<Integer> states;
+        do {
+            states = new TreeSet<>();
             for (Integer state : currentStates) {
                 if (state == rightState) {
                     accepts = true;
                 }
-                changed |= states.addAll(handler.getEpsilonStates(state));
+                states.addAll(handler.getEpsilonStates(state));
             }
-        }
-        if (!accepts && states.contains(rightState)) {
+        } while (currentStates.addAll(states));
+
+        if (!accepts && currentStates.contains(rightState)) {
             accepts = true;
         }
-        currentStates = states;
     }
 
 }

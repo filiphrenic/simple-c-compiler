@@ -2,6 +2,7 @@ package hr.fer.zemris.ppj.automaton;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -23,11 +24,22 @@ public class AutomatonHandler {
         //AutomatonHandler h = new AutomatonHandler();
         AutomatonHandler h = new AutomatonHandler();
         Automaton.setHandler(h);
-        Automaton a = h.fromString("AaA", "a");
-        Automaton b = h.fromString("bB|{a}|(cC)*", null);
-        System.out.println(h.state);
-        System.out.println(b.accepts());
+        h.fromString("AaA", "a");
 
+        String regex = "bB|{a}|(cC)*";
+        Automaton b = h.fromString(regex, null);
+        System.out.println(b.accepts());
+        //System.out.println(b.leftState());
+        //System.out.println(b.rightState());
+        //System.out.println(b.getCurrentStates());
+
+        //print(h.epsilonTransitions);
+    }
+
+    private static <K, V> void print(HashMap<K, V> map) {
+        for (Entry<K, V> e : map.entrySet()) {
+            System.out.println(e.getKey() + " -> " + e.getValue());
+        }
     }
 
     // main automaton representation, all automatons are in these maps
@@ -76,88 +88,80 @@ public class AutomatonHandler {
     }
 
     private Automaton transform(String regex) {
+        System.out.println("REGEX -> " + regex);
+
         List<String> choices = AutomatonUtility.splitChoices(regex);
-
-        if (choices.size() > 1) {
-            Automaton transformed = new Automaton();
-            for (String choice : choices) {
-                choice(transformed, transform(choice));
-            }
-            return transformed;
-        }
-
-        boolean prefixed = false;
-        int len = regex.length();
         int leftState = getNewState();
         int rightState = getNewState();
-        int lastState = leftState;
 
-        int state1, state2;
-        for (int idx = 0; idx < len; idx++) {
-            char symbol = regex.charAt(idx);
-            if (prefixed) {
-                prefixed = false;
-                char escape = AutomatonUtility.unescape(symbol);
-                state1 = getNewState();
-                state2 = getNewState();
-                addTransition(state1, state2, escape);
-            } else {
-                if (symbol == '\\') {
-                    prefixed = true;
-                    continue;
-                }
-                if (symbol == '(' || symbol == '{') {
-                    char closing = symbol == '(' ? ')' : '}';
-                    int close = AutomatonUtility.findCloser(regex, closing, idx + 1);
-                    String subs = regex.substring(idx + 1, close);
-                    Automaton tmp = symbol == '(' ? transform(subs) : regularDefinitions.get(subs);
-                    state1 = tmp.leftState();
-                    state2 = tmp.rightState();
-                    idx = close;
-                } else {
+        if (choices.size() > 1) {
+            for (String choice : choices) {
+                Automaton tmp = transform(choice);
+                addEpsilonTransition(leftState, tmp.leftState());
+                addEpsilonTransition(tmp.rightState(), rightState);
+            }
+        } else {
+
+            boolean prefixed = false;
+            int len = regex.length();
+            int lastState = leftState;
+
+            for (int idx = 0; idx < len; idx++) {
+                int state1, state2;
+                char symbol = regex.charAt(idx);
+                if (prefixed) {
+                    prefixed = false;
+                    char escape = AutomatonUtility.unescape(symbol);
                     state1 = getNewState();
                     state2 = getNewState();
-                    if (symbol == EPS) {
-                        addEpsilonTransition(state1, state2);
+                    addTransition(state1, state2, escape);
+                } else {
+                    if (symbol == '\\') {
+                        prefixed = true;
+                        continue;
+                    }
+                    if (symbol == '(' || symbol == '{') {
+                        // (regex) or {regDef}
+                        char closing = symbol == '(' ? ')' : '}';
+                        int close = AutomatonUtility.findCloser(regex, closing, idx + 1);
+                        String subs = regex.substring(idx + 1, close);
+                        Automaton tmp = symbol == '(' ? transform(subs)
+                                : regularDefinitions.get(subs);
+                        state1 = tmp.leftState();
+                        state2 = tmp.rightState();
+                        idx = close;
                     } else {
-                        addTransition(state1, state2, symbol);
+                        state1 = getNewState();
+                        state2 = getNewState();
+                        if (symbol == EPS) {
+                            addEpsilonTransition(state1, state2);
+                        } else {
+                            addTransition(state1, state2, symbol);
+                        }
                     }
                 }
-            }
 
-            if (idx + 1 < len && regex.charAt(idx + 1) == '*') {
-                int stateTmp1 = state1;
-                int stateTmp2 = state2;
-                state1 = getNewState();
-                state2 = getNewState();
-                addEpsilonTransition(state1, stateTmp1);
-                addEpsilonTransition(state1, state2);
-                addEpsilonTransition(stateTmp2, stateTmp1);
-                addEpsilonTransition(stateTmp2, state2);
-                idx++;
-            }
+                // KLEENE
+                if (idx + 1 < len && regex.charAt(idx + 1) == '*') {
+                    int stateTmp1 = state1;
+                    int stateTmp2 = state2;
+                    state1 = getNewState();
+                    state2 = getNewState();
+                    addEpsilonTransition(state1, stateTmp1);
+                    addEpsilonTransition(state1, state2);
+                    addEpsilonTransition(stateTmp2, stateTmp1);
+                    addEpsilonTransition(stateTmp2, state2);
+                    idx++;
+                }
 
-            addEpsilonTransition(lastState, state1);
-            lastState = state2;
+                // CONNECT TO AUTOMATON
+                addEpsilonTransition(lastState, state1);
+                lastState = state2;
+            }
+            // CONNECT TO LAST STATE
+            addEpsilonTransition(lastState, rightState);
         }
-        addEpsilonTransition(lastState, rightState);
         return new Automaton(leftState, rightState);
-    }
-
-    // ############################################################################
-    // BASIC AUTOMATONS
-
-    /**
-     * Adds an automaton as a choice to the main automaton.
-     * 
-     * @param main main automaton that will have another choice
-     * @param choice choice to add
-     * @return modified main automaton
-     */
-    private Automaton choice(Automaton main, Automaton choice) {
-        addEpsilonTransition(main.leftState(), choice.leftState());
-        addEpsilonTransition(choice.rightState(), main.rightState());
-        return new Automaton(main.leftState(), main.rightState());
     }
 
     // ############################################################################

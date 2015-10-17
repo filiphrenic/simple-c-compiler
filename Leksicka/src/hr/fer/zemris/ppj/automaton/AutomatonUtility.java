@@ -45,6 +45,7 @@ public class AutomatonUtility {
                 lastIdx = idx;
             }
         }
+        expressions.add(regex.substring(lastIdx + 1));
         return expressions;
     }
 
