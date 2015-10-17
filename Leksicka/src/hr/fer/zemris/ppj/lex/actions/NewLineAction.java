@@ -8,6 +8,8 @@ import hr.fer.zemris.ppj.lex.Lex;
  */
 public class NewLineAction implements IAction {
 
+    private static final long serialVersionUID = 5071566988664731887L;
+
     @Override
     public void execute(Lex lex) {
         // TODO Auto-generated method stub

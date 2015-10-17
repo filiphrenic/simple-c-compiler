@@ -1,5 +1,6 @@
 package hr.fer.zemris.ppj.automaton;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -15,8 +16,9 @@ import java.util.TreeSet;
  * 
  * @author fhrenic
  */
-public class AutomatonHandler {
+public class AutomatonHandler implements Serializable {
 
+    private static final long serialVersionUID = -3143699593378714639L;
     private static final char EPS = '$';
 
     public static void main(String[] args) {

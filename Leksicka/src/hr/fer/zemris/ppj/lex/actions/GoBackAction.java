@@ -8,6 +8,8 @@ import hr.fer.zemris.ppj.lex.Lex;
  */
 public class GoBackAction implements IAction {
 
+    private static final long serialVersionUID = 8238297743771818369L;
+    
     private int goBack;
 
     public GoBackAction(int goBack) {

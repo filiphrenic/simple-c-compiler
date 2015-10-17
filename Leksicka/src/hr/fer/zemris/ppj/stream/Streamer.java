@@ -21,6 +21,10 @@ import java.nio.charset.StandardCharsets;
  * @author fhrenic
  */
 public class Streamer {
+    
+    public static void main(String[] args) {
+        
+    }
 
     // TODO assign input/output file
     // file used for communication between GLA and LA

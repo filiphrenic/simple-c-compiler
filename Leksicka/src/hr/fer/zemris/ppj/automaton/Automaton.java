@@ -1,5 +1,6 @@
 package hr.fer.zemris.ppj.automaton;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -8,10 +9,12 @@ import java.util.TreeSet;
  * 
  * @author fhrenic
  */
-public class Automaton {
+public class Automaton implements Serializable {
 
     // if speed optimization needed:
     //  - consider optimizing what times is the updateStates() called
+
+    private static final long serialVersionUID = -173462860031922118L;
 
     public static void main(String[] args) {
 
@@ -125,7 +128,6 @@ public class Automaton {
     protected void updateCurrentStates() {
         // epsilon environment
         accepts = false;
-
         Set<Integer> states;
         do {
             states = new TreeSet<>();
