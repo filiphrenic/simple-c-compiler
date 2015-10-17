@@ -135,15 +135,20 @@ public class InputParser {
      */
     private void readRules(BufferedReader reader) throws IOException {
         while ((currLine = reader.readLine()) != null) {
-            String state = currLine.substring(1, currLine.indexOf(">"));
-            String regEx = currLine.substring(currLine.indexOf(">") + 1);
-            currLine = reader.readLine();
+            int idx = currLine.indexOf('>');
+            String state = currLine.substring(1, idx);
+            String regEx = currLine.substring(idx + 1);
             Automaton automaton = handler.fromString(regEx, null);
+
+            reader.readLine(); // reads the { symbol
             List<IAction> actions = new LinkedList<>();
-            while (!currLine.equals("}")) {
-                currLine = reader.readLine();
+            while (true) {
+                if ((currLine = reader.readLine()).startsWith("}")) {
+                    break;
+                }
                 actions.add(createAction(currLine));
             }
+            
             List<LexRule> lexRules = states.get(state);
             if (lexRules == null) {
                 lexRules = new LinkedList<>();
@@ -172,6 +177,7 @@ public class InputParser {
          * as some action name, it is assumed that it is lexical class. But, input file is said to be
          * always properly formatted so there shouldn't be any errors.
          */
+        //System.out.println(args[0]);
         if (args[0].equals(NEW_LINE)) {
             return new NewLineAction();
         } else if (args[0].equals(SKIP)) {

@@ -19,15 +19,13 @@ public class Lex {
     private HashMap<String, List<LexRule>> states;
     private String currentState;
     private List<LexRule> currentRules;
+    private OutputStream output;
+    private String input;
 
     private int startIndex;
     private int endIndex;
     private int lastIndex;
-
     private int lineNumber;
-
-    private OutputStream output;
-    private String input;
 
     public Lex(String startState, HashMap<String, List<LexRule>> states, AutomatonHandler handler,
             OutputStream output) {
@@ -51,7 +49,7 @@ public class Lex {
         currentRules = states.get(currentState);
         LexRule lastRule = null;
 
-        while (endIndex < len) {
+        do {
             char symbol = input.charAt(endIndex);
             boolean allDead = true;
             for (LexRule rule : currentRules) {
@@ -83,8 +81,7 @@ public class Lex {
                     rule.getAutomaton().reset();
                 }
             }
-            endIndex++;
-        }
+        } while (++endIndex < len);
     }
 
     public void incrementLineNumber() {
@@ -95,7 +92,7 @@ public class Lex {
         // TODO if we'll need the output, save this
         // otherwise, no need
         String sub = input.substring(startIndex, lastIndex + 1);
-        String output = lexClass + " " + lineNumber + " " + sub;
+        String output = lexClass + " " + lineNumber + " " + sub + '\n';
         try {
             Streamer.writeToStream(output, this.output);
         } catch (IOException e) {
@@ -110,6 +107,7 @@ public class Lex {
 
     public void changeState(String state) {
         currentState = state;
+        currentRules = states.get(currentState);
     }
 
     public void skip() {

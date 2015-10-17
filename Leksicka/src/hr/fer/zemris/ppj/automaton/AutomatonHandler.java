@@ -21,16 +21,6 @@ public class AutomatonHandler implements Serializable {
     private static final long serialVersionUID = -3143699593378714639L;
     private static final char EPS = '$';
 
-    //    public static void main(String[] args) {
-    //        
-    //        AutomatonHandler h = new AutomatonHandler();
-    //        Automaton.setHandler(h);
-    //        h.fromString("AaA", "a"); // regDef
-    //        String regex = "bB|{a}|(cC)*";
-    //        Automaton b = h.fromString(regex, null);
-    //        System.out.println(b.accepts());
-    //    }
-
     // main automaton representation, all automatons are in these maps
     private int state;
     // state -> ( symbol -> set of states )
