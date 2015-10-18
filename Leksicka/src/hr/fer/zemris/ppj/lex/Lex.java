@@ -40,10 +40,6 @@ public class Lex {
     }
 
     public void analyzeInput(InputStream stream) throws IOException {
-        // we should save the table that we need to print out
-        // maybe it will be needed in later exercises so we won't 
-        // have to parse it
-
         input = Streamer.readFromStream(stream);
         int len = input.length();
         currentRules = states.get(currentState);
@@ -77,11 +73,18 @@ public class Lex {
                     endIndex = lastIndex;
                 }
                 lastRule = null;
-                for (LexRule rule : currentRules) {
-                    rule.getAutomaton().reset();
-                }
+                resetCurrentAutomatons();
             }
         } while (++endIndex < len);
+    }
+
+    /**
+     * Resets the automatons that belong to the current state.
+     */
+    private void resetCurrentAutomatons() {
+        for (LexRule rule : currentRules) {
+            rule.getAutomaton().reset();
+        }
     }
 
     public void incrementLineNumber() {
@@ -100,16 +103,22 @@ public class Lex {
     }
 
     public void goBack(int toIdx) {
-        // OVDJE TREBA RESTARTATI AUTOMATE U TRENUTNOM STANJU
-        // jer su consumeali znakove koji se sad vraćaju natrag u niz
-        // zbog toga ih treba vratiti u to stanje
-        // TODO
+        // TODO ovo je mozda krivo
+        resetCurrentAutomatons();
         int idx = startIndex + toIdx - 1;
         endIndex = idx;
         lastIndex = idx;
+        char[] feed = input.substring(startIndex, endIndex).toCharArray();
+        
+        for (LexRule rule : currentRules) {
+            for (char symbol : feed)
+                rule.getAutomaton().consume(symbol);
+        }
+
     }
 
     public void changeState(String state) {
+        resetCurrentAutomatons();
         currentState = state;
         currentRules = states.get(currentState);
     }
