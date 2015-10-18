@@ -100,6 +100,10 @@ public class Lex {
     }
 
     public void goBack(int toIdx) {
+        // OVDJE TREBA RESTARTATI AUTOMATE U TRENUTNOM STANJU
+        // jer su consumeali znakove koji se sad vraćaju natrag u niz
+        // zbog toga ih treba vratiti u to stanje
+        // TODO
         int idx = startIndex + toIdx - 1;
         endIndex = idx;
         lastIndex = idx;
