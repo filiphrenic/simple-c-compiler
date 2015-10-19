@@ -50,7 +50,7 @@ public class InputParser {
      */
     public InputParser(InputStream input) {
         stateNames = new ArrayList<>();
-        lexClasses = new ArrayList<String>();
+        lexClasses = new ArrayList<>();
         states = new LinkedHashMap<>();
         handler = Automaton.getHandler();
 
