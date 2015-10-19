@@ -19,8 +19,7 @@ public class LexRule implements Serializable {
 
     public void print(){
         for (IAction action : actions){
-            Class<? extends IAction> c = action.getClass();
-            System.out.println(c);
+            System.out.println(action.getClass().getSimpleName());
         }
     }
     

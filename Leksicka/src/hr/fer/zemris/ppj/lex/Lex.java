@@ -34,7 +34,7 @@ public class Lex {
         this.output = output;
         Automaton.setHandler(handler); // don't change this
         startIndex = 0; // pocetak
-        endIndex = 0; // zavrsetak
+        endIndex = -1; // zavrsetak
         lastIndex = -1; // posljednji
         lineNumber = 1;
     }
@@ -45,37 +45,36 @@ public class Lex {
         currentRules = states.get(currentState);
         LexRule lastRule = null;
 
-        do {
-            char symbol = input.charAt(endIndex);
-            boolean allDead = true;
-            for (LexRule rule : currentRules) {
-                Automaton cur = rule.getAutomaton();
-                if (cur.isDead()) {
-                    continue;
-                }
-                allDead = false;
-                cur.consume(symbol);
-                if (cur.accepts()) {
-                    lastRule = rule;
-                    lastIndex = endIndex;
-                    break; // if two automatons accept on same string, use first
+        while (endIndex < len - 1) {
+            boolean alive = true;
+            while (alive && endIndex < len - 1) {
+                alive = false;
+                char symbol = input.charAt(++endIndex);
+                for (LexRule rule : currentRules) {
+                    Automaton cur = rule.getAutomaton();
+                    if (cur.isDead()) {
+                        continue;
+                    }
+                    alive = true;
+                    cur.consume(symbol);
+                    if (cur.accepts()) {
+                        lastRule = rule;
+                        lastIndex = endIndex;
+                    }
                 }
             }
-            if (allDead) {
-                if (lastRule == null) {
-                    // neither automaton accepted string, start again
-                    error();
-                    endIndex = startIndex++;
-                } else {
-                    // it got accepted
-                    lastRule.execute(this);
-                    startIndex = lastIndex + 1;
-                    endIndex = lastIndex;
-                }
-                lastRule = null;
-                resetCurrentAutomatons();
+
+            if (lastRule == null) { // neither automaton accepted string, start again
+                error();
+                endIndex = startIndex++;
+            } else {// it got accepted
+                endIndex = lastIndex;
+                lastRule.execute(this);
             }
-        } while (++endIndex < len);
+            lastRule = null;
+            resetCurrentAutomatons();
+
+        }
     }
 
     /**
@@ -95,6 +94,7 @@ public class Lex {
         // TODO if we'll need the output, save this
         // otherwise, no need
         String sub = input.substring(startIndex, lastIndex + 1);
+        startIndex = endIndex + 1;
         String output = lexClass + " " + lineNumber + " " + sub + '\n';
         try {
             Streamer.writeToStream(output, this.output);
@@ -103,17 +103,16 @@ public class Lex {
     }
 
     public void goBack(int toIdx) {
-        // TODO ovo je mozda krivo
-        resetCurrentAutomatons();
+        //resetCurrentAutomatons();
         int idx = startIndex + toIdx - 1;
         endIndex = idx;
         lastIndex = idx;
-        char[] feed = input.substring(startIndex, endIndex).toCharArray();
-        
-        for (LexRule rule : currentRules) {
-            for (char symbol : feed)
-                rule.getAutomaton().consume(symbol);
-        }
+
+        //char[] feed = input.substring(startIndex, endIndex).toCharArray();
+        //for (LexRule rule : currentRules) {
+        //    for (char symbol : feed)
+        //        rule.getAutomaton().consume(symbol);
+        //}
 
     }
 

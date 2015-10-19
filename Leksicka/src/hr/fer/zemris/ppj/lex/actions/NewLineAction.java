@@ -14,7 +14,6 @@ public class NewLineAction implements IAction {
      * 
      */
     public NewLineAction() {
-        System.out.println("aaaaaaa");
     }
     
     

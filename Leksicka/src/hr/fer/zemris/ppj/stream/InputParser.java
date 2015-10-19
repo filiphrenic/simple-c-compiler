@@ -148,7 +148,9 @@ public class InputParser {
                 }
                 actions.add(createAction(currLine));
             }
-            
+            IAction first = actions.remove(0);
+            actions.add(first);
+
             List<LexRule> lexRules = states.get(state);
             if (lexRules == null) {
                 lexRules = new LinkedList<>();
