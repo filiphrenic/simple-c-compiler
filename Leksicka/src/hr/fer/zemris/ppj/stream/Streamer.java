@@ -22,14 +22,13 @@ import java.nio.charset.StandardCharsets;
  */
 public class Streamer {
 
-    public static void main(String[] args) {
-
-    }
-
     // TODO assign input/output file
     // file used for communication between GLA and LA
-    private static final String FILE_LOCATION = "./analizator/objects.ost";
+    private static final String FILE_LOCATION = "analizator/objects.ost";
     private static File FILE = new File(FILE_LOCATION);
+    static{
+        FILE.getParentFile().mkdirs();
+    }
 
     // reading/writing to streams
     private static final Charset CHARSET = StandardCharsets.UTF_8;

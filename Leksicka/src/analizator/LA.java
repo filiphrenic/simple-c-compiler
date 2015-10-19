@@ -24,7 +24,9 @@ public class LA {
 
     public static void main(String[] args) throws FileNotFoundException {
         // TODO change input stream
-        InputStream input = new FileInputStream("primjer.minus.txt");
+        //InputStream input = new FileInputStream("primjer.minus.txt");
+        InputStream input = new FileInputStream("primjer.simple");
+        //InputStream input = System.in;
         new LA(input, System.out).lexicalAnalysis();
     }
 

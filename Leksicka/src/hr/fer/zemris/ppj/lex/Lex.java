@@ -173,9 +173,9 @@ public class Lex {
      * This is called when an error occurs.
      */
     private void error() {
-        int leftBound = Math.max(0, startIndex - 4);
-        int rightBound = Math.min(startIndex + 4, input.length());
-        System.err.println("Error at " + input.substring(leftBound, rightBound));
+        //int leftBound = Math.max(0, startIndex - 4);
+        //int rightBound = Math.min(startIndex + 4, input.length());
+        //System.err.println("Error at " + input.substring(leftBound, rightBound));
         //System.err.println("Error <" + input.charAt(endIndex - 1) + ">");
     }
 
