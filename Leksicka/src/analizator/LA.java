@@ -23,7 +23,7 @@ import hr.fer.zemris.ppj.stream.Streamer;
 public class LA {
 
     public static void main(String[] args) throws FileNotFoundException {
-        // TODO
+        // TODO change input stream
         InputStream input = new FileInputStream("primjer.minus.txt");
         new LA(input, System.out).lexicalAnalysis();
     }
@@ -53,8 +53,7 @@ public class LA {
             HashMap<String, List<LexRule>> states = (HashMap<String, List<LexRule>>) stream
                     .readObject();
             AutomatonHandler handler = (AutomatonHandler) stream.readObject();
-            Lex lex = new Lex(startState, states, handler, output);
-            lex.analyzeInput(input);
+            new Lex(startState, states, handler, output).analyzeInput(input);
         } catch (IOException | ClassNotFoundException ex) {
             // TODO: handle exception
         }

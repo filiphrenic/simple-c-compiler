@@ -14,7 +14,6 @@ import java.util.NoSuchElementException;
 import hr.fer.zemris.ppj.automaton.Automaton;
 import hr.fer.zemris.ppj.automaton.AutomatonHandler;
 import hr.fer.zemris.ppj.lex.LexRule;
-import hr.fer.zemris.ppj.lex.actions.AddLexClassAction;
 import hr.fer.zemris.ppj.lex.actions.ChangeStateAction;
 import hr.fer.zemris.ppj.lex.actions.GoBackAction;
 import hr.fer.zemris.ppj.lex.actions.IAction;
@@ -141,21 +140,17 @@ public class InputParser {
             Automaton automaton = handler.fromString(regEx, null);
 
             reader.readLine(); // reads the { symbol
+            String lexClass = reader.readLine();
             List<IAction> actions = new LinkedList<>();
-            while (true) {
-                if ((currLine = reader.readLine()).startsWith("}")) {
-                    break;
-                }
+            while (!(currLine = reader.readLine()).startsWith("}")) {
                 actions.add(createAction(currLine));
             }
-            IAction first = actions.remove(0);
-            actions.add(first);
 
             List<LexRule> lexRules = states.get(state);
             if (lexRules == null) {
                 lexRules = new LinkedList<>();
             }
-            lexRules.add(new LexRule(automaton, actions));
+            lexRules.add(new LexRule(lexClass, automaton, actions));
             states.put(state, lexRules);
         }
     }
@@ -168,7 +163,6 @@ public class InputParser {
      */
     private IAction createAction(String line) {
         String args[] = line.split("\\s");
-        // uzasna ifovnjaca ...
         /*
          * This iffing can be avoided by little modification of creating abstract class which implements
          * IAction interface and has private variable String for argument, and a few manipulations with
@@ -179,7 +173,6 @@ public class InputParser {
          * as some action name, it is assumed that it is lexical class. But, input file is said to be
          * always properly formatted so there shouldn't be any errors.
          */
-        //System.out.println(args[0]);
         if (args[0].equals(NEW_LINE)) {
             return new NewLineAction();
         } else if (args[0].equals(SKIP)) {
@@ -189,7 +182,7 @@ public class InputParser {
         } else if (args[0].equals(CHANGE_STATE)) {
             return new ChangeStateAction(args[1]);
         } else {
-            return new AddLexClassAction(args[0]);
+            throw new IllegalArgumentException("Undefined action: " + args[0]);
         }
     }
 

@@ -3,6 +3,7 @@ package hr.fer.zemris.ppj.lex.actions;
 import hr.fer.zemris.ppj.lex.Lex;
 
 /**
+ * Returns a part of the input to the lexical analyzer when called.
  * 
  * @author fhrenic
  */
@@ -12,6 +13,12 @@ public class GoBackAction implements IAction {
 
     private int goBack;
 
+    /**
+     * Creates a new action that will return symbols into lexical analyzers
+     * input.
+     * 
+     * @param goBack number of symbols that aren't returned
+     */
     public GoBackAction(int goBack) {
         this.goBack = goBack;
     }

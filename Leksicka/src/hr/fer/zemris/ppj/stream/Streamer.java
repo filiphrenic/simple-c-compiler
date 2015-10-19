@@ -31,10 +31,6 @@ public class Streamer {
     private static final String FILE_LOCATION = "./analizator/objects.ost";
     private static File FILE = new File(FILE_LOCATION);
 
-    static {
-        //FILE.mkdirs();
-    }
-
     // reading/writing to streams
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final int BUFFER_CAPACITY = 1 << 10;

@@ -23,6 +23,7 @@ public class GLA {
      * @throws FileNotFoundException if input file is not found
      */
     public static void main(String[] args) throws FileNotFoundException {
+        // TODO change input stream
         InputStream input = new FileInputStream("minusLang.lan");
         GLA generator = new GLA(input);
         generator.generateLA();
@@ -48,13 +49,12 @@ public class GLA {
      */
     public void generateLA() {
         InputParser parser = new InputParser(input);
-
         String result;
         try (ObjectOutputStream stream = Streamer.getOutput()) {
             stream.writeObject(parser.getStartState());
             stream.writeObject(parser.getStates());
             stream.writeObject(parser.getAutomatonHandler());
-            result = "Success";
+            result = "Generated tables";
         } catch (IOException ioe) {
             // TODO: handle exception
             result = "Error\n" + ioe.getMessage();

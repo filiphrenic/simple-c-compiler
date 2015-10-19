@@ -16,51 +16,11 @@ public class Automaton implements Serializable {
 
     private static final long serialVersionUID = -173462860031922118L;
 
-    public static void main(String[] args) {
-        String regex;
-
-        regex = "aaaa";
-        System.out.println('\n' + regex);
-        test(regex, regex);
-
-        regex = "ab|ba";
-        System.out.println('\n' + regex);
-        test(regex, "ab");
-        test(regex, "ba");
-        test(regex, "aB");
-        test(regex, "aba");
-
-        regex = "ab*";
-        System.out.println('\n' + regex);
-        test(regex, "a");
-        test(regex, "b");
-        test(regex, "ab");
-        test(regex, "abbbbbbbbbbb");
-
-        handler.fromString("0|1", "bit");
-        handler.fromString("\\n|\\t|\\_", "space");
-        handler.fromString("{space}*", "spaces");
-        handler.fromString("+|-", "op");
-        regex = "{bit}{spaces}{op}{spaces}{bit}";
-        System.out.println('\n' + regex);
-        test(regex, "1          \n    +1");
-
-    }
-
-    private static void test(String regex, String text) {
-        System.out.print("Testing " + text + " -> ");
-        Automaton a = handler.fromString(regex, null);
-        for (Character c : text.toCharArray()) {
-            a.consume(c);
-        }
-        System.out.println(a.accepts);
-    }
-
     /**
      * This object is used for providing and storing transitions. Automatons can
      * use transitions via this object.
      */
-    protected static AutomatonHandler handler = new AutomatonHandler();
+    private static AutomatonHandler handler = new AutomatonHandler();
 
     /**
      * Sets a new handler. This method should be called when you have an
@@ -86,14 +46,6 @@ public class Automaton implements Serializable {
     private int rightState; // this state is the only final state
     private Set<Integer> currentStates;
     private boolean accepts;
-
-    /**
-     * Creates an empty {@link Automaton} that only has 2 states but no
-     * transitions.
-     */
-    public Automaton() {
-        this(handler.getNewState(), handler.getNewState());
-    }
 
     /**
      * Creates a new automaton with given left and right state. This should be
@@ -156,16 +108,6 @@ public class Automaton implements Serializable {
     }
 
     /**
-     * Adds a set of states to the current states
-     * 
-     * @param states states to add
-     */
-    protected void addStates(Set<Integer> states) {
-        currentStates.addAll(states);
-        updateCurrentStates();
-    }
-
-    /**
      * @return the leftState
      */
     protected int leftState() {
@@ -189,7 +131,7 @@ public class Automaton implements Serializable {
     /**
      * Updates the current states to the epilon environment of those states.
      */
-    protected void updateCurrentStates() {
+    private void updateCurrentStates() {
         // epsilon environment
         accepts = false;
         Set<Integer> states;
