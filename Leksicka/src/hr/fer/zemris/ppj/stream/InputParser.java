@@ -92,7 +92,7 @@ public class InputParser {
             int regdefEnd = currLine.indexOf('}');
             String regDefName = currLine.substring(1, regdefEnd);
             String regEx = currLine.substring(regdefEnd + 2);
-            handler.fromString(regEx, regDefName);
+            handler.addRegularDefinition(regDefName, regEx);
         }
     }
 
@@ -137,7 +137,7 @@ public class InputParser {
             int idx = currLine.indexOf('>');
             String state = currLine.substring(1, idx);
             String regEx = currLine.substring(idx + 1);
-            Automaton automaton = handler.fromString(regEx, null);
+            Automaton automaton = handler.fromString(regEx);
 
             reader.readLine(); // reads the { symbol
             String lexClass = reader.readLine();

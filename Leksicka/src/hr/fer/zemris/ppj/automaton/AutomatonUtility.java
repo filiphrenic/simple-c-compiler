@@ -72,15 +72,25 @@ public class AutomatonUtility {
      * a regex.
      * 
      * @param regex expression in which we search the operator
-     * @param closer operator to search for
+     * @param open opening operator
+     * @param close close operator
      * @param startFrom starting index
      * @return index of a first found operator, -1 if none found
      */
-    public static int findCloser(String regex, char closer, int startFrom) {
+    public static int findCloser(String regex, char open, char close, int startFrom) {
         int len = regex.length();
+        int operators = 0;
         for (int idx = startFrom; idx < len; idx++) {
-            if (regex.charAt(idx) == closer && isOperator(regex, idx)) {
-                return idx;
+            char sym = regex.charAt(idx);
+            if (!isOperator(regex, idx)) {
+                continue;
+            }
+            if (sym == open) {
+                operators++;
+            } else if (sym == close) {
+                if (--operators == 0) {
+                    return idx;
+                }
             }
         }
         return -1;

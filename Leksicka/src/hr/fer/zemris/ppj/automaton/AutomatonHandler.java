@@ -27,8 +27,8 @@ public class AutomatonHandler implements Serializable {
     private HashMap<Integer, HashMap<Character, Integer>> transitions;
     // state -> set of states
     private HashMap<Integer, Set<Integer>> epsilonTransitions;
-    // regular definition -> automaton
-    private HashMap<String, Automaton> regularDefinitions;
+    // regular definition -> regex
+    private HashMap<String, String> regularDefinitions;
 
     /**
      * Creates a new, empty automaton handler.
@@ -50,26 +50,55 @@ public class AutomatonHandler implements Serializable {
     }
 
     /**
+     * Adds a regular definition to the handler so it can insert it into a
+     * regex.
+     * 
+     * @param regDefName it's name
+     * @param regex regex it represents
+     */
+    public void addRegularDefinition(String regDefName, String regex) {
+        regularDefinitions.put(regDefName, prepareRegex(regex));
+    }
+
+    /**
      * Creates a new automaton for a given <code>regex</code>.
-     * <code>regDefName</code> can be either <code>null</code> or a definitions
-     * name. If it is <code>null</code>, regex isn't saved in the regdef table
      * 
      * @param regex regular expression used to create an automaton
-     * @param regDefName name of the regular definition (if it's not a regular
-     *            definition, pass <code>null</code>)
      */
-    public Automaton fromString(String regex, String regDefName) {
-        Automaton automaton = transform(regex);
-        if (regDefName != null) {
-            regularDefinitions.put(regDefName, automaton);
+    public Automaton fromString(String regex) {
+        return transform(prepareRegex(regex));
+    }
+
+    /**
+     * Removes regular definitions from regex, swaps them with real regular
+     * expressions.
+     * 
+     * @param regex regular expression
+     * @return adjusted regular expression
+     */
+    private String prepareRegex(String regex) {
+        StringBuilder sb = new StringBuilder();
+        int len = regex.length();
+        for (int idx = 0; idx < len; idx++) {
+            if (regex.charAt(idx) == '{' && AutomatonUtility.isOperator(regex, idx)) {
+                int cidx = AutomatonUtility.findCloser(regex, '{', '}', idx);
+                String regdef = regex.substring(idx + 1, cidx);
+                String reg = regularDefinitions.get(regdef);
+                sb.append('(');
+                sb.append(reg);
+                sb.append(')');
+                idx = cidx;
+            } else {
+                sb.append(regex.charAt(idx));
+            }
         }
-        return automaton;
+        return sb.toString();
     }
 
     /**
      * Transforms the given regular expression into an {@link Automaton}
      * 
-     * @param regex regula expression
+     * @param regex regular expression
      * @return automaton
      */
     private Automaton transform(String regex) {
@@ -104,16 +133,14 @@ public class AutomatonHandler implements Serializable {
                         prefixed = true;
                         continue;
                     }
-                    boolean bracket = symbol == '(';
-                    if (bracket || symbol == '{') {
+                    if (symbol == '(') {
                         // (regex) or {regDef}
-                        char closing = bracket ? ')' : '}';
-                        int close = AutomatonUtility.findCloser(regex, closing, idx + 1);
-                        String subs = regex.substring(idx + 1, close);
-                        Automaton tmp = bracket ? transform(subs) : regularDefinitions.get(subs);
+                        int closing = AutomatonUtility.findCloser(regex, '(', ')', idx);
+                        String subs = regex.substring(idx + 1, closing);
+                        Automaton tmp = transform(subs);
                         state1 = tmp.leftState();
                         state2 = tmp.rightState();
-                        idx = close;
+                        idx = closing;
                     } else {
                         state1 = getNewState();
                         state2 = getNewState();
