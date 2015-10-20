@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import hr.fer.zemris.ppj.automaton.AutomatonHandler;
-import hr.fer.zemris.ppj.lex.Lex;
-import hr.fer.zemris.ppj.lex.LexRule;
+import hr.fer.zemris.ppj.lexical.Lex;
+import hr.fer.zemris.ppj.lexical.LexRule;
 import hr.fer.zemris.ppj.stream.Streamer;
 
 /**
@@ -25,8 +25,8 @@ public class LA {
     public static void main(String[] args) throws FileNotFoundException {
         // TODO change input stream
         //InputStream input = new FileInputStream("primjer.minus.txt");
-        InputStream input = new FileInputStream("test.in");
-        //InputStream input = System.in;
+        //InputStream input = new FileInputStream("test.in");
+        InputStream input = System.in;
         new LA(input, System.out).lexicalAnalysis();
     }
 

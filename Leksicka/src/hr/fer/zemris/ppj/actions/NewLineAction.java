@@ -1,6 +1,6 @@
-package hr.fer.zemris.ppj.lex.actions;
+package hr.fer.zemris.ppj.actions;
 
-import hr.fer.zemris.ppj.lex.Lex;
+import hr.fer.zemris.ppj.lexical.Lex;
 
 /**
  * This action increments the number of lines in the analyzer.

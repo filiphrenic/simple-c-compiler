@@ -25,8 +25,8 @@ public class GLA {
     public static void main(String[] args) throws FileNotFoundException {
         // TODO change input stream
         //InputStream input = new FileInputStream("minusLang.lan");
-        InputStream input = new FileInputStream("test.lan");
-        //InputStream input = System.in;
+        //InputStream input = new FileInputStream("test.lan");
+        InputStream input = System.in;
         GLA generator = new GLA(input);
         generator.generateLA();
     }

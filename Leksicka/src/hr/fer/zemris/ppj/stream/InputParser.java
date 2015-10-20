@@ -11,14 +11,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import hr.fer.zemris.ppj.actions.ChangeStateAction;
+import hr.fer.zemris.ppj.actions.GoBackAction;
+import hr.fer.zemris.ppj.actions.IAction;
+import hr.fer.zemris.ppj.actions.NewLineAction;
+import hr.fer.zemris.ppj.actions.SkipAction;
 import hr.fer.zemris.ppj.automaton.Automaton;
 import hr.fer.zemris.ppj.automaton.AutomatonHandler;
-import hr.fer.zemris.ppj.lex.LexRule;
-import hr.fer.zemris.ppj.lex.actions.ChangeStateAction;
-import hr.fer.zemris.ppj.lex.actions.GoBackAction;
-import hr.fer.zemris.ppj.lex.actions.IAction;
-import hr.fer.zemris.ppj.lex.actions.NewLineAction;
-import hr.fer.zemris.ppj.lex.actions.SkipAction;
+import hr.fer.zemris.ppj.lexical.LexRule;
 
 /**
  * Class which reads definitions for generator of lexical analyzer and offers

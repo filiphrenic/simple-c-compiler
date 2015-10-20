@@ -1,4 +1,4 @@
-package hr.fer.zemris.ppj.lex;
+package hr.fer.zemris.ppj.lexical;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,8 +1,8 @@
-package hr.fer.zemris.ppj.lex.actions;
+package hr.fer.zemris.ppj.actions;
 
 import java.io.Serializable;
 
-import hr.fer.zemris.ppj.lex.Lex;
+import hr.fer.zemris.ppj.lexical.Lex;
 
 /**
  * An interface for actions that are executed when a certain rule has to be
