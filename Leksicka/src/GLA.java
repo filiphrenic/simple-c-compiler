@@ -1,4 +1,3 @@
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,10 +21,7 @@ public class GLA {
      * @param args not used
      * @throws FileNotFoundException if input file is not found
      */
-    public static void main(String[] args) throws FileNotFoundException {
-        // TODO change input stream
-        //InputStream input = new FileInputStream("minusLang.lan");
-        //InputStream input = new FileInputStream("test.lan");
+    public static void main(String[] args) {
         InputStream input = System.in;
         GLA generator = new GLA(input);
         generator.generateLA();

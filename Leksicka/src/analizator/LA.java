@@ -1,6 +1,5 @@
 package analizator;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,9 +22,6 @@ import hr.fer.zemris.ppj.stream.Streamer;
 public class LA {
 
     public static void main(String[] args) throws FileNotFoundException {
-        // TODO change input stream
-        //InputStream input = new FileInputStream("primjer.minus.txt");
-        //InputStream input = new FileInputStream("test.in");
         InputStream input = System.in;
         new LA(input, System.out).lexicalAnalysis();
     }
