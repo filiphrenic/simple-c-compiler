@@ -1,4 +1,4 @@
-package analizator;
+
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
