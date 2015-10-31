@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,10 +21,11 @@ public class GLA {
      * Method which is called when program starts.
      * 
      * @param args not used
-     * @throws FileNotFoundException if input file is not found
+     * @throws FileNotFoundException
      */
-    public static void main(String[] args) {
-        InputStream input = System.in;
+    public static void main(String[] args) throws FileNotFoundException {
+        InputStream input = new FileInputStream(new File("minusLang.lan"));
+        //InputStream input = System.in;
         GLA generator = new GLA(input);
         generator.generateLA();
     }
@@ -51,7 +54,6 @@ public class GLA {
         try (ObjectOutputStream stream = Streamer.getOutput()) {
             stream.writeObject(parser.getStartState());
             stream.writeObject(parser.getStates());
-            stream.writeObject(parser.getAutomatonHandler());
             result = "Generated tables";
         } catch (IOException ioe) {
             // TODO: handle exception

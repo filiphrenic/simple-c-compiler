@@ -17,7 +17,7 @@ public class LexRule implements Serializable {
     private static final long serialVersionUID = -3606885506411201521L;
 
     private String lexClass;
-    private Automaton automaton;
+    private Automaton<Character> automaton;
     private List<IAction> actions;
 
     /**
@@ -27,7 +27,7 @@ public class LexRule implements Serializable {
      * @param automaton regex
      * @param actions list of actions that are executeds
      */
-    public LexRule(String lexClass, Automaton automaton, List<IAction> actions) {
+    public LexRule(String lexClass, Automaton<Character> automaton, List<IAction> actions) {
         this.lexClass = lexClass;
         this.automaton = automaton;
         this.actions = actions;
@@ -57,7 +57,7 @@ public class LexRule implements Serializable {
      * 
      * @return automaton that matches regex
      */
-    public Automaton getAutomaton() {
+    public Automaton<Character> getAutomaton() {
         return automaton;
     }
 

@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import hr.fer.zemris.ppj.automaton.Automaton;
-import hr.fer.zemris.ppj.automaton.AutomatonHandler;
 import hr.fer.zemris.ppj.stream.Streamer;
 
 /**
@@ -40,9 +39,7 @@ public class Lex {
      * @param handler has automaton transitions
      * @param output output stream that is used for printing results
      */
-    public Lex(String startState, HashMap<String, List<LexRule>> states, AutomatonHandler handler,
-            OutputStream output) {
-        Automaton.setHandler(handler); // don't change this
+    public Lex(String startState, HashMap<String, List<LexRule>> states, OutputStream output) {
         this.output = output;
         this.states = states;
         changeState(startState);
@@ -71,7 +68,7 @@ public class Lex {
                 boolean accepted = false;
                 char symbol = input.charAt(++endIndex);
                 for (LexRule rule : currentRules) {
-                    Automaton cur = rule.getAutomaton();
+                    Automaton<Character> cur = rule.getAutomaton();
                     if (cur.isDead()) {
                         continue;
                     }

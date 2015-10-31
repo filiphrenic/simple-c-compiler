@@ -17,7 +17,7 @@ import hr.fer.zemris.ppj.actions.IAction;
 import hr.fer.zemris.ppj.actions.NewLineAction;
 import hr.fer.zemris.ppj.actions.SkipAction;
 import hr.fer.zemris.ppj.automaton.Automaton;
-import hr.fer.zemris.ppj.automaton.AutomatonHandler;
+import hr.fer.zemris.ppj.automaton.AutomatonCreator;
 import hr.fer.zemris.ppj.lexical.LexRule;
 
 /**
@@ -38,7 +38,6 @@ public class InputParser {
     private List<String> stateNames;
     private List<String> lexClasses;
     private HashMap<String, List<LexRule>> states;
-    private AutomatonHandler handler;
 
     private String currLine;
 
@@ -52,7 +51,6 @@ public class InputParser {
         stateNames = new ArrayList<>();
         lexClasses = new ArrayList<>();
         states = new LinkedHashMap<>();
-        handler = Automaton.getHandler();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
             parse(reader);
@@ -92,7 +90,7 @@ public class InputParser {
             int regdefEnd = currLine.indexOf('}');
             String regDefName = currLine.substring(1, regdefEnd);
             String regEx = currLine.substring(regdefEnd + 2);
-            handler.addRegularDefinition(regDefName, regEx);
+            AutomatonCreator.addRegularDefinition(regDefName, regEx);
         }
     }
 
@@ -137,7 +135,7 @@ public class InputParser {
             int idx = currLine.indexOf('>');
             String state = currLine.substring(1, idx);
             String regEx = currLine.substring(idx + 1);
-            Automaton automaton = handler.fromString(regEx);
+            Automaton<Character> automaton = AutomatonCreator.fromString(regEx);
 
             reader.readLine(); // reads the { symbol
             String lexClass = reader.readLine();
@@ -208,15 +206,6 @@ public class InputParser {
      */
     public HashMap<String, List<LexRule>> getStates() {
         return states;
-    }
-
-    /**
-     * Gives the {@link AutomatonHandler}.
-     * 
-     * @return automaton handler
-     */
-    public AutomatonHandler getAutomatonHandler() {
-        return handler;
     }
 
     /**

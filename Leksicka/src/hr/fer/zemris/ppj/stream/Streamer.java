@@ -22,11 +22,11 @@ import java.nio.charset.StandardCharsets;
  */
 public class Streamer {
 
-    // TODO assign input/output file
     // file used for communication between GLA and LA
     private static final String FILE_LOCATION = "analizator/objects.ost";
     private static File FILE = new File(FILE_LOCATION);
-    static{
+
+    static {
         FILE.getParentFile().mkdirs();
     }
 

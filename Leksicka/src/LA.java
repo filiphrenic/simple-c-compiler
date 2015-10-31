@@ -1,5 +1,5 @@
-
-
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 
-import hr.fer.zemris.ppj.automaton.AutomatonHandler;
 import hr.fer.zemris.ppj.lexical.Lex;
 import hr.fer.zemris.ppj.lexical.LexRule;
 import hr.fer.zemris.ppj.stream.Streamer;
@@ -22,7 +21,8 @@ import hr.fer.zemris.ppj.stream.Streamer;
 public class LA {
 
     public static void main(String[] args) throws FileNotFoundException {
-        InputStream input = System.in;
+        InputStream input = new FileInputStream(new File("primjer.minus.txt"));
+        //InputStream input = System.in;
         new LA(input, System.out).lexicalAnalysis();
     }
 
@@ -50,8 +50,7 @@ public class LA {
             String startState = (String) stream.readObject();
             HashMap<String, List<LexRule>> states = (HashMap<String, List<LexRule>>) stream
                     .readObject();
-            AutomatonHandler handler = (AutomatonHandler) stream.readObject();
-            new Lex(startState, states, handler, output).analyzeInput(input);
+            new Lex(startState, states, output).analyzeInput(input);
         } catch (IOException | ClassNotFoundException ex) {
             // TODO: handle exception
         }
