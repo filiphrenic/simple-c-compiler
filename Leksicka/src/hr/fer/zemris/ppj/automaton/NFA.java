@@ -1,6 +1,5 @@
 package hr.fer.zemris.ppj.automaton;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -17,7 +16,7 @@ public class NFA<St, Sym> implements Automaton<Sym> {
     private St startState;
     private Set<St> acceptableStates;
     private Set<St> currentStates;
-    private Map<St, Map<Sym, List<St>>> transitions;
+    private Map<St, Map<Sym, Set<St>>> transitions;
 
     /**
      * Creates a new automaton with given left and right state. This should be
@@ -29,7 +28,7 @@ public class NFA<St, Sym> implements Automaton<Sym> {
      * @param transitions a 'normal' transitions map
      * @param epsilonTransitions epsilon transitions map
      */
-    public NFA(St startState, Set<St> acceptableStates, Map<St, Map<Sym, List<St>>> transitions) {
+    public NFA(St startState, Set<St> acceptableStates, Map<St, Map<Sym, Set<St>>> transitions) {
         this.startState = startState;
         this.acceptableStates = acceptableStates;
         this.transitions = transitions;
@@ -37,15 +36,21 @@ public class NFA<St, Sym> implements Automaton<Sym> {
         reset();
     }
 
+    public void debag(Sym s) {
+        System.out.println("jedem " + s);
+        consume(s);
+        System.out.println("prihvacam? " + accepts());
+    }
+
     @Override
     public void consume(Sym symbol) {
         Set<St> states = new TreeSet<>();
         for (St state : currentStates) {
-            Map<Sym, List<St>> transitionMap = transitions.get(state);
+            Map<Sym, Set<St>> transitionMap = transitions.get(state);
             if (transitionMap == null) {
                 continue;
             }
-            List<St> transitionStates = transitionMap.get(symbol);
+            Set<St> transitionStates = transitionMap.get(symbol);
             if (transitionStates != null) {
                 states.addAll(transitionStates);
             }

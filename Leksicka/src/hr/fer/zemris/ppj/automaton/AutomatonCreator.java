@@ -3,6 +3,7 @@ package hr.fer.zemris.ppj.automaton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Provides various static methods for automaton creation from regexes.
@@ -35,7 +36,7 @@ public class AutomatonCreator {
      * 
      * @param regex regular expression used to create an automaton
      */
-    public static Automaton<Character> fromString(String regex) {
+    public static EpsilonNFA<Integer, Character> fromString(String regex) {
         return transform(prepareRegex(regex));
     }
 
@@ -159,8 +160,8 @@ public class AutomatonCreator {
      */
     private static EpsilonNFA<Integer, Character> getEmptyEnfa() {
         return new EpsilonNFA<Integer, Character>(getNewState(), getNewState(),
-                new HashMap<Integer, Map<Character, List<Integer>>>(),
-                new HashMap<Integer, List<Integer>>());
+                new HashMap<Integer, Map<Character, Set<Integer>>>(),
+                new HashMap<Integer, Set<Integer>>());
     }
 
 }
