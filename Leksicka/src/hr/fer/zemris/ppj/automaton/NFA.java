@@ -1,5 +1,7 @@
 package hr.fer.zemris.ppj.automaton;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -34,12 +36,6 @@ public class NFA<St, Sym> implements Automaton<Sym> {
         this.transitions = transitions;
         currentStates = new TreeSet<>();
         reset();
-    }
-
-    public void debag(Sym s) {
-        System.out.println("jedem " + s);
-        consume(s);
-        System.out.println("prihvacam? " + accepts());
     }
 
     @Override
@@ -77,6 +73,103 @@ public class NFA<St, Sym> implements Automaton<Sym> {
     @Override
     public boolean isDead() {
         return currentStates.isEmpty();
+    }
+
+    /**
+     * Returns a set of states that are accessible from at least one of the
+     * given states via given symbol
+     * 
+     * @param states
+     * @param symbol
+     * @return states
+     */
+    private Set<St> applyTransition(Set<St> states, Sym symbol) {
+        Set<St> trans = new TreeSet<>();
+        for (St state : states) {
+            Map<Sym, Set<St>> transitionMap = transitions.get(state);
+            if (transitionMap == null) {
+                continue;
+            }
+            Set<St> transitionStates = transitionMap.get(symbol);
+            if (transitionStates == null) {
+                continue;
+            }
+            trans.addAll(transitionStates);
+        }
+        return trans;
+    }
+
+    /**
+     * All symbols for which there is at least one transition from one of the
+     * states in the set.
+     * 
+     * @param states
+     * @return symbols
+     */
+    private Set<Sym> getSymbols(Set<St> states) {
+        Set<Sym> symbols = new TreeSet<>();
+        for (St s : states) {
+            Map<Sym, Set<St>> map = transitions.get(s);
+            if (map != null) {
+                symbols.addAll(map.keySet());
+            }
+        }
+        return symbols;
+    }
+
+    /**
+     * Converts a nfa to a dfa.
+     * 
+     * @param nfa
+     * @return dfa
+     */
+    public static DFA<Integer, Character> toDFA(NFA<Integer, Character> nfa) {
+        // for dfa
+        int state = 0;
+        Set<Integer> acceptableStates = new TreeSet<>();
+        Map<Integer, Map<Character, Integer>> dfaTransitions = new HashMap<>();
+
+        // helper
+        Map<Set<Integer>, Integer> aliases = new HashMap<>();
+
+        // initialization
+        LinkedList<Set<Integer>> queue = new LinkedList<>();
+        Set<Integer> states = new TreeSet<>();
+        states.add(nfa.startState);
+        aliases.put(states, state++);
+
+        queue.add(states);
+        while (!queue.isEmpty()) {
+            states = queue.removeFirst();
+            Integer alias = aliases.get(states); // will exist            
+
+            Set<Character> symbols = nfa.getSymbols(states);
+            Map<Character, Integer> transitions = new HashMap<>();
+
+            for (Character symbol : symbols) {
+                Set<Integer> transitionStates = nfa.applyTransition(states, symbol);
+                Integer transAlias = aliases.get(transitionStates);
+
+                if (transAlias == null) {
+                    transAlias = state++;
+                    aliases.put(transitionStates, transAlias);
+                    queue.add(transitionStates);
+
+                    for (Integer st : transitionStates) {
+                        if (nfa.acceptableStates.contains(st)) {
+                            acceptableStates.add(transAlias);
+                            break;
+                        }
+                    }
+                }
+
+                transitions.put(symbol, transAlias);
+            }
+
+            dfaTransitions.put(alias, transitions);
+        }
+
+        return new DFA<Integer, Character>(0, acceptableStates, dfaTransitions);
     }
 
 }

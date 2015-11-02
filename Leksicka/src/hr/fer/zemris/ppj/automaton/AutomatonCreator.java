@@ -36,8 +36,10 @@ public class AutomatonCreator {
      * 
      * @param regex regular expression used to create an automaton
      */
-    public static EpsilonNFA<Integer, Character> fromString(String regex) {
-        return transform(prepareRegex(regex));
+    public static Automaton<Character> fromString(String regex) {
+        EpsilonNFA<Integer, Character> enfa = transform(prepareRegex(regex));
+        DFA<Integer, Character> dfa = NFA.toDFA(enfa.toNFA());
+        return dfa;
     }
 
     /**
@@ -45,7 +47,7 @@ public class AutomatonCreator {
      * 
      * @return state
      */
-    private static Integer getNewState() {
+    protected static Integer getNewState() {
         return Integer.valueOf(state++);
     }
 

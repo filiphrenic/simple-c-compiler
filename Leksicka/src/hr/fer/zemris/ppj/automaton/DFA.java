@@ -2,6 +2,7 @@ package hr.fer.zemris.ppj.automaton;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Implementation of a deterministic finite state automaton.
@@ -28,6 +29,7 @@ public class DFA<St, Sym> implements Automaton<Sym> {
         this.startState = startState;
         this.acceptableStates = acceptableStates;
         this.transitions = transitions;
+        reset();
     }
 
     @Override
@@ -37,6 +39,7 @@ public class DFA<St, Sym> implements Automaton<Sym> {
         }
         Map<Sym, St> transition = transitions.get(currentState);
         if (transition == null) {
+            currentState = null;
             return;
         }
         currentState = transition.get(symbol);
@@ -59,6 +62,46 @@ public class DFA<St, Sym> implements Automaton<Sym> {
     @Override
     public boolean isDead() {
         return currentState == null;
+    }
+
+    // minimization
+    /**
+     * Minimizes this dfa.
+     */
+    public void minimize() {
+        removeUnreachableStates();
+        joinEquivalentStates();
+    }
+
+    /**
+     * Removes unreachable states. Only saves memory.
+     */
+    private void removeUnreachableStates() {
+        Set<St> reachable = new TreeSet<>();
+        reachable.add(startState);
+
+        Set<St> help;
+        do {
+            help = new TreeSet<>();
+            for (St state : reachable) {
+                Map<Sym, St> map = transitions.get(state);
+                if (map == null) {
+                    continue;
+                }
+                help.addAll(map.values());
+            }
+        } while (reachable.addAll(help));
+
+        for (St state : reachable) {
+            transitions.remove(state);
+        }
+    }
+
+    /**
+     * Join equivalent states into one.
+     */
+    private void joinEquivalentStates() {
+        // TODO
     }
 
 }
