@@ -1,0 +1,16 @@
+Antonio
+parsirati datoteku
+	izrada gramatike
+
+Domagoj
+zapocinje ref. tran. okruzenje
+	pronalaženje praznih znakova (102. stranica)
+
+Filip
+generator sintaksnog parsera - generiranje automata
+	izraditi stavke (148. stranica)
+
+Marko
+sintaksni parser koji upotrebljava tablice
+	gradnja stabla
+	toString metoda
