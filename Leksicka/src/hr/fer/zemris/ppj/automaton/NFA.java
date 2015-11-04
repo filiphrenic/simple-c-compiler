@@ -1,5 +1,6 @@
 package hr.fer.zemris.ppj.automaton;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -123,31 +124,30 @@ public class NFA<St, Sym> implements Automaton<Sym> {
      * @param nfa
      * @return dfa
      */
-    public static DFA<Integer, Character> toDFA(NFA<Integer, Character> nfa) {
+    public DFA<Integer, Sym> toDFA() {
         // for dfa
         int state = 0;
         Set<Integer> acceptableStates = new TreeSet<>();
-        Map<Integer, Map<Character, Integer>> dfaTransitions = new HashMap<>();
+        Map<Integer, Map<Sym, Integer>> dfaTransitions = new HashMap<>();
 
-        // helper
-        Map<Set<Integer>, Integer> aliases = new HashMap<>();
+        // helper : set of states -> alias state
+        Map<Set<St>, Integer> aliases = new HashMap<>();
 
         // initialization
-        LinkedList<Set<Integer>> queue = new LinkedList<>();
-        Set<Integer> states = new TreeSet<>();
-        states.add(nfa.startState);
+        LinkedList<Set<St>> queue = new LinkedList<>();
+        Set<St> states = Collections.singleton(startState);
         aliases.put(states, state++);
 
         queue.add(states);
         while (!queue.isEmpty()) {
             states = queue.removeFirst();
-            Integer alias = aliases.get(states); // will exist            
+            Integer alias = aliases.get(states); // will exist
 
-            Set<Character> symbols = nfa.getSymbols(states);
-            Map<Character, Integer> transitions = new HashMap<>();
+            Set<Sym> symbols = getSymbols(states);
+            Map<Sym, Integer> transitions = new HashMap<>();
 
-            for (Character symbol : symbols) {
-                Set<Integer> transitionStates = nfa.applyTransition(states, symbol);
+            for (Sym symbol : symbols) {
+                Set<St> transitionStates = applyTransition(states, symbol);
                 Integer transAlias = aliases.get(transitionStates);
 
                 if (transAlias == null) {
@@ -155,21 +155,19 @@ public class NFA<St, Sym> implements Automaton<Sym> {
                     aliases.put(transitionStates, transAlias);
                     queue.add(transitionStates);
 
-                    for (Integer st : transitionStates) {
-                        if (nfa.acceptableStates.contains(st)) {
+                    for (St st : transitionStates) {
+                        if (this.acceptableStates.contains(st)) {
                             acceptableStates.add(transAlias);
                             break;
                         }
                     }
                 }
-
                 transitions.put(symbol, transAlias);
             }
-
             dfaTransitions.put(alias, transitions);
         }
 
-        return new DFA<Integer, Character>(0, acceptableStates, dfaTransitions);
+        return new DFA<Integer, Sym>(0, acceptableStates, dfaTransitions);
     }
 
 }
