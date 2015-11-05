@@ -11,4 +11,9 @@ public class Symbol {
         Terminal, NonTerminal, Sync;
     }
 
+	public Symbol(SymbolType type) {
+		super();
+		this.type = type;
+	}
+
 }
