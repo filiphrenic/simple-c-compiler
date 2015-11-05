@@ -1,13 +1,14 @@
-package hr.fer.zemris.ppj.actions;
+package hr.fer.zemris.ppj.lexical.actions;
 
 import hr.fer.zemris.ppj.lexical.Lex;
+import hr.fer.zemris.ppj.lexical.LexAction;
 
 /**
  * This action increments the number of lines in the analyzer.
  * 
  * @author fhrenic
  */
-public class NewLineAction implements IAction {
+public class NewLineAction implements LexAction {
 
     private static final long serialVersionUID = 5071566988664731887L;
 

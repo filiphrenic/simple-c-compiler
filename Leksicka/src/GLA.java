@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 
-import hr.fer.zemris.ppj.stream.InputParser;
+import hr.fer.zemris.ppj.stream.LexicalInputParser;
 import hr.fer.zemris.ppj.stream.Streamer;
 
 /**
@@ -49,7 +49,7 @@ public class GLA {
      * Generates objects needed by the lexical analyzer.
      */
     public void generateLA() {
-        InputParser parser = new InputParser(input);
+        LexicalInputParser parser = new LexicalInputParser(input);
         String result;
         try (ObjectOutputStream stream = Streamer.getOutput()) {
             stream.writeObject(parser.getStartState());

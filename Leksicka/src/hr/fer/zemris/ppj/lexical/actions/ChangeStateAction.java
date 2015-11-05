@@ -1,13 +1,14 @@
-package hr.fer.zemris.ppj.actions;
+package hr.fer.zemris.ppj.lexical.actions;
 
 import hr.fer.zemris.ppj.lexical.Lex;
+import hr.fer.zemris.ppj.lexical.LexAction;
 
 /**
  * Changes current state of lexical analyzer.
  * 
  * @author fhrenic
  */
-public class ChangeStateAction implements IAction {
+public class ChangeStateAction implements LexAction {
 
     private static final long serialVersionUID = -3833574174991832894L;
 

@@ -3,7 +3,6 @@ package hr.fer.zemris.ppj.lexical;
 import java.io.Serializable;
 import java.util.List;
 
-import hr.fer.zemris.ppj.actions.IAction;
 import hr.fer.zemris.ppj.automaton.Automaton;
 
 /**
@@ -18,7 +17,7 @@ public class LexRule implements Serializable {
 
     private String lexClass;
     private Automaton<Character> automaton;
-    private List<IAction> actions;
+    private List<LexAction> actions;
 
     /**
      * Creates a new rule from a given automaton (regex), and a list of actions
@@ -27,7 +26,7 @@ public class LexRule implements Serializable {
      * @param automaton regex
      * @param actions list of actions that are executeds
      */
-    public LexRule(String lexClass, Automaton<Character> automaton, List<IAction> actions) {
+    public LexRule(String lexClass, Automaton<Character> automaton, List<LexAction> actions) {
         this.lexClass = lexClass;
         this.automaton = automaton;
         this.actions = actions;
@@ -67,7 +66,7 @@ public class LexRule implements Serializable {
      * @param lex analyzer
      */
     public void execute(Lex lex) {
-        for (IAction action : actions) {
+        for (LexAction action : actions) {
             action.execute(lex);
         }
     }

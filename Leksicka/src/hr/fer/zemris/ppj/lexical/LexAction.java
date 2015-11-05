@@ -1,8 +1,6 @@
-package hr.fer.zemris.ppj.actions;
+package hr.fer.zemris.ppj.lexical;
 
 import java.io.Serializable;
-
-import hr.fer.zemris.ppj.lexical.Lex;
 
 /**
  * An interface for actions that are executed when a certain rule has to be
@@ -10,7 +8,7 @@ import hr.fer.zemris.ppj.lexical.Lex;
  * 
  * @author fhrenic
  */
-public interface IAction extends Serializable {
+public interface LexAction extends Serializable {
 
     /**
      * This method is called when a rule that has this action matches the input.

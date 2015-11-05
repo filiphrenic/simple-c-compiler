@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * @author fhrenic
  */
-public class Tester {
+public class LexTester {
 
     public void generateFiles() throws IOException {
         String path = "tests";
@@ -49,7 +49,7 @@ public class Tester {
     }
 
     public static void main(String[] args) throws IOException {
-        Tester t = new Tester();
+        LexTester t = new LexTester();
         t.generateFiles();
         t.testIt();
     }

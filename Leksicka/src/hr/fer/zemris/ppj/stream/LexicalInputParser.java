@@ -11,14 +11,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import hr.fer.zemris.ppj.actions.ChangeStateAction;
-import hr.fer.zemris.ppj.actions.GoBackAction;
-import hr.fer.zemris.ppj.actions.IAction;
-import hr.fer.zemris.ppj.actions.NewLineAction;
-import hr.fer.zemris.ppj.actions.SkipAction;
 import hr.fer.zemris.ppj.automaton.Automaton;
 import hr.fer.zemris.ppj.automaton.AutomatonCreator;
+import hr.fer.zemris.ppj.lexical.LexAction;
 import hr.fer.zemris.ppj.lexical.LexRule;
+import hr.fer.zemris.ppj.lexical.actions.ChangeStateAction;
+import hr.fer.zemris.ppj.lexical.actions.GoBackAction;
+import hr.fer.zemris.ppj.lexical.actions.NewLineAction;
+import hr.fer.zemris.ppj.lexical.actions.SkipAction;
 
 /**
  * Class which reads definitions for generator of lexical analyzer and offers
@@ -27,7 +27,7 @@ import hr.fer.zemris.ppj.lexical.LexRule;
  * @author fhrenic
  * @author ajuric
  */
-public class InputParser {
+public class LexicalInputParser {
 
     // action names
     public static final String NEW_LINE = "NOVI_REDAK";
@@ -42,12 +42,12 @@ public class InputParser {
     private String currLine;
 
     /**
-     * Creates new instance of {@link InputParser} which reads given input and
+     * Creates new instance of {@link LexicalInputParser} which reads given input and
      * parses it.
      * 
      * @param input which contains definitions for generator of lexical analyzer
      */
-    public InputParser(InputStream input) {
+    public LexicalInputParser(InputStream input) {
         stateNames = new ArrayList<>();
         lexClasses = new ArrayList<>();
         states = new LinkedHashMap<>();
@@ -139,7 +139,7 @@ public class InputParser {
 
             reader.readLine(); // reads the { symbol
             String lexClass = reader.readLine();
-            List<IAction> actions = new LinkedList<>();
+            List<LexAction> actions = new LinkedList<>();
             while (!(currLine = reader.readLine()).startsWith("}")) {
                 actions.add(createAction(currLine));
             }
@@ -159,7 +159,7 @@ public class InputParser {
      * @param line which contains some action
      * @return action parsed from given line
      */
-    private IAction createAction(String line) {
+    private LexAction createAction(String line) {
         String args[] = line.split("\\s");
         /*
          * This iffing can be avoided by little modification of creating abstract class which implements
