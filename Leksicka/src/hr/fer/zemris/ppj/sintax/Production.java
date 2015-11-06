@@ -11,8 +11,8 @@ public class Production {
     private Symbol lhs; // left hand side
     private List<Symbol> rhs; // right hand side;
 
-    public List<Symbol> GetLeftHandSide(){
-    	return rhs;
+    public Symbol GetLeftHandSide(){
+    	return lhs;
     }
     public List<Symbol> GetRightHandSide(){
     	return rhs;

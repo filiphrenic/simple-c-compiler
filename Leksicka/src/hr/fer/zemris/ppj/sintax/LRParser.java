@@ -15,7 +15,11 @@ import java.util.Vector;
 public class LRParser {
 	Stack<Symbol> stackSymbol;
 	Stack<Integer> stackState;
-	int StartState; 
+	Vector<Symbol> input;
+	Symbol currentSym;
+	int inputindex;
+	int StartState;
+	boolean running;
 	Symbol StartStackSymbol;
     // stanje -> ( znak -> akcija )
     // Akcija i NovoStanje su objedinjeni u ovoj
@@ -28,25 +32,38 @@ public class LRParser {
 		this.StartStackSymbol = startStackSymbol;
 		this.StartState = startState;
 		this.actions = table;
+		this.inputindex = 0;
 	}
     
-    public void analyzeInput(Vector<Symbol> input) throws IOException {
+    public LRNode analyzeInput(Vector<Symbol> input) throws IOException {
+    	this.input = input;
+    	running = true;
     	stackState.push(StartState);
     	stackSymbol.push(StartStackSymbol);
-    	for( int i = 0; i < input.size(); i++ ){
-    		actions.get(stackState.peek()).get(input).execute(this);
-    	}
+    	while(running)
+    		actions.get(stackState.peek()).get(currentSym).execute(this);
+    	
+    	return tree;
     }
     public void AcceptAction(){
-    	
+    	System.out.println(tree.toString());
+    	this.running = false;
     }
     public void MoveAction( Integer newState ){
-    	
+    	currentSym = input.elementAt(this.inputindex++);
+    	stackState.push(newState);
+    	stackSymbol.push(currentSym);
     }
     public void PutAction( Integer newState ){
-    	
+    	stackState.push(newState);
     }
     public void ReduceAction( Production production ){
-    	
+    	//todo tree generation
+    	for( int i = 0; i < production.GetRightHandSide().size(); i++ ){
+    		stackState.pop();
+    		stackSymbol.pop();
+    	}
+    	stackSymbol.push(production.GetLeftHandSide());
+    	actions.get(stackState.peek()).get(stackSymbol.peek()).execute(this);
     }
 }

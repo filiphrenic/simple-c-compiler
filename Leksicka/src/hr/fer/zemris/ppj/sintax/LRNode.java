@@ -27,9 +27,8 @@ public class LRNode {
     	}
     	return ret;
     }
-    public void addLeaf( Production production ){
-    	for (Symbol elem:production.GetRightHandSide()) {
-			children.add(new LRNode(elem));
-		}
+    
+    public void AddChild( LRNode child ){
+    	this.children.add(child);
     }
 }

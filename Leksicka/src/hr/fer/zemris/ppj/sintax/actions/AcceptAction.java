@@ -10,6 +10,6 @@ public class AcceptAction implements LRAction {
 
     @Override
     public void execute(LRParser parser) {
-        // TODO
+        parser.AcceptAction();
     }
 }
