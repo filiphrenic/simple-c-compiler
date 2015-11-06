@@ -15,6 +15,6 @@ public class PutAction implements LRAction {
 
     @Override
     public void execute(LRParser parser) {
-        parser.PutAction(this.newState);
+        parser.putAction(this.newState);
     }
 }

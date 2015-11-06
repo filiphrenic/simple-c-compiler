@@ -15,7 +15,7 @@ public class MoveAction implements LRAction {
 
     @Override
     public void execute(LRParser parser) {
-    	parser.MoveAction(this.newState);
+    	parser.moveAction(this.newState);
     }
 
 }
