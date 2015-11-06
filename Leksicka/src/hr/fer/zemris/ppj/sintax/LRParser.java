@@ -48,36 +48,36 @@ public class LRParser {
     		if( action != null )
     			action.execute(this);
     		else
-    			this.ErrorRecovery();
+    			this.errorRecovery();
     	}
     	return tree;
     }
 
-    public void AcceptAction() {
+    public void acceptAction() {
         System.out.println(tree.toString());
         this.running = false;
     }
 
-    public void MoveAction(Integer newState) {
+    public void moveAction(Integer newState) {
         currentSym = input.elementAt(this.inputindex++);
         stackState.push(newState);
         stackSymbol.push(currentSym);
     }
 
-    public void PutAction(Integer newState) {
+    public void putAction(Integer newState) {
         stackState.push(newState);
     }
 
-    public void ErrorRecovery( ){
+    public void errorRecovery( ){
     	//todo
     }
-    public void ReduceAction( Production production ){
+    public void reduceAction( Production production ){
     	//todo tree generation
-    	for( int i = 0; i < production.GetRightHandSide().size(); i++ ){
+    	for( int i = 0; i < production.getRightHandSide().size(); i++ ){
     		stackState.pop();
     		stackSymbol.pop();
     	}
-    	stackSymbol.push(production.GetLeftHandSide());
+    	stackSymbol.push(production.getLeftHandSide());
     	//put action
     	this.currentSym = stackSymbol.peek();
     }
