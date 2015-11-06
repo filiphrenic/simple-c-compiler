@@ -16,7 +16,7 @@ public class ReduceAction implements LRAction {
 
     @Override
     public void execute(LRParser parser) {
-        parser.ReduceAction(this.production);
+        parser.reduceAction(this.production);
     }
 
 }
