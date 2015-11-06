@@ -37,12 +37,17 @@ public class LRParser {
     
     public LRNode analyzeInput(Vector<Symbol> input) throws IOException {
     	this.input = input;
+    	LRAction action;
     	running = true;
     	stackState.push(StartState);
     	stackSymbol.push(StartStackSymbol);
-    	while(running)
-    		actions.get(stackState.peek()).get(currentSym).execute(this);
-    	
+    	while(running){
+    		action = actions.get(stackState.peek()).get(currentSym);
+    		if( action != null )
+    			action.execute(this);
+    		else
+    			this.ErrorRecovery();
+    	}
     	return tree;
     }
     public void AcceptAction(){
@@ -57,6 +62,9 @@ public class LRParser {
     public void PutAction( Integer newState ){
     	stackState.push(newState);
     }
+    public void ErrorRecovery( ){
+    	//todo
+    }
     public void ReduceAction( Production production ){
     	//todo tree generation
     	for( int i = 0; i < production.GetRightHandSide().size(); i++ ){
@@ -64,6 +72,7 @@ public class LRParser {
     		stackSymbol.pop();
     	}
     	stackSymbol.push(production.GetLeftHandSide());
-    	actions.get(stackState.peek()).get(stackSymbol.peek()).execute(this);
+    	//put action
+    	this.currentSym = stackSymbol.peek();
     }
 }
