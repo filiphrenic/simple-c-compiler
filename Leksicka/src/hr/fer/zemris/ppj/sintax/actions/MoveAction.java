@@ -1,6 +1,5 @@
 package hr.fer.zemris.ppj.sintax.actions;
 
-import hr.fer.zemris.ppj.sintax.LRAction;
 import hr.fer.zemris.ppj.sintax.LRParser;
 
 /**

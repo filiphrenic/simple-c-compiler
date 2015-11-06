@@ -1,7 +1,6 @@
 package hr.fer.zemris.ppj.lexical.actions;
 
 import hr.fer.zemris.ppj.lexical.Lex;
-import hr.fer.zemris.ppj.lexical.LexAction;
 
 /**
  * Changes current state of lexical analyzer.

@@ -23,11 +23,15 @@ import java.nio.charset.StandardCharsets;
 public class Streamer {
 
     // file used for communication between GLA and LA
-    private static final String FILE_LOCATION = "analizator/objects.ost";
-    private static File FILE = new File(FILE_LOCATION);
+    public static final String FOLDER = "analizator";
+    private static final String LEXICAL_OBJECTS = "lex_objects.ppj";
+    private static final String SINTAX_OBJECTS = "sin_objects.ppj";
+
+    private static File LEXICAL_FILE = new File(LEXICAL_OBJECTS);
+    private static File SINTAX_FILE = new File(LEXICAL_OBJECTS);
 
     static {
-        FILE.getParentFile().mkdirs();
+        LEXICAL_FILE.getParentFile().mkdirs();
     }
 
     // reading/writing to streams
@@ -41,7 +45,7 @@ public class Streamer {
      * @throws IOException
      */
     public static ObjectOutputStream getOutput() throws IOException {
-        FileOutputStream fileStream = new FileOutputStream(FILE);
+        FileOutputStream fileStream = new FileOutputStream(LEXICAL_FILE);
         ObjectOutputStream objStream = new ObjectOutputStream(fileStream);
         return objStream;
     }
@@ -53,7 +57,7 @@ public class Streamer {
      * @throws IOException
      */
     public static ObjectInputStream getInput() throws IOException {
-        FileInputStream fileStream = new FileInputStream(FILE);
+        FileInputStream fileStream = new FileInputStream(LEXICAL_FILE);
         ObjectInputStream objStream = new ObjectInputStream(fileStream);
         return objStream;
     }

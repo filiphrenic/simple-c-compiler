@@ -2,6 +2,8 @@ package hr.fer.zemris.ppj.sintax;
 
 import java.util.List;
 
+import hr.fer.zemris.ppj.sintax.grammar.Symbol;
+
 /**
  * @author fhrenic
  * @author marko1597

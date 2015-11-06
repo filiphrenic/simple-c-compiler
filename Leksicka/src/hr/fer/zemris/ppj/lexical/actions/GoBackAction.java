@@ -1,7 +1,6 @@
 package hr.fer.zemris.ppj.lexical.actions;
 
 import hr.fer.zemris.ppj.lexical.Lex;
-import hr.fer.zemris.ppj.lexical.LexAction;
 
 /**
  * Returns a part of the input to the lexical analyzer when called.

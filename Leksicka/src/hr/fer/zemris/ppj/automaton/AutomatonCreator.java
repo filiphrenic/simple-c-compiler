@@ -38,7 +38,7 @@ public class AutomatonCreator {
      */
     public static Automaton<Character> fromString(String regex) {
         EpsilonNFA<Integer, Character> enfa = transform(prepareRegex(regex));
-        DFA<Integer, Character> dfa = enfa.toNFA().toDFA();
+        DFA<Integer, Character> dfa = enfa.toNFA().toDFA().getDfa();
         return dfa;
     }
 

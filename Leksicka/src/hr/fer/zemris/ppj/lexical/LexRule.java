@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import hr.fer.zemris.ppj.automaton.Automaton;
+import hr.fer.zemris.ppj.lexical.actions.LexAction;
 
 /**
  * This class represent a rule that is executed when this rule's regex matches a

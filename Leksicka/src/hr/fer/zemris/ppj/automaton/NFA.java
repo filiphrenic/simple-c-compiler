@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.LinkedHashSet;
 
 /**
  * Implementation of a non deterministic finite state automaton.
@@ -35,13 +35,13 @@ public class NFA<St, Sym> implements Automaton<Sym> {
         this.startState = startState;
         this.acceptableStates = acceptableStates;
         this.transitions = transitions;
-        currentStates = new TreeSet<>();
+        currentStates = new LinkedHashSet<>();
         reset();
     }
 
     @Override
     public void consume(Sym symbol) {
-        Set<St> states = new TreeSet<>();
+        Set<St> states = new LinkedHashSet<>();
         for (St state : currentStates) {
             Map<Sym, Set<St>> transitionMap = transitions.get(state);
             if (transitionMap == null) {
@@ -85,7 +85,7 @@ public class NFA<St, Sym> implements Automaton<Sym> {
      * @return states
      */
     private Set<St> applyTransition(Set<St> states, Sym symbol) {
-        Set<St> trans = new TreeSet<>();
+        Set<St> trans = new LinkedHashSet<>();
         for (St state : states) {
             Map<Sym, Set<St>> transitionMap = transitions.get(state);
             if (transitionMap == null) {
@@ -108,7 +108,7 @@ public class NFA<St, Sym> implements Automaton<Sym> {
      * @return symbols
      */
     private Set<Sym> getSymbols(Set<St> states) {
-        Set<Sym> symbols = new TreeSet<>();
+        Set<Sym> symbols = new LinkedHashSet<>();
         for (St s : states) {
             Map<Sym, Set<St>> map = transitions.get(s);
             if (map != null) {
@@ -124,11 +124,12 @@ public class NFA<St, Sym> implements Automaton<Sym> {
      * @param nfa
      * @return dfa
      */
-    public DFA<Integer, Sym> toDFA() {
+    public DFAExtended<St, Sym> toDFA() {
         // for dfa
         int state = 0;
-        Set<Integer> acceptableStates = new TreeSet<>();
+        Set<Integer> acceptableStates = new LinkedHashSet<>();
         Map<Integer, Map<Sym, Integer>> dfaTransitions = new HashMap<>();
+        Map<Integer, Set<St>> dfaAliases = new HashMap<>();
 
         // helper : set of states -> alias state
         Map<Set<St>, Integer> aliases = new HashMap<>();
@@ -153,6 +154,7 @@ public class NFA<St, Sym> implements Automaton<Sym> {
                 if (transAlias == null) {
                     transAlias = state++;
                     aliases.put(transitionStates, transAlias);
+                    dfaAliases.put(transAlias, transitionStates);
                     queue.add(transitionStates);
 
                     for (St st : transitionStates) {
@@ -167,7 +169,8 @@ public class NFA<St, Sym> implements Automaton<Sym> {
             dfaTransitions.put(alias, transitions);
         }
 
-        return new DFA<Integer, Sym>(0, acceptableStates, dfaTransitions);
+        DFA<Integer, Sym> dfa = new DFA<Integer, Sym>(0, acceptableStates, dfaTransitions);
+        return new DFAExtended<>(dfa, dfaAliases);
     }
 
 }

@@ -13,10 +13,10 @@ import java.util.NoSuchElementException;
 
 import hr.fer.zemris.ppj.automaton.Automaton;
 import hr.fer.zemris.ppj.automaton.AutomatonCreator;
-import hr.fer.zemris.ppj.lexical.LexAction;
 import hr.fer.zemris.ppj.lexical.LexRule;
 import hr.fer.zemris.ppj.lexical.actions.ChangeStateAction;
 import hr.fer.zemris.ppj.lexical.actions.GoBackAction;
+import hr.fer.zemris.ppj.lexical.actions.LexAction;
 import hr.fer.zemris.ppj.lexical.actions.NewLineAction;
 import hr.fer.zemris.ppj.lexical.actions.SkipAction;
 

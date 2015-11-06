@@ -1,10 +1,10 @@
 package hr.fer.zemris.ppj.automaton;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Implementation of a epsilon non deterministic finite state automaton.
@@ -38,13 +38,13 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
         this.finalState = finalState;
         this.transitions = transitions;
         this.epsilonTransitions = epsilonTransitions;
-        currentStates = new TreeSet<>();
+        currentStates = new LinkedHashSet<>();
         currentStates.add(startState);
     }
 
     @Override
     public void consume(Sym symbol) {
-        Set<St> states = new TreeSet<>();
+        Set<St> states = new LinkedHashSet<>();
         for (St state : currentStates) {
             Map<Sym, Set<St>> transitionMap = transitions.get(state);
             if (transitionMap == null) {
@@ -83,14 +83,14 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
      * @return equivalent nfa
      */
     public NFA<St, Sym> toNFA() {
-        Set<St> acceptableStates = new TreeSet<>();
+        Set<St> acceptableStates = new LinkedHashSet<>();
         acceptableStates.add(finalState);
         if (epsilonEnv(startState).contains(finalState)) {
             acceptableStates.add(startState);
         }
         Map<St, Map<Sym, Set<St>>> nfaTransitions = new HashMap<>();
 
-        Set<St> allStates = new TreeSet<>(transitions.keySet());
+        Set<St> allStates = new LinkedHashSet<>(transitions.keySet());
         allStates.addAll(epsilonTransitions.keySet());
 
         for (St state : allStates) {
@@ -103,7 +103,7 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
                 for (Entry<Sym, Set<St>> e : currState.entrySet()) {
                     Set<St> before = trans.get(e.getKey());
                     if (before == null) {
-                        before = new TreeSet<>();
+                        before = new LinkedHashSet<>();
                     }
                     before.addAll(epsilonEnv(e.getValue()));
                     trans.put(e.getKey(), before);
@@ -146,7 +146,7 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
         Set<St> newStates;
 
         do {
-            newStates = new TreeSet<>();
+            newStates = new LinkedHashSet<>();
             for (St state : currentStates) {
                 if (state == finalState) {
                     accepts = true;
@@ -177,7 +177,7 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
         }
         Set<St> states = transitionMap.get(symbol);
         if (states == null) {
-            states = new TreeSet<>();
+            states = new LinkedHashSet<>();
         }
         states.add(right);
         transitionMap.put(symbol, states);
@@ -193,7 +193,7 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
     public void addEpsilonTransition(St left, St right) {
         Set<St> states = epsilonTransitions.get(left);
         if (states == null) {
-            states = new TreeSet<>();
+            states = new LinkedHashSet<>();
         }
         states.add(right);
         epsilonTransitions.put(left, states);
@@ -220,11 +220,11 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
      * @return epsilon environment
      */
     private Set<St> epsilonEnv(St state) {
-        Set<St> states = new TreeSet<>();
+        Set<St> states = new LinkedHashSet<>();
         states.add(state);
         Set<St> newStates;
         do {
-            newStates = new TreeSet<>();
+            newStates = new LinkedHashSet<>();
             for (St st : states) {
                 Set<St> epsStates = epsilonTransitions.get(st);
                 if (epsStates != null) {
@@ -242,7 +242,7 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
      * @return union of epsilon environments of all states
      */
     private Set<St> epsilonEnv(Set<St> states) {
-        Set<St> epsStates = new TreeSet<>();
+        Set<St> epsStates = new LinkedHashSet<>();
         for (St s : states) {
             epsStates.addAll(epsilonEnv(s));
         }
@@ -251,7 +251,7 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
 
     @Override
     public String toString() {
-        Set<St> states = new TreeSet<>(transitions.keySet());
+        Set<St> states = new LinkedHashSet<>(transitions.keySet());
         states.addAll(epsilonTransitions.keySet());
         int numStates = states.size();
 
