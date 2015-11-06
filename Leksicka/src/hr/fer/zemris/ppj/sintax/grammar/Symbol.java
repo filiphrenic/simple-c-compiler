@@ -8,28 +8,53 @@ public class Symbol {
 
     public static final Symbol STREAM_END = new Symbol(SymbolType.TERMINAL, "END", false);
 
-    private SymbolType type;
     private String name;
-    boolean printable;
+    private SymbolType type;
+    boolean isEmpty;
+    boolean isPrintable;
 
-    public Symbol(SymbolType type, String name, boolean printable) {
-        this(type, name);
-        this.printable = printable;
-    }
-
-    public Symbol(SymbolType type, String name) {
+    public Symbol(SymbolType type, String name, boolean isPrintable) {
         this.type = type;
         this.name = name;
-        this.printable = true;
+        this.isEmpty = false;
+        this.isPrintable = isPrintable;
+    }
+
+    public SymbolType getType() {
+        return type;
+    }
+
+    /**
+     * @return the isPrintable
+     */
+    public boolean isPrintable() {
+        return isPrintable;
+    }
+
+    /**
+     * @param isPrintable
+     */
+    public void setPrintable(boolean isPrintable) {
+        this.isPrintable = isPrintable;
+    }
+
+    /**
+     * @return the isEmpty
+     */
+    public boolean isEmpty() {
+        return isEmpty;
+    }
+
+    /**
+     * @param isEmpty
+     */
+    public void setIsEmpty(boolean isEmpty) {
+        this.isEmpty = isEmpty;
     }
 
     @Override
     public String toString() {
         return name;
-    }
-
-    public SymbolType getType() {
-        return type;
     }
 
     @Override

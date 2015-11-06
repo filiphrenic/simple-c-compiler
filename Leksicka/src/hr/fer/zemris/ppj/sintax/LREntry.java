@@ -1,8 +1,8 @@
 package hr.fer.zemris.ppj.sintax;
 
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
-import hr.fer.zemris.ppj.sintax.grammar.Grammar;
 import hr.fer.zemris.ppj.sintax.grammar.Production;
 import hr.fer.zemris.ppj.sintax.grammar.Symbol;
 
@@ -13,18 +13,22 @@ public class LREntry {
 
     private Production production;
     private int dotIndex;
-    private List<Symbol> followSymbols;
+    private Set<Symbol> followUps;
 
-    public LREntry(Grammar grammar, Production production) {
+    public LREntry(Production production, Set<Symbol> followUps) {
         this.production = production;
         dotIndex = 0;
-        followSymbols = grammar.follows(production.getLeftHandSide());
+        this.followUps = followUps;
     }
 
     private LREntry(LREntry e) {
         this.production = e.production;
         this.dotIndex = e.dotIndex + 1;
-        this.followSymbols = e.followSymbols;
+        this.followUps = new TreeSet<>(e.followUps);
+    }
+
+    public int getDotIndex() {
+        return dotIndex;
     }
 
     public LREntry next() {
@@ -32,16 +36,23 @@ public class LREntry {
     }
 
     public Symbol getTransitionSymbol() {
-        return production.getRightHandSide().get(dotIndex);
+        return production.getRHS().get(dotIndex);
     }
 
     public boolean isComplete() {
-        return dotIndex == production.getRightHandSide().size();
+        return dotIndex == production.getRHS().size();
     }
 
     @Override
     public int hashCode() {
         return production.hashCode() << 16 + dotIndex;
+    }
+
+    /**
+     * @param pFollowUps
+     */
+    public void addFollowUps(Set<Symbol> followUps) {
+        this.followUps.addAll(followUps);
     }
 
 }
