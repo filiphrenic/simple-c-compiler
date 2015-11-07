@@ -79,9 +79,11 @@ public class LRParser {
 
         System.err.printf("readed %s it is in input text %s", currentSym.toString(),
                 currentSym.getOriginalText());
-        while (input.elementAt(this.inputindex).isSync()) {
+        
+        //todo provjera jeli sinkronizacijski znak
+       /* while (input.elementAt(this.inputindex).isSync()) {
             this.inputindex++;
-        }
+        }*/
         currentSym = input.elementAt(this.inputindex);
         while (actions.get(stackState.peek()).get(currentSym) == null) {
             stackState.pop();
