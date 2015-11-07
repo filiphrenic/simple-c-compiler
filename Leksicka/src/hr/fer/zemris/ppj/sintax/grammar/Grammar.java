@@ -24,20 +24,15 @@ public class Grammar {
     // iznimka je metoda getProductions koja vraca sve produkcije, ona se bude pozvala
     // jednom za gradnju automata
 
-    private List<Symbol> terminalSymbols;
-    private List<Symbol> nonTerminalSymbols;
-    private List<Symbol> syncSymbols;
+    private List<Symbol> symbols;
     private Map<Symbol, List<Production>> productions;
     private Production startingProduction; // S' -> S
 
     private DFAExtended<LREntry, Symbol> dfa;
 
-    public Grammar(List<Symbol> terminalSymbols, List<Symbol> nonTerminalSymbols,
-            List<Symbol> syncSymbols, Map<Symbol, List<Production>> productions,
+    public Grammar(List<Symbol> symbols, Map<Symbol, List<Production>> productions,
             Production startingProduction) {
-        this.terminalSymbols = terminalSymbols;
-        this.nonTerminalSymbols = nonTerminalSymbols;
-        this.syncSymbols = syncSymbols;
+        this.symbols = symbols;
         this.productions = productions;
         this.startingProduction = startingProduction;
 
@@ -45,7 +40,7 @@ public class Grammar {
         // nađi slijedi i zapocinje okruzenja
 
         // zadnja metoda u konstruktoru
-        generateDFA();
+        //generateDFA();
     }
 
     private Production getStartingProduction() {
@@ -158,6 +153,21 @@ public class Grammar {
         }
 
         dfa = enfa.toNFA().toDFA();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Symbol key : productions.keySet()) {
+            sb.append(key);
+            sb.append('\n');
+            for (Production p : productions.get(key)) {
+                sb.append(' ');
+                sb.append(p.toString());
+                sb.append('\n');
+            }
+        }
+        return sb.toString();
     }
 
 }

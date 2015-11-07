@@ -11,12 +11,28 @@ public class Production {
     private Symbol lhs; // left hand side
     private List<Symbol> rhs; // right hand side;
 
+    public Production(Symbol lhs, List<Symbol> rhs) {
+        this.lhs = lhs;
+        this.rhs = rhs;
+    }
+
     public Symbol getLHS() {
         return lhs;
     }
 
     public List<Symbol> getRHS() {
         return rhs;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(lhs);
+        sb.append(" -> ");
+        for (Symbol s : rhs) {
+            sb.append(s);
+        }
+        return sb.toString();
     }
 
     @Override
@@ -36,4 +52,5 @@ public class Production {
         }
         return hash;
     }
+
 }

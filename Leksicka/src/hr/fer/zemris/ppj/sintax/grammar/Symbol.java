@@ -4,20 +4,22 @@ package hr.fer.zemris.ppj.sintax.grammar;
  * @author fhrenic
  * @author marko1597
  */
-public class Symbol {
+public class Symbol implements Comparable<Symbol> {
 
     public static final Symbol STREAM_END = new Symbol(SymbolType.TERMINAL, "END", false);
 
     private String name;
     private SymbolType type;
-    boolean isEmpty;
-    boolean isPrintable;
+    boolean empty;
+    boolean printable;
+    boolean sync;
 
     public Symbol(SymbolType type, String name, boolean isPrintable) {
         this.type = type;
         this.name = name;
-        this.isEmpty = false;
-        this.isPrintable = isPrintable;
+        this.empty = false;
+        this.sync = false;
+        this.printable = isPrintable;
     }
 
     public SymbolType getType() {
@@ -28,32 +30,61 @@ public class Symbol {
      * @return the isPrintable
      */
     public boolean isPrintable() {
-        return isPrintable;
+        return printable;
     }
 
     /**
      * @param isPrintable
      */
     public void setPrintable(boolean isPrintable) {
-        this.isPrintable = isPrintable;
+        this.printable = isPrintable;
     }
 
     /**
      * @return the isEmpty
      */
     public boolean isEmpty() {
-        return isEmpty;
+        return empty;
     }
 
     /**
-     * @param isEmpty
+     * @param empty
      */
-    public void setIsEmpty(boolean isEmpty) {
-        this.isEmpty = isEmpty;
+    public void setEmpty(boolean empty) {
+        this.empty = empty;
+    }
+
+    /**
+     * @return the sync
+     */
+    public boolean isSync() {
+        return sync;
+    }
+
+    /**
+     * @param sync the sync to set
+     */
+    public void setSync(boolean sync) {
+        this.sync = sync;
+    }
+
+    @Override
+    public int compareTo(Symbol o) {
+        if (type == o.type) {
+            return name.compareTo(o.name);
+        }
+        if (type == SymbolType.NON_TERMINAL) {
+            return -1;
+        } else {
+            return 1;
+        }
     }
 
     @Override
     public String toString() {
+        if (type == SymbolType.NON_TERMINAL) {
+            return '<' + name + '>';
+        }
         return name;
     }
 
