@@ -27,7 +27,7 @@ import hr.fer.zemris.ppj.sintax.grammar.SymbolType;
 public class SintaxInputParser {
 
     private static final String EPS_SYMBOL = "$";
-    private static final String START_SYMBOL = "s_crtano";
+    private static final String START_SYMBOL = "<s_crtano>";
 
     public static void main(String[] args) throws IOException {
         InputStream input = new FileInputStream("gramatika100.san");
@@ -64,7 +64,7 @@ public class SintaxInputParser {
             e.printStackTrace();
         }
 
-        Symbol startSymbol = readSymbol("<" + START_SYMBOL + ">", true);
+        Symbol startSymbol = readSymbol(START_SYMBOL, true);
         nonTerminalSymbols.put(START_SYMBOL, startSymbol);
 
         Symbol realStartSymbol = nonTerminalSymbols.get(startState);
@@ -93,11 +93,11 @@ public class SintaxInputParser {
         currLine = reader.readLine();
         currLine = currLine.substring(currLine.indexOf(' ') + 1);
         // set start state
-        int nextSpace = currLine.indexOf(' ') - 1;
+        int nextSpace = currLine.indexOf(' ');
         if (nextSpace == -1) {
             nextSpace = currLine.length();
         }
-        startState = currLine.substring(1, nextSpace);
+        startState = currLine.substring(0, nextSpace);
         readSymbols(currLine, true);
 
         // read terminal
@@ -157,7 +157,7 @@ public class SintaxInputParser {
         Map<String, Symbol> map = terminalSymbols;
         SymbolType type = SymbolType.TERMINAL;
         if (name.startsWith("<")) {
-            name = name.substring(1, name.length() - 1);
+            //name = name.substring(1, name.length() - 1);
             map = nonTerminalSymbols;
             type = SymbolType.NON_TERMINAL;
         }

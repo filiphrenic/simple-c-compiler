@@ -82,9 +82,6 @@ public class Symbol implements Comparable<Symbol> {
 
     @Override
     public String toString() {
-        if (type == SymbolType.NON_TERMINAL) {
-            return '<' + name + '>';
-        }
         return name;
     }
 
