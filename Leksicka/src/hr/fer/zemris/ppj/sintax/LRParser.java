@@ -14,14 +14,15 @@ import hr.fer.zemris.ppj.sintax.grammar.Symbol;
  * @author marko1597
  */
 public class LRParser {
-    Stack<Symbol> stackSymbol;
+    Stack<LRSymbol> stackSymbol;
     Stack<Integer> stackState;
-    Vector<Symbol> input;
-    Symbol currentSym;
+    Stack<LRNode> stackNode;
+    Vector<LRSymbol> input;
+    LRSymbol currentSym;
     int inputindex;
-    int StartState;
+    int startState;
     boolean running;
-    Symbol StartStackSymbol;
+    LRSymbol startStackSymbol;
     // stanje -> ( znak -> akcija )
     // Akcija i NovoStanje su objedinjeni u ovoj
     // zato jer nemaju presjeka, Akcija je definirana za stanje i završni,
@@ -29,20 +30,20 @@ public class LRParser {
     private Map<Integer, Map<Symbol, LRAction>> actions;
     LRNode tree;
 
-    public LRParser(int startState, Symbol startStackSymbol,
+    public LRParser(int startState, LRSymbol startStackSymbol,
             Map<Integer, Map<Symbol, LRAction>> table) {
-        this.StartStackSymbol = startStackSymbol;
-        this.StartState = startState;
+        this.startStackSymbol = startStackSymbol;
+        this.startState = startState;
         this.actions = table;
         this.inputindex = 0;
     }
 
-    public LRNode analyzeInput(Vector<Symbol> input) throws IOException {
+    public LRNode analyzeInput(Vector<LRSymbol> input) throws IOException {
         this.input = input;
         LRAction action;
         running = true;
-        stackState.push(StartState);
-        stackSymbol.push(StartStackSymbol);
+        stackState.push(startState);
+        stackSymbol.push(startStackSymbol);
         while (running) {
             action = actions.get(stackState.peek()).get(currentSym);
             if (action != null)
@@ -56,29 +57,49 @@ public class LRParser {
     public void acceptAction() {
         System.out.println(tree.toString());
         this.running = false;
+        this.tree = stackNode.peek();
     }
 
     public void moveAction(Integer newState) {
         currentSym = input.elementAt(this.inputindex++);
         stackState.push(newState);
         stackSymbol.push(currentSym);
+        stackNode.push(new LRNode(currentSym));
     }
 
     public void putAction(Integer newState) {
         stackState.push(newState);
+        this.currentSym = input.elementAt(this.inputindex);
     }
 
     public void errorRecovery() {
-        //todo
+        System.err.println("Error at line:" + currentSym.getLineNumber());
+
+        //todo 2. ocekivani uniformni znakovi (oni znakovi koji ne bi izazvali pogresku)
+
+        System.err.printf("readed %s it is in input text %s", currentSym.toString(),
+                currentSym.getOriginalText());
+        while (input.elementAt(this.inputindex).isSync()) {
+            this.inputindex++;
+        }
+        currentSym = input.elementAt(this.inputindex);
+        while (actions.get(stackState.peek()).get(currentSym) == null) {
+            stackState.pop();
+            stackNode.pop();
+            stackSymbol.pop();
+        }
     }
 
     public void reduceAction(Production production) {
-        //todo tree generation
+        LRNode tmp = new LRNode(production.getLHS());
         for (int i = 0; i < production.getRHS().size(); i++) {
             stackState.pop();
             stackSymbol.pop();
+            tmp.AddChild(stackNode.peek());
+            stackNode.pop();
         }
-        stackSymbol.push(production.getLHS());
+        stackSymbol.push(new LRSymbol(production.getLHS()));
+        stackNode.push(tmp);
         //put action
         this.currentSym = stackSymbol.peek();
     }
