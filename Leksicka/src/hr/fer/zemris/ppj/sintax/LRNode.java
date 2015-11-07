@@ -16,6 +16,9 @@ public class LRNode {
     public LRNode( Symbol sym ) {
 		this.LRNodeName = sym.toString();
 	}
+    public LRNode( LRSymbol sym ) {
+		this.LRNodeName = sym.toString();
+	}
     @Override
     public String toString() {
         return toString(0);
