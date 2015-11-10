@@ -24,23 +24,49 @@ public class Grammar {
     // iznimka je metoda getProductions koja vraca sve produkcije, ona se bude pozvala
     // jednom za gradnju automata
 
-    private List<Symbol> symbols;
+    private List<Symbol> terminalSymbols;
     private Map<Symbol, List<Production>> productions;
     private Production startingProduction; // S' -> S
 
     private DFAExtended<LREntry, Symbol> dfa;
 
-    public Grammar(List<Symbol> symbols, Map<Symbol, List<Production>> productions,
+    public Grammar(List<Symbol> terminalSymbols, Map<Symbol, List<Production>> productions,
             Production startingProduction) {
-        this.symbols = symbols;
+        this.terminalSymbols = terminalSymbols;
         this.productions = productions;
         this.startingProduction = startingProduction;
 
         // findEmptySymbols();
         // nađi slijedi i zapocinje okruzenja
 
+        // finds empty symbols
+        annotateEmptySymbols();
+
+        for (Symbol s : terminalSymbols) {
+            System.out.println(s + " " + s.isEmpty());
+        }
+
         // zadnja metoda u konstruktoru
         //generateDFA();
+    }
+
+    private void annotateEmptySymbols() {
+        boolean foundNewEmpty = false;
+        for (Symbol term : productions.keySet()) {
+            if (term.isEmpty()) {
+                continue;
+            }
+            for (Production prod : productions.get(term)) {
+                if (prod.isEmpty()) {
+                    term.setEmpty(true);
+                    foundNewEmpty = true;
+                    break;
+                }
+            }
+        }
+        if (foundNewEmpty) {
+            annotateEmptySymbols();
+        }
     }
 
     private Production getStartingProduction() {

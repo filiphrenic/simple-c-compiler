@@ -24,6 +24,15 @@ public class Production {
         return rhs;
     }
 
+    public boolean isEmpty() {
+        for (Symbol s : rhs) {
+            if (!s.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

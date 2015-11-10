@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ public class SintaxInputParser {
     private Map<String, Symbol> terminalSymbols;
     private Map<String, Symbol> nonTerminalSymbols;
     private Map<Symbol, List<Production>> productions;
+    private Production startingProduction;
     private String startState;
 
     private String currLine;
@@ -54,9 +56,12 @@ public class SintaxInputParser {
     public SintaxInputParser(InputStream input) {
         terminalSymbols = new HashMap<>();
         nonTerminalSymbols = new HashMap<>();
-        productions = new HashMap<>();
+        productions = new LinkedHashMap<>();
 
-        terminalSymbols.put(EPS_SYMBOL, new Symbol(SymbolType.TERMINAL, EPS_SYMBOL, false));
+        // is symbol $ printed? set false if not
+        Symbol eps = new Symbol(SymbolType.TERMINAL, EPS_SYMBOL, true);
+        eps.setEmpty(true);
+        terminalSymbols.put(EPS_SYMBOL, eps);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
             readGrammar(reader);
@@ -64,18 +69,9 @@ public class SintaxInputParser {
             e.printStackTrace();
         }
 
-        Symbol startSymbol = readSymbol(START_SYMBOL, true);
-        nonTerminalSymbols.put(START_SYMBOL, startSymbol);
+        List<Symbol> terminals = new ArrayList<>(terminalSymbols.values());
 
-        Symbol realStartSymbol = nonTerminalSymbols.get(startState);
-        Production startingProduction = new Production(startSymbol,
-                Collections.singletonList(realStartSymbol));
-        productions.put(startSymbol, Collections.singletonList(startingProduction));
-
-        List<Symbol> allSymbols = new ArrayList<>(terminalSymbols.values());
-        allSymbols.addAll(nonTerminalSymbols.values());
-
-        g = new Grammar(allSymbols, productions, startingProduction);
+        g = new Grammar(terminals, productions, startingProduction);
     }
 
     public Grammar getConstructedGrammar() {
@@ -110,6 +106,14 @@ public class SintaxInputParser {
         for (Symbol sync : readSymbols(currLine.substring(currLine.indexOf(' ')), false)) {
             sync.setSync(true);
         }
+
+        Symbol startSymbol = readSymbol(START_SYMBOL, true);
+        nonTerminalSymbols.put(START_SYMBOL, startSymbol);
+
+        Symbol realStartSymbol = nonTerminalSymbols.get(startState);
+        startingProduction = new Production(startSymbol,
+                Collections.singletonList(realStartSymbol));
+        productions.put(startSymbol, Collections.singletonList(startingProduction));
 
         readAllProductions(reader);
     }
