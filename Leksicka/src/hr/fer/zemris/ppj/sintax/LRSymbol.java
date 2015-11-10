@@ -22,4 +22,7 @@ public class LRSymbol {
 	public String getOriginalText(){
 		return this.originalText;
 	}
+	public boolean isSync(){
+		return sym.isSync();
+	}
 }

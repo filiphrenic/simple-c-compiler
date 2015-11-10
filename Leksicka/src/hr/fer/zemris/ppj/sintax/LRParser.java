@@ -1,7 +1,9 @@
 package hr.fer.zemris.ppj.sintax;
 
 import java.io.IOException;
+import java.nio.channels.Pipe.SinkChannel;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -81,9 +83,9 @@ public class LRParser {
                 currentSym.getOriginalText());
         
         //todo provjera jeli sinkronizacijski znak
-       /* while (input.elementAt(this.inputindex).isSync()) {
+        while (input.elementAt(this.inputindex).isSync() == false) {
             this.inputindex++;
-        }*/
+        }
         currentSym = input.elementAt(this.inputindex);
         while (actions.get(stackState.peek()).get(currentSym) == null) {
             stackState.pop();
