@@ -3,6 +3,7 @@ package hr.fer.zemris.ppj.sintax.grammar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -263,16 +264,14 @@ public class Grammar {
         } while(change);
 
     	// maknuti nezavrsne (i eps)
-    	for(Symbol symbol : nonTerminalSymbols) {
-    		firstSets.get(symbol).removeIf(
-   				new Predicate<Symbol>() {
-					@Override
-					public boolean test(Symbol sym) {
-						return sym.getType() == SymbolType.NON_TERMINAL || "$".equals(sym.toString());
-					}
-   				}
-    		);
-    	}
+        for(Symbol symbol : nonTerminalSymbols) {
+        	for(Iterator<Symbol> it = firstSets.get(symbol).iterator(); it.hasNext();) {
+        		Symbol sym = it.next();
+        		if(sym.getType() == SymbolType.NON_TERMINAL || "$".equals(sym.toString())) {
+        			it.remove();
+        		}
+        	}
+        }
     	
 //    	System.out.println("---\nProvjera ZAPOCINJE skupova:");
 //    	for(Symbol symbol : nonTerminalSymbols) {
