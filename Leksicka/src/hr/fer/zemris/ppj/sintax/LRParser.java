@@ -96,11 +96,16 @@ public class LRParser {
 
     public void reduceAction(Production production) {
         LRNode tmp = new LRNode(production.getLHS());
+        Stack<LRNode> tmpStack = new Stack<LRNode>();
         for (int i = 0; i < production.getRHS().size(); i++) {
             stackState.pop();
             stackSymbol.pop();
-            tmp.AddChild(stackNode.peek());
+            tmpStack.push(stackNode.peek());
             stackNode.pop();
+        }
+        while(!tmpStack.isEmpty()){
+        	tmp.AddChild(tmpStack.peek());
+        	tmpStack.pop();
         }
         stackSymbol.push(new LRSymbol(production.getLHS()));
         stackNode.push(tmp);
