@@ -27,14 +27,19 @@ import hr.fer.zemris.ppj.sintax.grammar.SymbolType;
  */
 public class SintaxInputParser {
 
-    private static final String EPS_SYMBOL = "$";
-    private static final String START_SYMBOL = "<s_crtano>";
+    private static final String EPS_SYMBOL_NAME = "$";
+    private static final String START_SYMBOL_NAME = "<s_crtano>";
+
+    public static final Symbol EPS_SYMBOL;
+
+    static {
+        EPS_SYMBOL = new Symbol(SymbolType.TERMINAL, EPS_SYMBOL_NAME, true);
+        EPS_SYMBOL.setEmpty(true);
+    }
 
     public static void main(String[] args) throws IOException {
         InputStream input = new FileInputStream("gramatika100.san");
         SintaxInputParser sip = new SintaxInputParser(input);
-        Grammar g = sip.getConstructedGrammar();
-        System.out.println(g);
     }
 
     private Map<String, Symbol> terminalSymbols;
@@ -59,9 +64,7 @@ public class SintaxInputParser {
         productions = new LinkedHashMap<>();
 
         // is symbol $ printed? set false if not
-        Symbol eps = new Symbol(SymbolType.TERMINAL, EPS_SYMBOL, true);
-        eps.setEmpty(true);
-        terminalSymbols.put(EPS_SYMBOL, eps);
+        terminalSymbols.put(EPS_SYMBOL_NAME, EPS_SYMBOL);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
             readGrammar(reader);
@@ -107,13 +110,13 @@ public class SintaxInputParser {
             sync.setSync(true);
         }
 
-        Symbol startSymbol = readSymbol(START_SYMBOL, true);
-        nonTerminalSymbols.put(START_SYMBOL, startSymbol);
+        Symbol startSymbol = readSymbol(START_SYMBOL_NAME, true);
+        nonTerminalSymbols.put(START_SYMBOL_NAME, startSymbol);
 
         Symbol realStartSymbol = nonTerminalSymbols.get(startState);
         startingProduction = new Production(startSymbol,
                 Collections.singletonList(realStartSymbol));
-        productions.put(startSymbol, Collections.singletonList(startingProduction));
+        //productions.put(startSymbol, Collections.singletonList(startingProduction));
 
         readAllProductions(reader);
     }

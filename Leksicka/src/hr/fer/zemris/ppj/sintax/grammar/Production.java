@@ -2,6 +2,8 @@ package hr.fer.zemris.ppj.sintax.grammar;
 
 import java.util.List;
 
+import hr.fer.zemris.ppj.stream.SintaxInputParser;
+
 /**
  * @author fhrenic
  * @author marko1597
@@ -16,6 +18,10 @@ public class Production {
         this.lhs = lhs;
         this.rhs = rhs;
         emptyFrom = 0;
+    }
+
+    public boolean isEpsilonProduction() {
+        return rhs.get(0).equals(SintaxInputParser.EPS_SYMBOL);
     }
 
     public void annotate() {
