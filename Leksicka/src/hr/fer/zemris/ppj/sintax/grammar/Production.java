@@ -8,20 +8,18 @@ import hr.fer.zemris.ppj.stream.SintaxInputParser;
  * @author fhrenic
  * @author marko1597
  */
-public class Production {
+public class Production implements Comparable<Production> {
 
+    private int id;
     private Symbol lhs; // left hand side
     private List<Symbol> rhs; // right hand side;
     private int emptyFrom; // index of first symbol after which there are all empty symbols
 
-    public Production(Symbol lhs, List<Symbol> rhs) {
+    public Production(Symbol lhs, List<Symbol> rhs, int id) {
         this.lhs = lhs;
         this.rhs = rhs;
+        this.id = id;
         emptyFrom = 0;
-    }
-
-    public boolean isEpsilonProduction() {
-        return rhs.get(0).equals(SintaxInputParser.EPS_SYMBOL);
     }
 
     public void annotate() {
@@ -30,6 +28,10 @@ public class Production {
                 emptyFrom = idx + 1;
             }
         }
+    }
+
+    public boolean isEpsilonProduction() {
+        return rhs.get(0).equals(SintaxInputParser.EPS_SYMBOL);
     }
 
     public int emptyFrom() {
@@ -65,21 +67,22 @@ public class Production {
     }
 
     @Override
+    public int compareTo(Production o) {
+        return Integer.compare(id, o.id);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Production)) {
             return false;
         }
         Production p = (Production) obj;
-        return lhs.equals(p.lhs) && rhs.equals(p.rhs);
+        return id == p.id;
     }
 
     @Override
     public int hashCode() {
-        int hash = lhs.hashCode();
-        for (Symbol s : rhs) {
-            hash = 31 * hash + s.hashCode();
-        }
-        return hash;
+        return id;
     }
 
 }

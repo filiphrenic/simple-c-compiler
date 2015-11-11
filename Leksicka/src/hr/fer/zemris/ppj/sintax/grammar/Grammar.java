@@ -1,17 +1,21 @@
 package hr.fer.zemris.ppj.sintax.grammar;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 
+import hr.fer.zemris.ppj.automaton.DFA;
 import hr.fer.zemris.ppj.automaton.DFAExtended;
 import hr.fer.zemris.ppj.automaton.EpsilonNFA;
+import hr.fer.zemris.ppj.automaton.NFA;
 import hr.fer.zemris.ppj.sintax.LREntry;
 import hr.fer.zemris.ppj.sintax.actions.LRAction;
 import hr.fer.zemris.ppj.stream.SintaxInputParser;
@@ -44,8 +48,6 @@ public class Grammar {
 
         // zadnja metoda u konstruktoru
         buildActionTable(generateDFA());
-
-        //System.out.println(this);
     }
 
     private void annotateProductions() {
@@ -92,13 +94,49 @@ public class Grammar {
     }
 
     public List<Production> getProductionsForLhs(Symbol sym) {
-        // vraca sve produkcije za neki nezavrsni znak
-        // tipa za A vraca produkcije A->a; A->bBaA; ...
         return productions.get(sym);
     }
 
     private void buildActionTable(DFAExtended<LREntry, Symbol> dfa) {
-        // TODO
+
+        //System.out.println(dfa);
+        System.exit(0);
+
+        Map<Integer, Set<LREntry>> aliases = dfa.getAliases();
+        DFA<Integer, Symbol> dfan = dfa.getDfa();
+
+        List<Integer> states = new ArrayList<>(aliases.keySet());
+        Collections.sort(states);
+
+        Map<Integer, Map<Symbol, Integer>> transitions = dfan.getTransitions();
+
+        for (Integer state : transitions.keySet()) {
+            Map<Symbol, Integer> trans = transitions.get(state);
+            for (Symbol sym : trans.keySet()) {
+
+            }
+
+        }
+
+        for (Integer state : states) {
+            LREntry lre = null;
+            for (LREntry e : aliases.get(state)) {
+                if (lre != null) {
+                    if (e.compareTo(lre) < 0) {
+                        lre = e;
+                    }
+                } else {
+                    lre = e;
+                }
+            }
+
+            LRAction action = null;
+            if (!lre.isComplete()) {
+
+            }
+
+        }
+
     }
 
     private DFAExtended<LREntry, Symbol> generateDFA() {
@@ -153,9 +191,12 @@ public class Grammar {
                     }
 
                     for (Production ntp : getProductionsForLhs(sym)) {
+
                         if (ntp.isEpsilonProduction()) {
-                            continue;
+                            //                            enfa.addEpsilonTransition(entry, next);
+                            //                            continue;
                         }
+
                         LREntry nonTermEntry = new LREntry(ntp, newStartSet);
                         enfa.addEpsilonTransition(entry, nonTermEntry);
 
@@ -170,7 +211,13 @@ public class Grammar {
             }
         }
 
-        return enfa.toNFA().toDFA();
+        NFA<LREntry, Symbol> nfa = enfa.toNFA();
+
+        DFAExtended<LREntry, Symbol> dfa = nfa.toDFA();
+        System.out.println("------------------");
+        System.out.println(dfa);
+
+        return dfa;
     }
 
     @Override

@@ -83,9 +83,11 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
      * @return equivalent nfa
      */
     public NFA<St, Sym> toNFA() {
+
         Set<St> acceptableStates = new LinkedHashSet<>();
         acceptableStates.add(finalState);
-        if (epsilonEnv(startState).contains(finalState)) {
+        Set<St> epsStartState = epsilonEnv(startState);
+        if (epsStartState.contains(finalState)) {
             acceptableStates.add(startState);
         }
         Map<St, Map<Sym, Set<St>>> nfaTransitions = new HashMap<>();
@@ -112,7 +114,7 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
             nfaTransitions.put(state, trans);
         }
 
-        return new NFA<St, Sym>(startState, acceptableStates, nfaTransitions);
+        return new NFA<St, Sym>(epsStartState, acceptableStates, nfaTransitions);
     }
 
     /**

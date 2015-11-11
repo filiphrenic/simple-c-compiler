@@ -38,7 +38,7 @@ public class SintaxInputParser {
     }
 
     public static void main(String[] args) throws IOException {
-        InputStream input = new FileInputStream("gramatika100.san");
+        InputStream input = new FileInputStream("grah.txt");
         SintaxInputParser sip = new SintaxInputParser(input);
     }
 
@@ -51,6 +51,7 @@ public class SintaxInputParser {
     private String currLine;
 
     private Grammar g;
+    private int productionId;
 
     /**
      * Creates new instance of {@link SintaxInputParser} which reads given input and
@@ -66,6 +67,7 @@ public class SintaxInputParser {
         // is symbol $ printed? set false if not
         terminalSymbols.put(EPS_SYMBOL_NAME, EPS_SYMBOL);
 
+        productionId = 0;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
             readGrammar(reader);
         } catch (IOException e) {
@@ -114,8 +116,8 @@ public class SintaxInputParser {
         nonTerminalSymbols.put(START_SYMBOL_NAME, startSymbol);
 
         Symbol realStartSymbol = nonTerminalSymbols.get(startState);
-        startingProduction = new Production(startSymbol,
-                Collections.singletonList(realStartSymbol));
+        startingProduction = new Production(startSymbol, Collections.singletonList(realStartSymbol),
+                productionId++);
         //productions.put(startSymbol, Collections.singletonList(startingProduction));
 
         readAllProductions(reader);
@@ -147,7 +149,7 @@ public class SintaxInputParser {
     }
 
     private Production readProduction(Symbol lhs, String line) {
-        Production p = new Production(lhs, readSymbols(line, false));
+        Production p = new Production(lhs, readSymbols(line, false), productionId++);
         return p;
     }
 

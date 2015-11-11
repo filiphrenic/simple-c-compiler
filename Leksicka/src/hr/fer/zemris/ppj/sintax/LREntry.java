@@ -10,7 +10,7 @@ import hr.fer.zemris.ppj.sintax.grammar.Symbol;
 /**
  * @author fhrenic
  */
-public class LREntry {
+public class LREntry implements Comparable<LREntry> {
 
     private Production production;
     private int dotIndex;
@@ -36,6 +36,10 @@ public class LREntry {
         return new LREntry(this);
     }
 
+    public boolean isComplete() {
+        return production.isEpsilonProduction() || dotIndex == production.getRHS().size();
+    }
+
     public boolean isEmptyAfterDot() {
         return dotIndex >= production.emptyFrom();
     }
@@ -44,26 +48,8 @@ public class LREntry {
         return production.getRHS().get(dotIndex);
     }
 
-    public boolean isComplete() {
-        return dotIndex == production.getRHS().size();
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * dotIndex + production.hashCode() << 16;
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof LREntry)) {
-            return false;
-        }
-        LREntry other = (LREntry) obj;
-        return dotIndex == other.dotIndex && production.equals(other.production)
-                && startSet.equals(other.startSet);
+    public Production getProduction() {
+        return production;
     }
 
     @Override
@@ -89,6 +75,42 @@ public class LREntry {
         sb.append('}');
 
         return sb.toString();
+    }
+
+    @Override
+    public int compareTo(LREntry o) {
+        // will return the one that has higher priority
+        // move/reduce -> move
+        // reduce/reduce -> which production was defined first?
+
+        boolean comp1 = isComplete();
+        boolean comp2 = o.isComplete();
+
+        if (comp1 ^ comp2) {
+            return comp1 ? 1 : -1;
+        }
+
+        int c = production.compareTo(o.production);
+        if (c != 0) {
+            return c;
+        }
+
+        return Integer.compare(dotIndex, o.dotIndex);
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * dotIndex + production.hashCode() << 16;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof LREntry)) {
+            return false;
+        }
+        LREntry other = (LREntry) obj;
+        return dotIndex == other.dotIndex && production.equals(other.production)
+                && startSet.equals(other.startSet);
     }
 
     public Iterable<Symbol> getSymbolsAfterDot() {

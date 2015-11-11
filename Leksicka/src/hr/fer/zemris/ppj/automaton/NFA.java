@@ -2,10 +2,12 @@ package hr.fer.zemris.ppj.automaton;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
-import java.util.LinkedHashSet;
+import java.util.TreeSet;
 
 /**
  * Implementation of a non deterministic finite state automaton.
@@ -16,23 +18,22 @@ public class NFA<St, Sym> implements Automaton<Sym> {
 
     private static final long serialVersionUID = -377105148250534821L;
 
-    private St startState;
-    private Set<St> acceptableStates;
-    private Set<St> currentStates;
-    private Map<St, Map<Sym, Set<St>>> transitions;
+    public Set<St> startingStates;
+    public Set<St> acceptableStates;
+    public Set<St> currentStates;
+    public Map<St, Map<Sym, Set<St>>> transitions;
 
     /**
-     * Creates a new automaton with given left and right state. This should be
-     * called only after you have added the transitions to the handler. If it's
-     * done the other way around, it may not work properly.
+     * Creates a new automaton with given properties.
      * 
-     * @param startState starting state
+     * @param startingStates starting states
      * @param acceptableStates final state
      * @param transitions a 'normal' transitions map
      * @param epsilonTransitions epsilon transitions map
      */
-    public NFA(St startState, Set<St> acceptableStates, Map<St, Map<Sym, Set<St>>> transitions) {
-        this.startState = startState;
+    public NFA(Set<St> startingStates, Set<St> acceptableStates,
+            Map<St, Map<Sym, Set<St>>> transitions) {
+        this.startingStates = startingStates;
         this.acceptableStates = acceptableStates;
         this.transitions = transitions;
         currentStates = new LinkedHashSet<>();
@@ -57,8 +58,7 @@ public class NFA<St, Sym> implements Automaton<Sym> {
 
     @Override
     public void reset() {
-        currentStates.clear();
-        currentStates.add(startState);
+        currentStates = new TreeSet<>(startingStates);
     }
 
     @Override
@@ -135,13 +135,14 @@ public class NFA<St, Sym> implements Automaton<Sym> {
         Map<Set<St>, Integer> aliases = new HashMap<>();
 
         // initialization
-        LinkedList<Set<St>> queue = new LinkedList<>();
-        Set<St> states = Collections.singleton(startState);
-        aliases.put(states, state++);
+        Queue<Set<St>> queue = new LinkedList<>();
+        Set<St> states = new LinkedHashSet<>(startingStates);
+        aliases.put(states, state);
+        dfaAliases.put(state++, states);
 
         queue.add(states);
         while (!queue.isEmpty()) {
-            states = queue.removeFirst();
+            states = queue.poll();
             Integer alias = aliases.get(states); // will exist
 
             Set<Sym> symbols = getSymbols(states);
