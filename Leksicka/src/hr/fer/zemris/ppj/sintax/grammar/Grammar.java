@@ -42,12 +42,23 @@ public class Grammar {
         // finds empty symbols
         annotateEmptySymbols();
 
+        //
+        annotateProductions();
+
         for (Symbol s : terminalSymbols) {
             System.out.println(s + " " + s.isEmpty());
         }
 
         // zadnja metoda u konstruktoru
         //generateDFA();
+    }
+
+    private void annotateProductions() {
+        for (List<Production> ps : productions.values()) {
+            for (Production p : ps) {
+                p.annotate();
+            }
+        }
     }
 
     private void annotateEmptySymbols() {
@@ -159,6 +170,8 @@ public class Grammar {
 
                     if (sym.getType() == SymbolType.NON_TERMINAL) {
 
+                        // TODO ovo je krivo
+                        
                         // TODO
                         // ovo se da ubrzati da ne trazi svaki put
                         Symbol nonEmpty = firstNonEmpty(prod, next.getDotIndex());

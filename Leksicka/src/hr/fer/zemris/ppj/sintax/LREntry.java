@@ -35,6 +35,10 @@ public class LREntry {
         return new LREntry(this);
     }
 
+    public boolean isEmptyAfterTransition() {
+        return dotIndex >= production.emptyFrom();
+    }
+
     public Symbol getTransitionSymbol() {
         return production.getRHS().get(dotIndex);
     }

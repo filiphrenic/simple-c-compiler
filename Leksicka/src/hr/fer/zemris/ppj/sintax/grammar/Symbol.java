@@ -10,9 +10,9 @@ public class Symbol implements Comparable<Symbol> {
 
     private String name;
     private SymbolType type;
-    boolean empty;
-    boolean printable;
-    boolean sync;
+    private boolean empty;
+    private boolean printable;
+    private boolean sync;
 
     public Symbol(SymbolType type, String name, boolean isPrintable) {
         this.type = type;

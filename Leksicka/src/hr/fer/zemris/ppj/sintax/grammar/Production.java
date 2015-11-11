@@ -10,10 +10,24 @@ public class Production {
 
     private Symbol lhs; // left hand side
     private List<Symbol> rhs; // right hand side;
+    private int emptyFrom; // index of first symbol after which there are all empty symbols
 
     public Production(Symbol lhs, List<Symbol> rhs) {
         this.lhs = lhs;
         this.rhs = rhs;
+        emptyFrom = 0;
+    }
+
+    public void annotate() {
+        for (int idx = 0; idx < rhs.size(); idx++) {
+            if (!rhs.get(idx).isEmpty()) {
+                emptyFrom = idx + 1;
+            }
+        }
+    }
+
+    public int emptyFrom() {
+        return emptyFrom;
     }
 
     public Symbol getLHS() {
