@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -17,7 +16,11 @@ import hr.fer.zemris.ppj.automaton.DFAExtended;
 import hr.fer.zemris.ppj.automaton.EpsilonNFA;
 import hr.fer.zemris.ppj.automaton.NFA;
 import hr.fer.zemris.ppj.sintax.LREntry;
+import hr.fer.zemris.ppj.sintax.actions.AcceptAction;
 import hr.fer.zemris.ppj.sintax.actions.LRAction;
+import hr.fer.zemris.ppj.sintax.actions.MoveAction;
+import hr.fer.zemris.ppj.sintax.actions.PutAction;
+import hr.fer.zemris.ppj.sintax.actions.ReduceAction;
 import hr.fer.zemris.ppj.stream.SintaxInputParser;
 
 /**
@@ -99,11 +102,11 @@ public class Grammar {
 
     private void buildActionTable(DFAExtended<LREntry, Symbol> dfa) {
 
-        //System.out.println(dfa);
-        System.exit(0);
+        System.err.println("Actions:");
 
         Map<Integer, Set<LREntry>> aliases = dfa.getAliases();
         DFA<Integer, Symbol> dfan = dfa.getDfa();
+        actions = new HashMap<>();
 
         List<Integer> states = new ArrayList<>(aliases.keySet());
         Collections.sort(states);
@@ -111,30 +114,62 @@ public class Grammar {
         Map<Integer, Map<Symbol, Integer>> transitions = dfan.getTransitions();
 
         for (Integer state : transitions.keySet()) {
+            Map<Symbol, LRAction> actions4State = new HashMap<>();
             Map<Symbol, Integer> trans = transitions.get(state);
-            for (Symbol sym : trans.keySet()) {
+            List<LREntry> entries = new ArrayList<>(aliases.get(state));
+            Collections.sort(entries);
 
-            }
+            boolean complete = false;
 
-        }
-
-        for (Integer state : states) {
-            LREntry lre = null;
-            for (LREntry e : aliases.get(state)) {
-                if (lre != null) {
-                    if (e.compareTo(lre) < 0) {
-                        lre = e;
-                    }
-                } else {
-                    lre = e;
+            for (LREntry entry : entries) {
+                if (entry.isComplete()) {
+                    complete = true;
                 }
+
+                if (complete) {
+
+                    if (entry.getProduction().getLHS().equals(startingProduction.getLHS())) {
+                        for (Symbol a : entry.getStartSet()) {
+                            // should be only one symbol, end_stream
+                            System.err.println("Akcija[" + state + "," + a + "]=Prihvati()");
+                            actions4State.put(a, new AcceptAction());
+                        }
+                    }
+
+                    for (Symbol a : entry.getStartSet()) {
+                        if (!actions4State.containsKey(a)) {
+                            // reduce/move contradiction
+                            Production p = entry.getProduction();
+                            System.err.println(
+                                    "Akcija[" + state + "," + a + "]=Reduciraj(" + p + ")");
+                            actions4State.put(a, new ReduceAction(p));
+
+                        }
+                    }
+
+                } else {
+                    Symbol a = entry.getTransitionSymbol();
+                    Integer nextState = trans.get(a);
+                    if (nextState != null) {
+                        if (!actions4State.containsKey(a)) {
+                            if (a.getType() == SymbolType.NON_TERMINAL) {
+                                System.err.println(
+                                        "NovoStanje[" + state + "," + a + "]=" + trans.get(a));
+                                actions4State.put(a, new PutAction(trans.get(a)));
+                            } else {
+                                // move/move contradiction, only first
+                                System.err.println("Akcija[" + state + "," + a + "]=Pomakni("
+                                        + nextState + ")");
+                                actions4State.put(a, new MoveAction(nextState));
+                            }
+                        }
+                    }
+                }
+
             }
 
-            LRAction action = null;
-            if (!lre.isComplete()) {
-
-            }
-
+            actions.put(state, actions4State);
+            System.err.println();
         }
 
     }
@@ -193,8 +228,8 @@ public class Grammar {
                     for (Production ntp : getProductionsForLhs(sym)) {
 
                         if (ntp.isEpsilonProduction()) {
-                            //                            enfa.addEpsilonTransition(entry, next);
-                            //                            continue;
+                            // enfa.addEpsilonTransition(entry, next);
+                            // continue;
                         }
 
                         LREntry nonTermEntry = new LREntry(ntp, newStartSet);
@@ -214,8 +249,8 @@ public class Grammar {
         NFA<LREntry, Symbol> nfa = enfa.toNFA();
 
         DFAExtended<LREntry, Symbol> dfa = nfa.toDFA();
-        System.out.println("------------------");
-        System.out.println(dfa);
+        System.err.println("DFA:\n");
+        System.err.println(dfa);
 
         return dfa;
     }
