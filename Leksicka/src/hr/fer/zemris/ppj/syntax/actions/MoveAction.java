@@ -1,6 +1,6 @@
-package hr.fer.zemris.ppj.sintax.actions;
+package hr.fer.zemris.ppj.syntax.actions;
 
-import hr.fer.zemris.ppj.sintax.LRParser;
+import hr.fer.zemris.ppj.syntax.LRParser;
 
 /**
  * @author fhrenic
@@ -8,7 +8,7 @@ import hr.fer.zemris.ppj.sintax.LRParser;
 public class MoveAction implements LRAction {
 
     private static final long serialVersionUID = 190351265170535630L;
-    
+
     private Integer newState;
 
     public MoveAction(Integer newState) {
@@ -17,7 +17,7 @@ public class MoveAction implements LRAction {
 
     @Override
     public void execute(LRParser parser) {
-        parser.moveAction(this.newState);
+        parser.executeMove(newState);
     }
 
 }

@@ -1,6 +1,6 @@
-package hr.fer.zemris.ppj.sintax.actions;
+package hr.fer.zemris.ppj.syntax.actions;
 
-import hr.fer.zemris.ppj.sintax.LRParser;
+import hr.fer.zemris.ppj.syntax.LRParser;
 
 /**
  * @author fhrenic
@@ -11,6 +11,6 @@ public class AcceptAction implements LRAction {
 
     @Override
     public void execute(LRParser parser) {
-        parser.acceptAction();
+        parser.executeAccept();
     }
 }

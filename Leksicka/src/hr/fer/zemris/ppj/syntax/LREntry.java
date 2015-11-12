@@ -1,12 +1,12 @@
-package hr.fer.zemris.ppj.sintax;
+package hr.fer.zemris.ppj.syntax;
 
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
-import hr.fer.zemris.ppj.sintax.grammar.Production;
-import hr.fer.zemris.ppj.sintax.grammar.Symbol;
+import hr.fer.zemris.ppj.syntax.grammar.Production;
+import hr.fer.zemris.ppj.syntax.grammar.Symbol;
 
 /**
  * @author fhrenic

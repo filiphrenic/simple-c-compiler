@@ -1,9 +1,7 @@
-package hr.fer.zemris.ppj.sintax.grammar;
+package hr.fer.zemris.ppj.syntax.grammar;
 
 import java.io.Serializable;
 import java.util.List;
-
-import hr.fer.zemris.ppj.stream.SintaxInputParser;
 
 /**
  * @author fhrenic
@@ -34,7 +32,7 @@ public class Production implements Comparable<Production>, Serializable {
     }
 
     public boolean isEpsilonProduction() {
-        return rhs.get(0).equals(SintaxInputParser.EPS_SYMBOL);
+        return rhs.get(0).equals(Symbol.EPS_SYMBOL);
     }
 
     public int emptyFrom() {

@@ -1,8 +1,8 @@
-package hr.fer.zemris.ppj.sintax.actions;
+package hr.fer.zemris.ppj.syntax.actions;
 
 import java.io.Serializable;
 
-import hr.fer.zemris.ppj.sintax.LRParser;
+import hr.fer.zemris.ppj.syntax.LRParser;
 
 /**
  * @author fhrenic

@@ -12,10 +12,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import hr.fer.zemris.ppj.sintax.grammar.Grammar;
-import hr.fer.zemris.ppj.sintax.grammar.Production;
-import hr.fer.zemris.ppj.sintax.grammar.Symbol;
-import hr.fer.zemris.ppj.sintax.grammar.SymbolType;
+import hr.fer.zemris.ppj.syntax.grammar.Grammar;
+import hr.fer.zemris.ppj.syntax.grammar.Production;
+import hr.fer.zemris.ppj.syntax.grammar.Symbol;
+import hr.fer.zemris.ppj.syntax.grammar.SymbolType;
 
 /**
  * Class which reads definitions for generator of lexical analyzer and offers
@@ -24,17 +24,7 @@ import hr.fer.zemris.ppj.sintax.grammar.SymbolType;
  * @author fhrenic
  * @author ajuric
  */
-public class SintaxInputParser {
-
-    private static final String EPS_SYMBOL_NAME = "$";
-    private static final String START_SYMBOL_NAME = "<s_crtano>";
-
-    public static final Symbol EPS_SYMBOL;
-
-    static {
-        EPS_SYMBOL = new Symbol(SymbolType.TERMINAL, EPS_SYMBOL_NAME, true);
-        EPS_SYMBOL.setEmpty(true);
-    }
+public class SyntaxInputParser {
 
     private Map<String, Symbol> terminalSymbols;
     private Map<String, Symbol> nonTerminalSymbols;
@@ -48,18 +38,18 @@ public class SintaxInputParser {
     private int productionId;
 
     /**
-     * Creates new instance of {@link SintaxInputParser} which reads given input and
+     * Creates new instance of {@link SyntaxInputParser} which reads given input and
      * parses it.
      * 
      * @param input which contains definitions for generator of lexical analyzer
      */
-    public SintaxInputParser(InputStream input) {
+    public SyntaxInputParser(InputStream input) {
         terminalSymbols = new HashMap<>();
         nonTerminalSymbols = new HashMap<>();
         productions = new LinkedHashMap<>();
 
         // is symbol $ printed? set false if not
-        terminalSymbols.put(EPS_SYMBOL_NAME, EPS_SYMBOL);
+        terminalSymbols.put(Symbol.EPS_SYMBOL_NAME, Symbol.EPS_SYMBOL);
 
         productionId = 0;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
@@ -106,12 +96,11 @@ public class SintaxInputParser {
             sync.setSync(true);
         }
 
-        Symbol startSymbol = readSymbol(START_SYMBOL_NAME, true);
-        nonTerminalSymbols.put(START_SYMBOL_NAME, startSymbol);
+        nonTerminalSymbols.put(Symbol.START_SYMBOL_NAME, Symbol.START_SYMBOL);
 
         Symbol realStartSymbol = nonTerminalSymbols.get(startState);
-        startingProduction = new Production(startSymbol, Collections.singletonList(realStartSymbol),
-                productionId++);
+        startingProduction = new Production(Symbol.START_SYMBOL,
+                Collections.singletonList(realStartSymbol), productionId++);
         //productions.put(startSymbol, Collections.singletonList(startingProduction));
 
         readAllProductions(reader);

@@ -1,4 +1,4 @@
-package hr.fer.zemris.ppj.sintax.grammar;
+package hr.fer.zemris.ppj.syntax.grammar;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,13 +15,11 @@ import hr.fer.zemris.ppj.automaton.DFA;
 import hr.fer.zemris.ppj.automaton.DFAExtended;
 import hr.fer.zemris.ppj.automaton.EpsilonNFA;
 import hr.fer.zemris.ppj.automaton.NFA;
-import hr.fer.zemris.ppj.sintax.LREntry;
-import hr.fer.zemris.ppj.sintax.actions.AcceptAction;
-import hr.fer.zemris.ppj.sintax.actions.LRAction;
-import hr.fer.zemris.ppj.sintax.actions.MoveAction;
-import hr.fer.zemris.ppj.sintax.actions.PutAction;
-import hr.fer.zemris.ppj.sintax.actions.ReduceAction;
-import hr.fer.zemris.ppj.stream.SintaxInputParser;
+import hr.fer.zemris.ppj.syntax.LREntry;
+import hr.fer.zemris.ppj.syntax.actions.AcceptAction;
+import hr.fer.zemris.ppj.syntax.actions.LRAction;
+import hr.fer.zemris.ppj.syntax.actions.MoveAction;
+import hr.fer.zemris.ppj.syntax.actions.ReduceAction;
 
 /**
  * @author fhrenic
@@ -34,12 +32,15 @@ public class Grammar {
     private Map<Symbol, Set<Symbol>> startSets;
 
     private Map<Integer, Map<Symbol, LRAction>> actions;
+    private Map<Integer, Map<Symbol, Integer>> newStates;
 
     public Grammar(List<Symbol> terminalSymbols, Map<Symbol, List<Production>> productions,
             Production startingProduction) {
         this.terminalSymbols = terminalSymbols;
         this.productions = productions;
         this.startingProduction = startingProduction;
+        actions = new HashMap<>();
+        newStates = new HashMap<>();
 
         // finds empty symbols
         annotateEmptySymbols();
@@ -55,6 +56,10 @@ public class Grammar {
 
     public Map<Integer, Map<Symbol, LRAction>> getActions() {
         return actions;
+    }
+
+    public Map<Integer, Map<Symbol, Integer>> getNewStates() {
+        return newStates;
     }
 
     private void annotateProductions() {
@@ -110,7 +115,6 @@ public class Grammar {
 
         Map<Integer, Set<LREntry>> aliases = dfa.getAliases();
         DFA<Integer, Symbol> dfan = dfa.getDfa();
-        actions = new HashMap<>();
 
         List<Integer> states = new ArrayList<>(aliases.keySet());
         Collections.sort(states);
@@ -119,6 +123,8 @@ public class Grammar {
 
         for (Integer state : transitions.keySet()) {
             Map<Symbol, LRAction> actions4State = new HashMap<>();
+            Map<Symbol, Integer> newStates4State = new HashMap<>();
+
             Map<Symbol, Integer> trans = transitions.get(state);
             List<LREntry> entries = new ArrayList<>(aliases.get(state));
             Collections.sort(entries);
@@ -154,13 +160,14 @@ public class Grammar {
                 } else {
                     Symbol a = entry.getTransitionSymbol();
                     Integer nextState = trans.get(a);
-                    if (nextState != null) {
-                        if (!actions4State.containsKey(a)) {
-                            if (a.getType() == SymbolType.NON_TERMINAL) {
-                                System.err.println(
-                                        "NovoStanje[" + state + "," + a + "]=" + trans.get(a));
-                                actions4State.put(a, new PutAction(trans.get(a)));
-                            } else {
+
+                    if (a.getType() == SymbolType.NON_TERMINAL) {
+                        System.err.println("NovoStanje[" + state + "," + a + "]=" + trans.get(a));
+                        newStates4State.put(a, nextState);
+
+                    } else {
+                        if (nextState != null) {
+                            if (!actions4State.containsKey(a)) {
                                 // move/move contradiction, only first
                                 System.err.println("Akcija[" + state + "," + a + "]=Pomakni("
                                         + nextState + ")");
@@ -169,10 +176,10 @@ public class Grammar {
                         }
                     }
                 }
-
             }
 
             actions.put(state, actions4State);
+            newStates.put(state, newStates4State);
             System.err.println();
         }
 
@@ -327,7 +334,7 @@ public class Grammar {
         // also remove epsilon
         for (Set<Symbol> set : startSets.values()) {
             set.retainAll(terminalSymbols);
-            set.remove(SintaxInputParser.EPS_SYMBOL);
+            set.remove(Symbol.EPS_SYMBOL);
         }
 
     }

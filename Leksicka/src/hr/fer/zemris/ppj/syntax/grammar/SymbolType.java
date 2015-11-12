@@ -1,4 +1,4 @@
-package hr.fer.zemris.ppj.sintax.grammar;
+package hr.fer.zemris.ppj.syntax.grammar;
 
 /**
  * @author fhrenic

@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
  */
 public class Streamer {
 
-    // file used for communication between GLA and LA
+    // names of files used for communication between generators and analyzers 
     public static final String FOLDER = "analizator";
     public static final String LEXICAL_OBJECTS = "lex_objects.ppj";
     public static final String SINTAX_OBJECTS = "sin_objects.ppj";
@@ -84,12 +84,12 @@ public class Streamer {
     /**
      * Writes a given string to the output stream
      * 
-     * @param output string to write
+     * @param output object to write
      * @param stream output stream
      * @throws IOException
      */
-    public static void writeToStream(String output, OutputStream stream) throws IOException {
-        stream.write(output.getBytes(CHARSET));
+    public static void writeToStream(Object output, OutputStream stream) throws IOException {
+        stream.write(output.toString().getBytes(CHARSET));
     }
 
 }

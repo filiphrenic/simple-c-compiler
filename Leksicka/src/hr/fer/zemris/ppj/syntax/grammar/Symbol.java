@@ -1,4 +1,4 @@
-package hr.fer.zemris.ppj.sintax.grammar;
+package hr.fer.zemris.ppj.syntax.grammar;
 
 import java.io.Serializable;
 
@@ -10,7 +10,22 @@ public class Symbol implements Comparable<Symbol>, Serializable {
 
     private static final long serialVersionUID = 2797783666592641402L;
 
-    public static final Symbol STREAM_END = new Symbol(SymbolType.TERMINAL, "END", false);
+    public static final String STREAM_END_NAME = "END";
+    public static final String EPS_SYMBOL_NAME = "$";
+    public static final String START_SYMBOL_NAME = "<s_crtano>";
+
+    public static final Symbol EPS_SYMBOL;
+    public static final Symbol START_SYMBOL;
+    public static final Symbol STREAM_END;
+
+    static {
+        EPS_SYMBOL = new Symbol(SymbolType.TERMINAL, EPS_SYMBOL_NAME, true);
+        EPS_SYMBOL.setEmpty(true);
+
+        START_SYMBOL = new Symbol(SymbolType.NON_TERMINAL, START_SYMBOL_NAME, false);
+
+        STREAM_END = new Symbol(SymbolType.TERMINAL, STREAM_END_NAME, false);
+    }
 
     private String name;
     private SymbolType type;

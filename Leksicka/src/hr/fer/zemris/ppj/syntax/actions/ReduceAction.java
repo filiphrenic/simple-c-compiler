@@ -1,7 +1,7 @@
-package hr.fer.zemris.ppj.sintax.actions;
+package hr.fer.zemris.ppj.syntax.actions;
 
-import hr.fer.zemris.ppj.sintax.LRParser;
-import hr.fer.zemris.ppj.sintax.grammar.Production;
+import hr.fer.zemris.ppj.syntax.LRParser;
+import hr.fer.zemris.ppj.syntax.grammar.Production;
 
 /**
  * @author fhrenic
@@ -9,7 +9,7 @@ import hr.fer.zemris.ppj.sintax.grammar.Production;
 public class ReduceAction implements LRAction {
 
     private static final long serialVersionUID = -3146584488477220887L;
-    
+
     private Production production;
 
     public ReduceAction(Production production) {
@@ -18,7 +18,7 @@ public class ReduceAction implements LRAction {
 
     @Override
     public void execute(LRParser parser) {
-        parser.reduceAction(this.production);
+        parser.executeReduce(production);
     }
 
 }
