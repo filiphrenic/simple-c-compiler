@@ -1,5 +1,6 @@
 package hr.fer.zemris.ppj.sintax.grammar;
 
+import java.io.Serializable;
 import java.util.List;
 
 import hr.fer.zemris.ppj.stream.SintaxInputParser;
@@ -8,7 +9,9 @@ import hr.fer.zemris.ppj.stream.SintaxInputParser;
  * @author fhrenic
  * @author marko1597
  */
-public class Production implements Comparable<Production> {
+public class Production implements Comparable<Production>, Serializable {
+
+    private static final long serialVersionUID = -1638197559527421240L;
 
     private int id;
     private Symbol lhs; // left hand side

@@ -1,10 +1,14 @@
 package hr.fer.zemris.ppj.sintax.grammar;
 
+import java.io.Serializable;
+
 /**
  * @author fhrenic
  * @author marko1597
  */
-public class Symbol implements Comparable<Symbol> {
+public class Symbol implements Comparable<Symbol>, Serializable {
+
+    private static final long serialVersionUID = 2797783666592641402L;
 
     public static final Symbol STREAM_END = new Symbol(SymbolType.TERMINAL, "END", false);
 

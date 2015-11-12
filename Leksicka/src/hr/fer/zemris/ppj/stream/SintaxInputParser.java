@@ -1,7 +1,6 @@
 package hr.fer.zemris.ppj.stream;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,11 +34,6 @@ public class SintaxInputParser {
     static {
         EPS_SYMBOL = new Symbol(SymbolType.TERMINAL, EPS_SYMBOL_NAME, true);
         EPS_SYMBOL.setEmpty(true);
-    }
-
-    public static void main(String[] args) throws IOException {
-        InputStream input = new FileInputStream("grah.txt");
-        SintaxInputParser sip = new SintaxInputParser(input);
     }
 
     private Map<String, Symbol> terminalSymbols;

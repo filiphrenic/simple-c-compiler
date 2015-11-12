@@ -1,9 +1,7 @@
 package hr.fer.zemris.ppj.sintax;
 
 import java.io.IOException;
-import java.nio.channels.Pipe.SinkChannel;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -12,7 +10,6 @@ import hr.fer.zemris.ppj.sintax.grammar.Production;
 import hr.fer.zemris.ppj.sintax.grammar.Symbol;
 
 /**
- * @author fhrenic
  * @author marko1597
  */
 public class LRParser {

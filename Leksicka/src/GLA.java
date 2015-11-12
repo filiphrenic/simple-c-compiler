@@ -50,16 +50,15 @@ public class GLA {
      */
     public void generateLA() {
         LexicalInputParser parser = new LexicalInputParser(input);
-        String result;
-        try (ObjectOutputStream stream = Streamer.getOutput()) {
+        String fileName = Streamer.FOLDER + "/" + Streamer.LEXICAL_OBJECTS;
+
+        try (ObjectOutputStream stream = Streamer.getOutput(fileName)) {
             stream.writeObject(parser.getStartState());
             stream.writeObject(parser.getStates());
-            result = "Generated tables";
         } catch (IOException ioe) {
             // TODO: handle exception
-            result = "Error\n" + ioe.getMessage();
+            System.err.println("Error in GLA: " + ioe.getMessage());
         }
-        System.err.println(result);
 
     }
 

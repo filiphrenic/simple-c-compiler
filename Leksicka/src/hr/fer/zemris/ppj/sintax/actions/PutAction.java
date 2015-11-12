@@ -7,6 +7,8 @@ import hr.fer.zemris.ppj.sintax.LRParser;
  */
 public class PutAction implements LRAction {
 
+    private static final long serialVersionUID = -3251760961934426419L;
+    
     private Integer newState;
 
     public PutAction(Integer newState) {

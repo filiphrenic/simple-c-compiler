@@ -53,6 +53,10 @@ public class Grammar {
         buildActionTable(generateDFA());
     }
 
+    public Map<Integer, Map<Symbol, LRAction>> getActions() {
+        return actions;
+    }
+
     private void annotateProductions() {
         for (List<Production> ps : productions.values()) {
             for (Production p : ps) {
@@ -325,7 +329,6 @@ public class Grammar {
             set.retainAll(terminalSymbols);
             set.remove(SintaxInputParser.EPS_SYMBOL);
         }
-
 
     }
 

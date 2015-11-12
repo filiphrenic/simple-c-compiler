@@ -1,5 +1,6 @@
 package hr.fer.zemris.ppj.sintax;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
@@ -10,7 +11,9 @@ import hr.fer.zemris.ppj.sintax.grammar.Symbol;
 /**
  * @author fhrenic
  */
-public class LREntry implements Comparable<LREntry> {
+public class LREntry implements Comparable<LREntry>, Serializable {
+
+    private static final long serialVersionUID = 6695195208613158733L;
 
     private Production production;
     private int dotIndex;

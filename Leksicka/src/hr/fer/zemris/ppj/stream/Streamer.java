@@ -24,14 +24,11 @@ public class Streamer {
 
     // file used for communication between GLA and LA
     public static final String FOLDER = "analizator";
-    private static final String LEXICAL_OBJECTS = "lex_objects.ppj";
-    private static final String SINTAX_OBJECTS = "sin_objects.ppj";
-
-    private static File LEXICAL_FILE = new File(LEXICAL_OBJECTS);
-    private static File SINTAX_FILE = new File(LEXICAL_OBJECTS);
+    public static final String LEXICAL_OBJECTS = "lex_objects.ppj";
+    public static final String SINTAX_OBJECTS = "sin_objects.ppj";
 
     static {
-        LEXICAL_FILE.getParentFile().mkdirs();
+        new File(FOLDER).mkdirs();
     }
 
     // reading/writing to streams
@@ -41,11 +38,13 @@ public class Streamer {
     /**
      * Returns an object stream used to read objects produced by the GLA
      * 
+     * @param fileName name of the file to be used as a io stream
      * @return object output stream
      * @throws IOException
      */
-    public static ObjectOutputStream getOutput() throws IOException {
-        FileOutputStream fileStream = new FileOutputStream(LEXICAL_FILE);
+    public static ObjectOutputStream getOutput(String fileName) throws IOException {
+        File output = new File(fileName);
+        FileOutputStream fileStream = new FileOutputStream(output);
         ObjectOutputStream objStream = new ObjectOutputStream(fileStream);
         return objStream;
     }
@@ -53,11 +52,13 @@ public class Streamer {
     /**
      * Returns an object stream used by the GLA to write objects
      * 
+     * @param fileName name of the file to be used as a io stream
      * @return object input stream
      * @throws IOException
      */
-    public static ObjectInputStream getInput() throws IOException {
-        FileInputStream fileStream = new FileInputStream(LEXICAL_FILE);
+    public static ObjectInputStream getInput(String fileName) throws IOException {
+        File input = new File(fileName);
+        FileInputStream fileStream = new FileInputStream(input);
         ObjectInputStream objStream = new ObjectInputStream(fileStream);
         return objStream;
     }
