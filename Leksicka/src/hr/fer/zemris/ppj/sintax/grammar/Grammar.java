@@ -303,6 +303,7 @@ public class Grammar {
         // equivalence relation
         boolean change;
         do {
+
             change = false;
             for (Symbol symbol : nonTerminalSymbols) {
                 Set<Symbol> firstSet = startSets.get(symbol);
@@ -324,6 +325,7 @@ public class Grammar {
             set.retainAll(terminalSymbols);
             set.remove(SintaxInputParser.EPS_SYMBOL);
         }
+
 
     }
 
