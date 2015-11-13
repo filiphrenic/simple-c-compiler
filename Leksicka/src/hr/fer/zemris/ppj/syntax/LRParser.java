@@ -40,28 +40,21 @@ public class LRParser {
 
     public void parse() {
         stack = new Stack<>();
-        StackEntry startingSE = new StackEntry(0, null);
-        stack.push(startingSE);
+        stack.push(new StackEntry(0, null));
 
         symbols = LRSymbol.readSymbolsFrom(input);
         index = 0;
 
-        while (!accepts) {
+        while (!accepts && index < symbols.size() && !stack.isEmpty()) {
             LRSymbol current = symbols.get(index);
 
             Map<Symbol, LRAction> map = actions.get(stack.peek().state);
+            LRAction action;
 
-            if (map != null) {
-                LRAction action = map.get(current.getSymbol());
-                if (action == null) {
-                    errorRecovery();
-                    return;
-                }
-                action.execute(this);
-            } else {
+            if (map == null || (action = map.get(current.getSymbol())) == null) {
                 errorRecovery();
-
-                return;
+            } else {
+                action.execute(this);
             }
         }
 
@@ -70,6 +63,8 @@ public class LRParser {
             Streamer.writeToStream(stack.peek().node, output);
         } catch (IOException e) {
         }
+
+        System.err.println("Accepts: " + accepts);
     }
 
     public void executeMove(int newState) {
@@ -105,8 +100,7 @@ public class LRParser {
                 errorRecovery();
                 return;
             }
-            StackEntry se = new StackEntry(newState, parent);
-            stack.push(se);
+            stack.push(new StackEntry(newState, parent));
         } else {
             errorRecovery();
             return;
@@ -119,27 +113,39 @@ public class LRParser {
     }
 
     private void errorRecovery() {
+
         System.err.println("Error at " + symbols.get(index).getLineNumber());
+        System.err.println("Expected one of following: ");
+        for (Symbol s : actions.get(stack.peek().state).keySet()) {
+            System.err.print(s + " ");
+        }
+
         System.err.println("Searching for synchronization symbol...");
 
         LRSymbol sync;
         while (!(sync = symbols.get(index)).getSymbol().isSync()) {
-            index++;
+            if (++index == symbols.size()) {
+                System.err.println("Didn't find synchronization symbol");
+                return;
+            }
         }
 
         System.err.println("Found symbol " + sync);
 
         // searching for valid transition
         while (true) {
-            Integer state = stack.peek().state;
-            Map<Symbol, LRAction> map = actions.get(state);
+            Map<Symbol, LRAction> map = actions.get(stack.peek().state);
             if (map == null || map.get(sync.getSymbol()) == null) {
                 stack.pop();
+                if (stack.isEmpty()) {
+                    System.err.println(
+                            "Error recovery hasn't come to a valid state. Stoping analysis");
+                }
                 continue;
             }
             break;
         }
-        System.err.println("Continuing with the analysis...");
+        System.err.println("Continuing with the analysis...\n");
     }
 
     private static class StackEntry {
