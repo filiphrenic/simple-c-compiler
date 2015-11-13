@@ -1,14 +1,18 @@
 package hr.fer.zemris.ppj.syntax;
 
 import java.io.Serializable;
-import java.util.Iterator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import hr.fer.zemris.ppj.syntax.grammar.Production;
 import hr.fer.zemris.ppj.syntax.grammar.Symbol;
 
 /**
+ * This class represents a production with a dot. This is used to create tables
+ * for the parser. Example A->aBC, creates entry A->[dot]aBC
+ * 
  * @author fhrenic
  */
 public class LREntry implements Comparable<LREntry>, Serializable {
@@ -19,38 +23,79 @@ public class LREntry implements Comparable<LREntry>, Serializable {
     private int dotIndex;
     private Set<Symbol> startSet;
 
+    /**
+     * Creates a new entry from all needed parameters. Dot is set at the front
+     * of productions right side.
+     * 
+     * @param production production
+     * @param startSet start set of this entry
+     */
     public LREntry(Production production, Set<Symbol> startSet) {
         this.production = production;
         dotIndex = 0;
         this.startSet = startSet;
     }
 
+    /**
+     * Helper, copies the given entry and moves the dot one step.
+     * 
+     * @param e entry to copy
+     */
     private LREntry(LREntry e) {
         this.production = e.production;
         this.dotIndex = e.dotIndex + 1;
-        this.startSet = new TreeSet<>(e.startSet);
+        this.startSet = new HashSet<>(e.startSet);
     }
 
+    /**
+     * @return start set
+     */
     public Set<Symbol> getStartSet() {
         return startSet;
     }
 
+    /**
+     * The next entry is the same as this entry but it has dot moved one towards
+     * production end. A->a[dot]BC => A->aB[dot]C
+     * 
+     * @return next entry
+     */
     public LREntry next() {
         return new LREntry(this);
     }
 
+    /**
+     * Returns if this entry is complete. It is complete if the dot is at the
+     * end of the production. A->aBC[dot] is complete, A->[dot]aBC isn't.
+     * C->[dot]$ is also complete because it is an epsilon production
+     * 
+     * @return <code>true</code> if entry is complete
+     */
     public boolean isComplete() {
         return production.isEpsilonProduction() || dotIndex == production.getRHS().size();
     }
 
+    /**
+     * Returns <code>true</code> if the symbols after the dot are empty
+     * 
+     * @return <code>true</code> if symbols right of the dot are empty
+     */
     public boolean isEmptyAfterDot() {
         return dotIndex >= production.emptyFrom();
     }
 
+    /**
+     * Returns the symbol that follows the dot
+     * 
+     * @return transition symbol
+     */
     public Symbol getTransitionSymbol() {
         return production.getRHS().get(dotIndex);
     }
 
+    /**
+     * @return underlying production
+     */
     public Production getProduction() {
         return production;
     }
@@ -103,7 +148,7 @@ public class LREntry implements Comparable<LREntry>, Serializable {
 
     @Override
     public int hashCode() {
-        return 31 * dotIndex + production.hashCode() << 16;
+        return 31 * production.hashCode() + dotIndex;
     }
 
     @Override
@@ -116,35 +161,20 @@ public class LREntry implements Comparable<LREntry>, Serializable {
                 && startSet.equals(other.startSet);
     }
 
-    public Iterable<Symbol> getSymbolsAfterDot() {
-        return new Iterable<Symbol>() {
-            @Override
-            public Iterator<Symbol> iterator() {
-                return new SymbolDotIt(dotIndex);
+    /**
+     * @param startSets
+     * @return
+     */
+    public Set<Symbol> getStartSetFromDot(Map<Symbol, Set<Symbol>> startSets) {
+        List<Symbol> rhs = production.getRHS();
+        Set<Symbol> startS = new HashSet<>(startSet);
+        for (int idx = dotIndex; idx < rhs.size(); idx++) {
+            Symbol s = rhs.get(idx);
+            startS.addAll(startSets.get(s));
+            if (!s.isEmpty()) {
+                break;
             }
-        };
-    }
-
-    private class SymbolDotIt implements Iterator<Symbol> {
-        private int idx;
-
-        public SymbolDotIt(int idx) {
-            this.idx = idx;
         }
-
-        @Override
-        public boolean hasNext() {
-            return idx < production.getRHS().size();
-        }
-
-        @Override
-        public Symbol next() {
-            return production.getRHS().get(idx++);
-        }
-
-        @Override
-        public void remove() {
-        }
-
+        return startS;
     }
 }

@@ -11,10 +11,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 
-import hr.fer.zemris.ppj.automaton.DFA;
 import hr.fer.zemris.ppj.automaton.DFAExtended;
 import hr.fer.zemris.ppj.automaton.EpsilonNFA;
-import hr.fer.zemris.ppj.automaton.NFA;
 import hr.fer.zemris.ppj.syntax.LREntry;
 import hr.fer.zemris.ppj.syntax.actions.AcceptAction;
 import hr.fer.zemris.ppj.syntax.actions.LRAction;
@@ -22,6 +20,9 @@ import hr.fer.zemris.ppj.syntax.actions.MoveAction;
 import hr.fer.zemris.ppj.syntax.actions.ReduceAction;
 
 /**
+ * This class represents a grammar. The most important method (for this
+ * assignment) is the method that generates tables for LR parser.
+ * 
  * @author fhrenic
  */
 public class Grammar {
@@ -30,10 +31,21 @@ public class Grammar {
     private Map<Symbol, List<Production>> productions;
     private Production startingProduction; // S' -> S
     private Map<Symbol, Set<Symbol>> startSets;
+    
+    
 
     private Map<Integer, Map<Symbol, LRAction>> actions;
     private Map<Integer, Map<Symbol, Integer>> newStates;
 
+    /**
+     * Create a new instance of {@link Grammar}. This constructor basically does
+     * all the work. You don't need to supply non-terminal symbols because they
+     * should be keys of the productions map.
+     * 
+     * @param terminalSymbols terminal symbols
+     * @param productions a map [non-terminal symbol => list of productions]
+     * @param startingProduction starting production
+     */
     public Grammar(List<Symbol> terminalSymbols, Map<Symbol, List<Production>> productions,
             Production startingProduction) {
         this.terminalSymbols = terminalSymbols;
@@ -51,17 +63,31 @@ public class Grammar {
         annotateProductions();
 
         // zadnja metoda u konstruktoru
-        buildActionTable(generateDFA());
+        buildParserTable(generateDFA());
     }
 
+    /**
+     * Returns the actions required by the parser.
+     * 
+     * @return action table
+     */
     public Map<Integer, Map<Symbol, LRAction>> getActions() {
         return actions;
     }
 
+    /**
+     * Returns the new states required by the parser.
+     * 
+     * @return new state table
+     */
     public Map<Integer, Map<Symbol, Integer>> getNewStates() {
         return newStates;
     }
 
+    /**
+     * Annotates productions in a way that it finds the epsilon productions and
+     * those that contain all empty symbols.
+     */
     private void annotateProductions() {
         for (List<Production> ps : productions.values()) {
             for (Production p : ps) {
@@ -71,6 +97,9 @@ public class Grammar {
         startingProduction.annotate();
     }
 
+    /**
+     * Annotates symbols so it finds all empty symbols.
+     */
     private void annotateEmptySymbols() {
         boolean foundNewEmpty = false;
         for (Symbol term : productions.keySet()) {
@@ -90,10 +119,22 @@ public class Grammar {
         }
     }
 
+    /**
+     * Returns start set of a given symbol.
+     * 
+     * @param sym symbol of interest
+     * @return start set
+     */
     private Set<Symbol> startsWith(Symbol sym) {
         return startSets.get(sym);
     }
 
+    /**
+     * Returns a start set of an iterable of symbols
+     * 
+     * @param it iterable
+     * @return start set
+     */
     private Set<Symbol> startsWith(Iterable<Symbol> it) {
         Set<Symbol> set = new TreeSet<>();
         for (Symbol s : it) {
@@ -105,21 +146,19 @@ public class Grammar {
         return set;
     }
 
-    public List<Production> getProductionsForLhs(Symbol sym) {
-        return productions.get(sym);
-    }
-
-    private void buildActionTable(DFAExtended<LREntry, Symbol> dfa) {
-
-        System.err.println("Actions:");
+    /**
+     * Builds actions and new state table for the parser. Most vital method of
+     * grammar.
+     * 
+     * @param dfa underlying dfa that is used to create tables
+     */
+    private void buildParserTable(DFAExtended<LREntry, Symbol> dfa) {
 
         Map<Integer, Set<LREntry>> aliases = dfa.getAliases();
-        DFA<Integer, Symbol> dfan = dfa.getDfa();
+        Map<Integer, Map<Symbol, Integer>> transitions = dfa.getDfa().getTransitions();
 
         List<Integer> states = new ArrayList<>(aliases.keySet());
         Collections.sort(states);
-
-        Map<Integer, Map<Symbol, Integer>> transitions = dfan.getTransitions();
 
         for (Integer state : transitions.keySet()) {
             Map<Symbol, LRAction> actions4State = new HashMap<>();
@@ -141,7 +180,7 @@ public class Grammar {
                     if (entry.getProduction().getLHS().equals(startingProduction.getLHS())) {
                         for (Symbol a : entry.getStartSet()) {
                             // should be only one symbol, end_stream
-                            System.err.println("Akcija[" + state + "," + a + "]=Prihvati()");
+                            // System.err.println("Akcija[" + state + "," + a + "]=Prihvati()");
                             actions4State.put(a, new AcceptAction());
                         }
                     }
@@ -150,8 +189,7 @@ public class Grammar {
                         if (!actions4State.containsKey(a)) {
                             // reduce/move contradiction
                             Production p = entry.getProduction();
-                            System.err.println(
-                                    "Akcija[" + state + "," + a + "]=Reduciraj(" + p + ")");
+                            // System.err.println("Akcija[" + state + "," + a + "]=Reduciraj(" + p + ")");
                             actions4State.put(a, new ReduceAction(p));
 
                         }
@@ -162,15 +200,16 @@ public class Grammar {
                     Integer nextState = trans.get(a);
 
                     if (a.getType() == SymbolType.NON_TERMINAL) {
-                        System.err.println("NovoStanje[" + state + "," + a + "]=" + trans.get(a));
-                        newStates4State.put(a, nextState);
+                        // System.err.println("NovoStanje[" + state + "," + a + "]=" + trans.get(a));
+                        if (!newStates4State.containsKey(a)) {
+                            newStates4State.put(a, nextState);
+                        }
 
                     } else {
                         if (nextState != null) {
                             if (!actions4State.containsKey(a)) {
                                 // move/move contradiction, only first
-                                System.err.println("Akcija[" + state + "," + a + "]=Pomakni("
-                                        + nextState + ")");
+                                // System.err.println("Akcija[" + state + "," + a + "]=Pomakni(" + nextState + ")");
                                 actions4State.put(a, new MoveAction(nextState));
                             }
                         }
@@ -180,16 +219,21 @@ public class Grammar {
 
             actions.put(state, actions4State);
             newStates.put(state, newStates4State);
-            System.err.println();
+            // System.err.println();
         }
 
     }
 
+    /**
+     * Creates a dfa from this grammar.
+     * 
+     * @return dfa
+     */
     private DFAExtended<LREntry, Symbol> generateDFA() {
 
-        /* * * * * * * * * *
-         * ENFA parameters *
-         * * * * * * * * * */
+        /*
+         * * * * * * * * * * ENFA parameters * * * * * * * * *
+         */
 
         // S' -> .S, { STREAM_END } is the start state
         // S' -> S., { STREAM_END } is the final state
@@ -209,9 +253,11 @@ public class Grammar {
         Queue<LREntry> queue = new LinkedList<>();
         queue.add(startState);
 
-        /* * * * * * * * * * * * * *
-         * Add transitions to ENFA *
-         * * * * * * * * * * * * * */
+        /*
+         * * * * * * * * * Add transitions to ENFA * * * * * * * * *
+         */
+        System.out.println("gradim enfa");
+        long t1 = System.currentTimeMillis();
 
         while (!queue.isEmpty()) {
             LREntry entry = queue.poll();
@@ -230,19 +276,14 @@ public class Grammar {
                     // next  = A -> xB.y, {a1,...,an}
 
                     // case 4 - c - i
-                    Set<Symbol> newStartSet = startsWith(next.getSymbolsAfterDot());
+
+                    Set<Symbol> newStartSet = next.getStartSetFromDot(startSets);
                     if (next.isEmptyAfterDot()) {
                         // case 4 - c - ii
                         newStartSet.addAll(entry.getStartSet());
                     }
 
-                    for (Production ntp : getProductionsForLhs(sym)) {
-
-                        if (ntp.isEpsilonProduction()) {
-                            // enfa.addEpsilonTransition(entry, next);
-                            // continue;
-                        }
-
+                    for (Production ntp : productions.get(sym)) {
                         LREntry nonTermEntry = new LREntry(ntp, newStartSet);
                         enfa.addEpsilonTransition(entry, nonTermEntry);
 
@@ -257,13 +298,13 @@ public class Grammar {
             }
         }
 
-        NFA<LREntry, Symbol> nfa = enfa.toNFA();
+        System.out.println("gotov enfa");
 
-        DFAExtended<LREntry, Symbol> dfa = nfa.toDFA();
-        System.err.println("DFA:\n");
-        System.err.println(dfa);
+        long t2 = System.currentTimeMillis();
+        double t = (t2 - t1) / 1000;
+        System.out.format("%.2f seconds\n", t);
 
-        return dfa;
+        return enfa.toNFA().toDFA();
     }
 
     @Override
@@ -282,7 +323,10 @@ public class Grammar {
     }
 
     /**
+     * Constructs a map of start sets.
+     * 
      * @author dnakic
+     * @author fhrenic
      */
     private void constructStartSets() {
 

@@ -13,13 +13,15 @@ import hr.fer.zemris.ppj.syntax.actions.LRAction;
 import hr.fer.zemris.ppj.syntax.grammar.Symbol;
 
 /**
+ * This class is used to do syntax analysis of a program. It uses LR(1) parser.
+ * 
  * @author fhrenic
  */
 public class SA {
     public static void main(String[] args) throws FileNotFoundException {
         InputStream input = new FileInputStream(new File("files/syntax/sa.in"));
-        //InputStream input = System.in;
-        new SA(input, System.out).sintaxAnalysis();
+        //        InputStream input = System.in;
+        new SA(input, System.out).syntaxAnalysis();
     }
 
     private InputStream input;
@@ -38,23 +40,23 @@ public class SA {
     }
 
     /**
-     * Performs sintax analysis of the input stream.
+     * Performs syntax analysis of the input stream.
      */
     @SuppressWarnings("unchecked")
-    public void sintaxAnalysis() {
-        String fileName = Streamer.FOLDER + "/" + Streamer.SINTAX_OBJECTS;
-        //String fileName = Streamer.SINTAX_OBJECTS;
+    public void syntaxAnalysis() {
+        String fileName = Streamer.FOLDER + "/" + Streamer.SYNTAX_OBJECTS;
+
+        // use this for SPRUT
+        // String fileName = Streamer.SINTAX_OBJECTS;
 
         try (ObjectInputStream stream = Streamer.getInput(fileName)) {
             Map<Integer, Map<Symbol, LRAction>> actions = (Map<Integer, Map<Symbol, LRAction>>) stream
                     .readObject();
             Map<Integer, Map<Symbol, Integer>> newStates = (Map<Integer, Map<Symbol, Integer>>) stream
                     .readObject();
-            // create parser with given actions, input and output stream
             new LRParser(input, output, actions, newStates).parse();
         } catch (IOException | ClassNotFoundException ex) {
-            // TODO: handle exception
-            System.out.println(ex);
+            System.err.println("Error in SA: " + ex.getMessage());
         }
     }
 

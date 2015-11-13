@@ -13,6 +13,8 @@ import hr.fer.zemris.ppj.syntax.grammar.Production;
 import hr.fer.zemris.ppj.syntax.grammar.Symbol;
 
 /**
+ * Parser who's main task is to parse the input and build a syntax tree.
+ * 
  * @author fhrenic
  */
 public class LRParser {
@@ -28,6 +30,14 @@ public class LRParser {
     private List<LRSymbol> symbols;
     private int index;
 
+    /**
+     * Creates a new {@link LRParser}
+     * 
+     * @param input used to read symbols
+     * @param output used to print the tree
+     * @param actions actions taken by the parser
+     * @param newStates determines the new state upon reduction
+     */
     public LRParser(InputStream input, OutputStream output,
             Map<Integer, Map<Symbol, LRAction>> actions,
             Map<Integer, Map<Symbol, Integer>> newStates) {
@@ -38,6 +48,9 @@ public class LRParser {
         accepts = false;
     }
 
+    /**
+     * Parses input from input stream.
+     */
     public void parse() {
         stack = new Stack<>();
         stack.push(new StackEntry(0, null));
@@ -67,12 +80,23 @@ public class LRParser {
         System.err.println("Accepts: " + accepts);
     }
 
+    /**
+     * Moves the pointer to the next symbol and builds a new node.
+     * 
+     * @param newState new state to go to
+     */
     public void executeMove(int newState) {
         LRSymbol current = symbols.get(index++);
         StackEntry se = new StackEntry(newState, new LRNode(current));
         stack.push(se);
     }
 
+    /**
+     * Reduces nodes from the stack to a parent node and adds the removed nodes
+     * as it's children.
+     * 
+     * @param p production, lhs becomes parent, rhs is removed from stack
+     */
     public void executeReduce(Production p) {
         LRNode parent = new LRNode(new LRSymbol(p.getLHS()));
 
@@ -91,7 +115,7 @@ public class LRParser {
         }
 
         // needs to be done to have output ordering correct
-        parent.reverseChildren();
+        parent.reverseChildrenOrder();
 
         Map<Symbol, Integer> map = newStates.get(stack.peek().state);
         if (map != null) {
@@ -108,10 +132,16 @@ public class LRParser {
 
     }
 
+    /**
+     * Set parser as accepting the input.
+     */
     public void executeAccept() {
         accepts = true;
     }
 
+    /**
+     * If there is no valid transition for the parser, this method is called.
+     */
     private void errorRecovery() {
 
         System.err.println("Error at " + symbols.get(index).getLineNumber());
@@ -148,6 +178,11 @@ public class LRParser {
         System.err.println("Continuing with the analysis...\n");
     }
 
+    /**
+     * Simple wrapper for a stack entry.
+     * 
+     * @author fhrenic
+     */
     private static class StackEntry {
         int state;
         LRNode node;

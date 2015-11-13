@@ -10,8 +10,19 @@ import java.util.List;
 import hr.fer.zemris.ppj.syntax.grammar.Symbol;
 import hr.fer.zemris.ppj.syntax.grammar.SymbolType;
 
+/**
+ * A wrapper around symbol that also has line nubmer and original text.
+ * 
+ * @author fhrenic
+ */
 public class LRSymbol {
 
+    /**
+     * Read symbols from input stream
+     * 
+     * @param input stream
+     * @return list of read symbols
+     */
     public static List<LRSymbol> readSymbolsFrom(InputStream input) {
         List<LRSymbol> symbols = new ArrayList<>();
 
@@ -38,12 +49,25 @@ public class LRSymbol {
     private int lineNumber;
     private String originalText;
 
+    /**
+     * Create a new {@link LRSymbol} with given properties.
+     * 
+     * @param symbol
+     * @param lineNumber
+     * @param originalText
+     */
     public LRSymbol(Symbol symbol, int lineNumber, String originalText) {
         this.symbol = symbol;
         this.lineNumber = lineNumber;
         this.originalText = originalText;
     }
 
+    /**
+     * Create a new {@link LRSymbol} that doesn't need to have line number and
+     * original text properties.
+     * 
+     * @param symbol
+     */
     public LRSymbol(Symbol symbol) {
         this(symbol, -1, "");
     }

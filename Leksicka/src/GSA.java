@@ -6,40 +6,59 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 
-import hr.fer.zemris.ppj.stream.SyntaxInputParser;
 import hr.fer.zemris.ppj.stream.Streamer;
+import hr.fer.zemris.ppj.stream.SyntaxInputParser;
 import hr.fer.zemris.ppj.syntax.grammar.Grammar;
 
 /**
+ * This class is used to generate a sytax analyzer. It reads in grammar
+ * definition and based on that generates lr(1) parser's tables.
  * 
- * @author ajuric
- * @author fhrenic 
+ * @author fhrenic
  */
 public class GSA {
 
     public static void main(String[] args) throws FileNotFoundException {
-        InputStream input = new FileInputStream(new File("files/syntax/gsa.in"));
+        InputStream input = new FileInputStream(new File("tests_syntax/simplePpjVeci/test.san"));
         //InputStream input = System.in;
         GSA generator = new GSA(input);
+        long t1 = System.currentTimeMillis();
+        System.out.println("pocetno = " + t1);
         generator.generateSA();
+        long t2 = System.currentTimeMillis();
+        System.out.println("gotovo  = " + t2);
+        double t = (t2 - t1) / 1000;
+        System.out.format("%.2f seconds\n", t);
     }
 
+    /**
+     * Input stream used to read in grammar definition.
+     */
     private InputStream input;
 
+    /**
+     * Creates a new generator that will use given input stream.
+     * 
+     * @param input input stream that will be used to read grammar definition
+     */
     public GSA(InputStream input) {
         this.input = input;
     }
 
+    /**
+     * Generates tables for LR parser in such way that it writes them out to a
+     * file. More concretely, tables are actions and new state.
+     */
     public void generateSA() {
         SyntaxInputParser sip = new SyntaxInputParser(input);
         Grammar g = sip.getConstructedGrammar();
-        String fileName = Streamer.FOLDER + "/" + Streamer.SINTAX_OBJECTS;
+        String fileName = Streamer.FOLDER + "/" + Streamer.SYNTAX_OBJECTS;
 
         try (ObjectOutputStream stream = Streamer.getOutput(fileName)) {
             stream.writeObject(g.getActions());
             stream.writeObject(g.getNewStates());
+            System.out.println("done");
         } catch (IOException ioe) {
-            // TODO: handle exception
             System.err.println("Error in GSA: " + ioe.getMessage());
         }
     }

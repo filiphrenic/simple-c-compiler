@@ -1,6 +1,3 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -20,9 +17,9 @@ import hr.fer.zemris.ppj.stream.Streamer;
  */
 public class LA {
 
-    public static void main(String[] args) throws FileNotFoundException {
-        InputStream input = new FileInputStream(new File("primjer.minus.txt"));
-        //InputStream input = System.in;
+    public static void main(String[] args) {
+        //InputStream input = new FileInputStream(new File("primjer.minus.txt"));
+        InputStream input = System.in;
         new LA(input, System.out).lexicalAnalysis();
     }
 
@@ -54,7 +51,7 @@ public class LA {
                     .readObject();
             new Lex(startState, states, output).analyzeInput(input);
         } catch (IOException | ClassNotFoundException ex) {
-            // TODO: handle exception
+            System.err.println("Error in LA: " + ex.getMessage());
         }
     }
 

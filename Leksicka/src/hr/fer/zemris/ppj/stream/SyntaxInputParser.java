@@ -22,7 +22,6 @@ import hr.fer.zemris.ppj.syntax.grammar.SymbolType;
  * getters for states, lexical classes and rules for lexical analyzer.
  * 
  * @author fhrenic
- * @author ajuric
  */
 public class SyntaxInputParser {
 
@@ -34,12 +33,12 @@ public class SyntaxInputParser {
 
     private String currLine;
 
-    private Grammar g;
+    private Grammar grammar;
     private int productionId;
 
     /**
-     * Creates new instance of {@link SyntaxInputParser} which reads given input and
-     * parses it.
+     * Creates new instance of {@link SyntaxInputParser} which reads given input
+     * and parses it.
      * 
      * @param input which contains definitions for generator of lexical analyzer
      */
@@ -48,10 +47,10 @@ public class SyntaxInputParser {
         nonTerminalSymbols = new HashMap<>();
         productions = new LinkedHashMap<>();
 
-        // is symbol $ printed? set false if not
         terminalSymbols.put(Symbol.EPS_SYMBOL_NAME, Symbol.EPS_SYMBOL);
-
+        nonTerminalSymbols.put(Symbol.START_SYMBOL_NAME, Symbol.START_SYMBOL);
         productionId = 0;
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
             readGrammar(reader);
         } catch (IOException e) {
@@ -60,16 +59,22 @@ public class SyntaxInputParser {
 
         List<Symbol> terminals = new ArrayList<>(terminalSymbols.values());
 
-        g = new Grammar(terminals, productions, startingProduction);
-    }
-
-    public Grammar getConstructedGrammar() {
-        return g;
+        grammar = new Grammar(terminals, productions, startingProduction);
     }
 
     /**
-     * Parses definitions for generator of lexical analyzer.
+     * Returns the grammar that was constructed from the grammar definition.
      * 
+     * @return grammar
+     */
+    public Grammar getConstructedGrammar() {
+        return grammar;
+    }
+
+    /**
+     * Parses definitions of a grammar.
+     * 
+     * @param reader used for reading lines
      * @throws IOException
      */
     private void readGrammar(BufferedReader reader) throws IOException {
@@ -96,16 +101,20 @@ public class SyntaxInputParser {
             sync.setSync(true);
         }
 
-        nonTerminalSymbols.put(Symbol.START_SYMBOL_NAME, Symbol.START_SYMBOL);
-
         Symbol realStartSymbol = nonTerminalSymbols.get(startState);
         startingProduction = new Production(Symbol.START_SYMBOL,
                 Collections.singletonList(realStartSymbol), productionId++);
-        //productions.put(startSymbol, Collections.singletonList(startingProduction));
+        //productions.put(Symbol.START_SYMBOL, Collections.singletonList(startingProduction));
 
         readAllProductions(reader);
     }
 
+    /**
+     * This method reads all of the productions and stores them in the map.
+     * 
+     * @param reader line reader
+     * @throws IOException
+     */
     private void readAllProductions(BufferedReader reader) throws IOException {
         currLine = reader.readLine();
         while (currLine != null) {
@@ -119,6 +128,15 @@ public class SyntaxInputParser {
         }
     }
 
+    /**
+     * Reads production for a single non-terminal symbols. This method is called
+     * multiple times in the readAllProductions method.
+     * 
+     * @param reader line reader
+     * @param lhs left hand side of the production
+     * @return list of productions for given lhs
+     * @throws IOException
+     */
     private List<Production> readProductions(BufferedReader reader, Symbol lhs) throws IOException {
         List<Production> productions = new LinkedList<>();
         while (true) {
@@ -131,20 +149,43 @@ public class SyntaxInputParser {
         return productions;
     }
 
+    /**
+     * Reads a single production (one line).
+     * 
+     * @param lhs left hand side of the production
+     * @param line line to read production from
+     * @return constructed production
+     */
     private Production readProduction(Symbol lhs, String line) {
         Production p = new Production(lhs, readSymbols(line, false), productionId++);
         return p;
     }
 
-    private List<Symbol> readSymbols(String s, boolean store) {
+    /**
+     * Reads symbols from a string.
+     * 
+     * @param str string from which we read symbols
+     * @param store indicates should the symbols be stored in the map (set
+     *            <code>true</code> if uncertain)
+     * @return list of symbols
+     */
+    private List<Symbol> readSymbols(String str, boolean store) {
         List<Symbol> symbols = new ArrayList<>();
-        String[] names = s.trim().split(" ");
+        String[] names = str.trim().split(" ");
         for (String name : names) {
             symbols.add(readSymbol(name, store));
         }
         return symbols;
     }
 
+    /**
+     * Reads a single symbol.
+     * 
+     * @param name only thing that this string should contain is symbols name
+     * @param store indicates should the symbols be stored in the map (set
+     *            <code>true</code> if uncertain)
+     * @return read symbol
+     */
     private Symbol readSymbol(String name, boolean store) {
         Map<String, Symbol> map = terminalSymbols;
         SymbolType type = SymbolType.TERMINAL;
@@ -155,7 +196,7 @@ public class SyntaxInputParser {
         }
 
         Symbol sym = map.get(name);
-        if (store) {
+        if (store || sym == null) {
             sym = new Symbol(type, name, true);
             map.put(name, sym);
         }

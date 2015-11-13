@@ -3,42 +3,48 @@ package hr.fer.zemris.ppj.syntax;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 /**
+ * Class that represents nodes of the parse tree created by the LR parser.
+ * 
  * @author fhrenic
  * @author marko1597
  */
 public class LRNode {
 
-    public static void main(String[] args) {
-        //        Stack<Integer> x = new Stack<>();
-        Queue<Integer> x = new LinkedList<>();
-        x.add(2);
-        x.add(3);
-        Iterable<Integer> a = x;
-        for (Integer b : a) {
-            System.out.println(b);
-        }
-    }
-
     private LRSymbol symbol;
     private List<LRNode> children;
 
+    /**
+     * Create a node with no children and given symbol.
+     * 
+     * @param symbol symbol
+     */
     public LRNode(LRSymbol symbol) {
         this.symbol = symbol;
         children = new LinkedList<>();
     }
 
+    /**
+     * @return symbol
+     */
     public LRSymbol getSymbol() {
         return symbol;
     }
 
     @Override
     public String toString() {
-        return toString(0);
+        return new StringBuilder().append(toString(0)).append('\n').toString();
     }
 
+    /**
+     * Creates a tree-like string representation of this node. This node is in
+     * the first row, and each of it's children is indented in the next row. And
+     * so on, and so on.
+     * 
+     * @param level indentation, tree depth
+     * @return string representation
+     */
     public String toString(int level) {
         StringBuilder sb = new StringBuilder();
         String indent = spaces(level);
@@ -51,15 +57,29 @@ public class LRNode {
         return sb.toString();
     }
 
-    private static String spaces(int x) {
-        return new String(new char[x]).replace('\0', ' ');
+    /**
+     * Creates a string that contains only spaces, exactly the given number of
+     * them.
+     * 
+     * @param numberOfSpaces
+     * @return string with only spaces
+     */
+    private static String spaces(int numberOfSpaces) {
+        return new String(new char[numberOfSpaces]).replace('\0', ' ');
     }
 
-    public void reverseChildren() {
-        // needs to be done to get the correct order
+    /**
+     * Reverses children order, needs to be done to get the correct order
+     */
+    public void reverseChildrenOrder() {
         Collections.reverse(children);
     }
 
+    /**
+     * Adds a child to this node.
+     * 
+     * @param child
+     */
     public void addChild(LRNode child) {
         children.add(child);
     }

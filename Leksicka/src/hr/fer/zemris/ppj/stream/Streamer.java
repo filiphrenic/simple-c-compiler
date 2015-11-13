@@ -25,7 +25,7 @@ public class Streamer {
     // names of files used for communication between generators and analyzers 
     public static final String FOLDER = "analizator";
     public static final String LEXICAL_OBJECTS = "lex_objects.ppj";
-    public static final String SINTAX_OBJECTS = "sin_objects.ppj";
+    public static final String SYNTAX_OBJECTS = "syn_objects.ppj";
 
     static {
         new File(FOLDER).mkdirs();
@@ -36,9 +36,10 @@ public class Streamer {
     private static final int BUFFER_CAPACITY = 1 << 10;
 
     /**
-     * Returns an object stream used to read objects produced by the GLA
+     * Returns an object stream used to read objects. Mainly used by analyzers
+     * to read objects created by generators.
      * 
-     * @param fileName name of the file to be used as a io stream
+     * @param fileName name of the file to be used as a output stream
      * @return object output stream
      * @throws IOException
      */
@@ -50,9 +51,9 @@ public class Streamer {
     }
 
     /**
-     * Returns an object stream used by the GLA to write objects
+     * Returns an object stream used mainly by generators to write objects
      * 
-     * @param fileName name of the file to be used as a io stream
+     * @param fileName name of the file to be used as a input stream
      * @return object input stream
      * @throws IOException
      */

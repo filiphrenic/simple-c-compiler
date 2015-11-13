@@ -87,7 +87,7 @@ public class LexicalInputParser {
             }
 
             // removed splitting by space because maybe we can have
-            // {regular definition} -> regex
+            // {regular<space>definition} -> regex
             int regdefEnd = currLine.indexOf('}');
             String regDefName = currLine.substring(1, regdefEnd);
             String regEx = currLine.substring(regdefEnd + 2);

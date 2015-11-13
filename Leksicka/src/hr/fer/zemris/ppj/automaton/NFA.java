@@ -1,6 +1,5 @@
 package hr.fer.zemris.ppj.automaton;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -36,7 +35,6 @@ public class NFA<St, Sym> implements Automaton<Sym> {
         this.startingStates = startingStates;
         this.acceptableStates = acceptableStates;
         this.transitions = transitions;
-        currentStates = new LinkedHashSet<>();
         reset();
     }
 
@@ -119,7 +117,7 @@ public class NFA<St, Sym> implements Automaton<Sym> {
     }
 
     /**
-     * Converts a nfa to a dfa.
+     * Converts a nfa to an extended dfa.
      * 
      * @param nfa
      * @return dfa

@@ -15,12 +15,14 @@ public class Production implements Comparable<Production>, Serializable {
     private Symbol lhs; // left hand side
     private List<Symbol> rhs; // right hand side;
     private int emptyFrom; // index of first symbol after which there are all empty symbols
+    private boolean isEpsilon;
 
     public Production(Symbol lhs, List<Symbol> rhs, int id) {
         this.lhs = lhs;
         this.rhs = rhs;
         this.id = id;
         emptyFrom = 0;
+        isEpsilon = rhs.get(0).equals(Symbol.EPS_SYMBOL);
     }
 
     public void annotate() {
@@ -32,7 +34,7 @@ public class Production implements Comparable<Production>, Serializable {
     }
 
     public boolean isEpsilonProduction() {
-        return rhs.get(0).equals(Symbol.EPS_SYMBOL);
+        return isEpsilon;
     }
 
     public int emptyFrom() {
