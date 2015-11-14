@@ -1,7 +1,4 @@
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
@@ -18,9 +15,8 @@ import hr.fer.zemris.ppj.syntax.grammar.Grammar;
  */
 public class GSA {
 
-    public static void main(String[] args) throws FileNotFoundException {
-        InputStream input = new FileInputStream(new File("tests_syntax/simplePpjVeci/test.san"));
-        //InputStream input = System.in;
+    public static void main(String[] args) {
+        InputStream input = System.in;
         GSA generator = new GSA(input);
         generator.generateSA();
     }
@@ -46,9 +42,9 @@ public class GSA {
     public void generateSA() {
         SyntaxInputParser sip = new SyntaxInputParser(input);
         Grammar g = sip.getConstructedGrammar();
-        String fileName = Streamer.FOLDER + "/" + Streamer.SYNTAX_OBJECTS;
+        String filename = Streamer.getFilename4Generator(Streamer.SYNTAX_OBJECTS);
 
-        try (ObjectOutputStream stream = Streamer.getOutput(fileName)) {
+        try (ObjectOutputStream stream = Streamer.getOutput(filename)) {
             stream.writeObject(g.getActions());
             stream.writeObject(g.getNewStates());
         } catch (IOException ioe) {

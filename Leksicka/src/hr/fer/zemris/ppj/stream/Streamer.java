@@ -93,4 +93,12 @@ public class Streamer {
         stream.write(output.toString().getBytes(CHARSET));
     }
 
+    public static String getFilename4Generator(String filename) {
+        return filename;
+    }
+
+    public static String getFilename4Analyzer(String filename) {
+        return "../" + filename;
+    }
+
 }
