@@ -1,6 +1,3 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -18,9 +15,8 @@ import hr.fer.zemris.ppj.syntax.grammar.Symbol;
  * @author fhrenic
  */
 public class SA {
-    public static void main(String[] args) throws FileNotFoundException {
-        InputStream input = new FileInputStream(new File("tests_syntax/simplePpjVeci/test.in"));
-        //        InputStream input = System.in;
+    public static void main(String[] args) {
+        InputStream input = System.in;
         new SA(input, System.out).syntaxAnalysis();
     }
 
@@ -44,10 +40,7 @@ public class SA {
      */
     @SuppressWarnings("unchecked")
     public void syntaxAnalysis() {
-        String fileName = Streamer.FOLDER + "/" + Streamer.SYNTAX_OBJECTS;
-
-        // use this for SPRUT
-        // String fileName = Streamer.SINTAX_OBJECTS;
+        String fileName = Streamer.getFilename4Analyzer(Streamer.SYNTAX_OBJECTS);
 
         try (ObjectInputStream stream = Streamer.getInput(fileName)) {
             Map<Integer, Map<Symbol, LRAction>> actions = (Map<Integer, Map<Symbol, LRAction>>) stream

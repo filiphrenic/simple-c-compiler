@@ -18,7 +18,6 @@ import hr.fer.zemris.ppj.stream.Streamer;
 public class LA {
 
     public static void main(String[] args) {
-        //InputStream input = new FileInputStream(new File("primjer.minus.txt"));
         InputStream input = System.in;
         new LA(input, System.out).lexicalAnalysis();
     }
@@ -43,7 +42,7 @@ public class LA {
      */
     @SuppressWarnings("unchecked")
     public void lexicalAnalysis() {
-        String fileName = Streamer.LEXICAL_OBJECTS;
+        String fileName = Streamer.getFilename4Analyzer(Streamer.LEXICAL_OBJECTS);
 
         try (ObjectInputStream stream = Streamer.getInput(fileName)) {
             String startState = (String) stream.readObject();

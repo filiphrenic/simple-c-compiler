@@ -48,7 +48,7 @@ public class GLA {
      */
     public void generateLA() {
         LexicalInputParser parser = new LexicalInputParser(input);
-        String fileName = Streamer.FOLDER + "/" + Streamer.LEXICAL_OBJECTS;
+        String fileName = Streamer.getFilename4Generator(Streamer.LEXICAL_OBJECTS);
 
         try (ObjectOutputStream stream = Streamer.getOutput(fileName)) {
             stream.writeObject(parser.getStartState());
