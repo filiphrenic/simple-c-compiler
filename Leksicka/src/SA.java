@@ -42,9 +42,6 @@ public class SA {
     public void syntaxAnalysis() {
         String filename = Streamer.getFilename4Analyzer(Streamer.SYNTAX_OBJECTS);
 
-        // use this for SPRUT
-        // String fileName = Streamer.SINTAX_OBJECTS;
-
         try (ObjectInputStream stream = Streamer.getInput(filename)) {
             Map<Integer, Map<Symbol, LRAction>> actions = (Map<Integer, Map<Symbol, LRAction>>) stream
                     .readObject();
