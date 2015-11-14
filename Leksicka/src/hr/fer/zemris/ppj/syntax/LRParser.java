@@ -19,7 +19,6 @@ import hr.fer.zemris.ppj.syntax.grammar.Symbol;
  */
 public class LRParser {
 
-    private InputStream input;
     private OutputStream output;
     private Map<Integer, Map<Symbol, LRAction>> actions;
     private Map<Integer, Map<Symbol, Integer>> newStates;
@@ -41,10 +40,10 @@ public class LRParser {
     public LRParser(InputStream input, OutputStream output,
             Map<Integer, Map<Symbol, LRAction>> actions,
             Map<Integer, Map<Symbol, Integer>> newStates) {
-        this.input = input;
         this.output = output;
         this.actions = actions;
         this.newStates = newStates;
+        symbols = LRSymbol.readSymbolsFrom(input);
         accepts = false;
     }
 
@@ -54,16 +53,13 @@ public class LRParser {
     public void parse() {
         stack = new Stack<>();
         stack.push(new StackEntry(0, null));
-
-        symbols = LRSymbol.readSymbolsFrom(input);
         index = 0;
 
         while (!accepts && index < symbols.size() && !stack.isEmpty()) {
             LRSymbol current = symbols.get(index);
-
             Map<Symbol, LRAction> map = actions.get(stack.peek().state);
-            LRAction action;
 
+            LRAction action;
             if (map == null || (action = map.get(current.getSymbol())) == null) {
                 errorRecovery();
             } else {
@@ -76,8 +72,6 @@ public class LRParser {
             Streamer.writeToStream(stack.peek().node, output);
         } catch (IOException e) {
         }
-
-        System.err.println("Accepts: " + accepts);
     }
 
     /**
@@ -87,8 +81,7 @@ public class LRParser {
      */
     public void executeMove(int newState) {
         LRSymbol current = symbols.get(index++);
-        StackEntry se = new StackEntry(newState, new LRNode(current));
-        stack.push(se);
+        stack.push(new StackEntry(newState, new LRNode(current)));
     }
 
     /**
@@ -101,8 +94,8 @@ public class LRParser {
         LRNode parent = new LRNode(new LRSymbol(p.getLHS()));
 
         if (!p.isEpsilonProduction()) {
-            for (int idx = p.getRHS().size() - 1; idx >= 0; idx--) {
-                Symbol sym = p.getRHS().get(idx);
+            for (int idx = p.getSize() - 1; idx >= 0; idx--) {
+                Symbol sym = p.getAt(idx);
                 StackEntry se = stack.pop();
                 if (!se.node.getSymbol().getSymbol().equals(sym)) {
                     errorRecovery();
@@ -118,16 +111,11 @@ public class LRParser {
         parent.reverseChildrenOrder();
 
         Map<Symbol, Integer> map = newStates.get(stack.peek().state);
-        if (map != null) {
-            Integer newState = map.get(parent.getSymbol().getSymbol());
-            if (newState == null) {
-                errorRecovery();
-                return;
-            }
+        Integer newState;
+        if (map != null && (newState = map.get(parent.getSymbol().getSymbol())) != null) {
             stack.push(new StackEntry(newState, parent));
         } else {
             errorRecovery();
-            return;
         }
 
     }
@@ -147,7 +135,7 @@ public class LRParser {
         System.err.println("Error at " + symbols.get(index).getLineNumber());
         System.err.println("Expected one of following: ");
         for (Symbol s : actions.get(stack.peek().state).keySet()) {
-            System.err.print(s + " ");
+            System.err.println("\t" + s);
         }
 
         System.err.println("Searching for synchronization symbol...");
@@ -170,6 +158,7 @@ public class LRParser {
                 if (stack.isEmpty()) {
                     System.err.println(
                             "Error recovery hasn't come to a valid state. Stoping analysis");
+                    return;
                 }
                 continue;
             }

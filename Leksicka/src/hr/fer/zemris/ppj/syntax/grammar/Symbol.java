@@ -3,6 +3,9 @@ package hr.fer.zemris.ppj.syntax.grammar;
 import java.io.Serializable;
 
 /**
+ * Class to represent a single symbol in grammar (can be either terminal or non
+ * terminal).
+ * 
  * @author fhrenic
  * @author marko1597
  */
@@ -10,67 +13,68 @@ public class Symbol implements Comparable<Symbol>, Serializable {
 
     private static final long serialVersionUID = 2797783666592641402L;
 
-    public static final String STREAM_END_NAME = "END";
     public static final String EPS_SYMBOL_NAME = "$";
-    public static final String START_SYMBOL_NAME = "<s_crtano>";
+    public static final String STREAM_END_NAME = "###";
+    public static final String START_SYMBOL_NAME = "%%%";
 
     public static final Symbol EPS_SYMBOL;
-    public static final Symbol START_SYMBOL;
     public static final Symbol STREAM_END;
+    public static final Symbol START_SYMBOL;
 
     static {
-        EPS_SYMBOL = new Symbol(SymbolType.TERMINAL, EPS_SYMBOL_NAME, true);
+        EPS_SYMBOL = new Symbol(EPS_SYMBOL_NAME, true, true);
         EPS_SYMBOL.setEmpty(true);
-
-        START_SYMBOL = new Symbol(SymbolType.NON_TERMINAL, START_SYMBOL_NAME, false);
-
-        STREAM_END = new Symbol(SymbolType.TERMINAL, STREAM_END_NAME, false);
+        STREAM_END = new Symbol(STREAM_END_NAME, true, false);
+        START_SYMBOL = new Symbol(START_SYMBOL_NAME, false, false);
     }
 
     private String name;
-    private SymbolType type;
+    private boolean isTerminal;
     private boolean empty;
     private boolean printable;
     private boolean sync;
 
-    public Symbol(SymbolType type, String name, boolean isPrintable) {
-        this.type = type;
+    public Symbol(String name, boolean isTerminal, boolean isPrintable) {
         this.name = name;
+        this.isTerminal = isTerminal;
+        this.printable = isPrintable;
         this.empty = false;
         this.sync = false;
-        this.printable = isPrintable;
-    }
-
-    public SymbolType getType() {
-        return type;
     }
 
     /**
-     * @return the isPrintable
+     * @return the isTerminal
      */
-    public boolean isPrintable() {
-        return printable;
+    public boolean isTerminal() {
+        return isTerminal;
     }
 
     /**
-     * @param isPrintable
-     */
-    public void setPrintable(boolean isPrintable) {
-        this.printable = isPrintable;
-    }
-
-    /**
-     * @return the isEmpty
+     * @return the empty
      */
     public boolean isEmpty() {
         return empty;
     }
 
     /**
-     * @param empty
+     * @param empty the empty to set
      */
     public void setEmpty(boolean empty) {
         this.empty = empty;
+    }
+
+    /**
+     * @return the printable
+     */
+    public boolean isPrintable() {
+        return printable;
+    }
+
+    /**
+     * @param printable the printable to set
+     */
+    public void setPrintable(boolean printable) {
+        this.printable = printable;
     }
 
     /**
@@ -89,13 +93,13 @@ public class Symbol implements Comparable<Symbol>, Serializable {
 
     @Override
     public int compareTo(Symbol o) {
-        if (type == o.type) {
+        if (isTerminal == o.isTerminal) {
             return name.compareTo(o.name);
         }
-        if (type == SymbolType.NON_TERMINAL) {
-            return -1;
-        } else {
+        if (isTerminal) {
             return 1;
+        } else {
+            return -1;
         }
     }
 
@@ -110,11 +114,11 @@ public class Symbol implements Comparable<Symbol>, Serializable {
             return false;
         }
         Symbol s = (Symbol) obj;
-        return name.equals(s.name) && type == s.type;
+        return name.equals(s.name) && isTerminal == s.isTerminal;
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode() * 31 + type.hashCode();
+        return (isTerminal ? 1 : 0) * 31 + name.hashCode();
     }
 }

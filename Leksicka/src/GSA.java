@@ -22,13 +22,7 @@ public class GSA {
         InputStream input = new FileInputStream(new File("tests_syntax/simplePpjVeci/test.san"));
         //InputStream input = System.in;
         GSA generator = new GSA(input);
-        long t1 = System.currentTimeMillis();
-        System.out.println("pocetno = " + t1);
         generator.generateSA();
-        long t2 = System.currentTimeMillis();
-        System.out.println("gotovo  = " + t2);
-        double t = (t2 - t1) / 1000;
-        System.out.format("%.2f seconds\n", t);
     }
 
     /**
@@ -57,7 +51,6 @@ public class GSA {
         try (ObjectOutputStream stream = Streamer.getOutput(fileName)) {
             stream.writeObject(g.getActions());
             stream.writeObject(g.getNewStates());
-            System.out.println("done");
         } catch (IOException ioe) {
             System.err.println("Error in GSA: " + ioe.getMessage());
         }

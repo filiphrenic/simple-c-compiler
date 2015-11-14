@@ -26,6 +26,22 @@ public class LRNode {
     }
 
     /**
+     * Reverses children order, needs to be done to get the correct order
+     */
+    public void reverseChildrenOrder() {
+        Collections.reverse(children);
+    }
+
+    /**
+     * Adds a child to this node.
+     * 
+     * @param child
+     */
+    public void addChild(LRNode child) {
+        children.add(child);
+    }
+
+    /**
      * @return symbol
      */
     public LRSymbol getSymbol() {
@@ -68,19 +84,4 @@ public class LRNode {
         return new String(new char[numberOfSpaces]).replace('\0', ' ');
     }
 
-    /**
-     * Reverses children order, needs to be done to get the correct order
-     */
-    public void reverseChildrenOrder() {
-        Collections.reverse(children);
-    }
-
-    /**
-     * Adds a child to this node.
-     * 
-     * @param child
-     */
-    public void addChild(LRNode child) {
-        children.add(child);
-    }
 }

@@ -19,7 +19,7 @@ import hr.fer.zemris.ppj.syntax.grammar.Symbol;
  */
 public class SA {
     public static void main(String[] args) throws FileNotFoundException {
-        InputStream input = new FileInputStream(new File("files/syntax/sa.in"));
+        InputStream input = new FileInputStream(new File("tests_syntax/simplePpjVeci/test.in"));
         //        InputStream input = System.in;
         new SA(input, System.out).syntaxAnalysis();
     }

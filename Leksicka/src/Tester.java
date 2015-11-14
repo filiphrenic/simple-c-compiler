@@ -1,4 +1,3 @@
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -11,13 +10,15 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
+ * Helper class used for testing
+ * 
  * @author fhrenic
  */
 public abstract class Tester {
 
     public static void main(String[] args) throws IOException {
         //lexTester.run();
-        sinTester.run();
+        sinTester.generateAnalyzeCompare();
     }
 
     private Path dir;
@@ -34,39 +35,32 @@ public abstract class Tester {
         this.my_out = my_out;
     }
 
-    public void run() throws IOException {
-        generateAndAnalyze();
-        compareOutputs();
-    }
-
-    public void generateAndAnalyze() throws FileNotFoundException {
+    public void generateAnalyzeCompare() throws IOException {
+        long t1, t2;
         for (File test : dir.toFile().listFiles()) {
-            System.out.println("performing " + test);
+
             FileInputStream gfis = new FileInputStream(get_path(test, gen_in).toFile());
             FileInputStream afis = new FileInputStream(get_path(test, ana_in).toFile());
-            FileOutputStream afos = new FileOutputStream(get_path(test, ana_out).toFile());
-            System.out.println("generating tables");
-            generate(gfis);
-            System.out.println("analyzing");
-            analyze(afis, afos);
-        }
-    }
+            FileOutputStream afos = new FileOutputStream(get_path(test, my_out).toFile());
 
-    public void compareOutputs() throws IOException {
-        boolean wrong = false;
-        for (File folder_name : dir.toFile().listFiles()) {
-            System.out.println("tu sam");
-            List<String> out = readFile(folder_name, ana_out);
-            System.out.println("citam");
-            List<String> my = readFile(folder_name, my_out);
-            System.out.println("lolo");
-            if (!my.equals(out)) {
-                System.err.println("Krivi je: " + folder_name.getName());
-                wrong = true;
-            }
-        }
-        if (!wrong) {
-            System.out.println("NISTA nije krivo!!!");
+            System.out.println("Performing " + test);
+
+            System.out.println("\tGenerating...");
+            t1 = System.currentTimeMillis();
+            generate(gfis);
+            t2 = System.currentTimeMillis();
+            System.out.format("\tTook %.2f seconds\n", (t2 - t1) / 1000.0);
+
+            System.out.println("\tAnalyzing...");
+            t1 = System.currentTimeMillis();
+            analyze(afis, afos);
+            t2 = System.currentTimeMillis();
+            System.out.format("\tTook %.2f seconds\n", (t2 - t1) / 1000.0);
+
+            List<String> out = readFile(test, ana_out);
+            List<String> my = readFile(test, my_out);
+            System.out.println("\tSame outputs? " + my.equals(out));
+            System.out.println();
         }
     }
 

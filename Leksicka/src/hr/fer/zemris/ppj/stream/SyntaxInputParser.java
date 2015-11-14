@@ -15,7 +15,6 @@ import java.util.Map;
 import hr.fer.zemris.ppj.syntax.grammar.Grammar;
 import hr.fer.zemris.ppj.syntax.grammar.Production;
 import hr.fer.zemris.ppj.syntax.grammar.Symbol;
-import hr.fer.zemris.ppj.syntax.grammar.SymbolType;
 
 /**
  * Class which reads definitions for generator of lexical analyzer and offers
@@ -58,8 +57,10 @@ public class SyntaxInputParser {
         }
 
         List<Symbol> terminals = new ArrayList<>(terminalSymbols.values());
+        terminals.add(Symbol.STREAM_END);
+        List<Symbol> nonTerminals = new ArrayList<>(nonTerminalSymbols.values());
 
-        grammar = new Grammar(terminals, productions, startingProduction);
+        grammar = new Grammar(terminals, nonTerminals, productions, startingProduction);
     }
 
     /**
@@ -104,7 +105,7 @@ public class SyntaxInputParser {
         Symbol realStartSymbol = nonTerminalSymbols.get(startState);
         startingProduction = new Production(Symbol.START_SYMBOL,
                 Collections.singletonList(realStartSymbol), productionId++);
-        //productions.put(Symbol.START_SYMBOL, Collections.singletonList(startingProduction));
+        productions.put(Symbol.START_SYMBOL, Collections.singletonList(startingProduction));
 
         readAllProductions(reader);
     }
@@ -188,16 +189,16 @@ public class SyntaxInputParser {
      */
     private Symbol readSymbol(String name, boolean store) {
         Map<String, Symbol> map = terminalSymbols;
-        SymbolType type = SymbolType.TERMINAL;
+        boolean isTerminal = true;
         if (name.startsWith("<")) {
             //name = name.substring(1, name.length() - 1);
             map = nonTerminalSymbols;
-            type = SymbolType.NON_TERMINAL;
+            isTerminal = false;
         }
 
         Symbol sym = map.get(name);
         if (store || sym == null) {
-            sym = new Symbol(type, name, true);
+            sym = new Symbol(name, isTerminal, true);
             map.put(name, sym);
         }
 

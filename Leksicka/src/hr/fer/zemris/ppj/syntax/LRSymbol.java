@@ -8,10 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hr.fer.zemris.ppj.syntax.grammar.Symbol;
-import hr.fer.zemris.ppj.syntax.grammar.SymbolType;
 
 /**
- * A wrapper around symbol that also has line nubmer and original text.
+ * A wrapper around symbol that also has line number and original text.
  * 
  * @author fhrenic
  */
@@ -30,7 +29,7 @@ public class LRSymbol {
             String currLine;
             while ((currLine = reader.readLine()) != null) {
                 String[] elements = currLine.split(" ", 3);
-                Symbol sym = new Symbol(SymbolType.TERMINAL, elements[0], true);
+                Symbol sym = new Symbol(elements[0], true, true);
                 int lineNumber = Integer.parseInt(elements[1]);
                 String originalText = elements[2];
                 LRSymbol lrsym = new LRSymbol(sym, lineNumber, originalText);
@@ -113,7 +112,7 @@ public class LRSymbol {
 
     @Override
     public String toString() {
-        if (symbol.getType() == SymbolType.TERMINAL && symbol != Symbol.EPS_SYMBOL) {
+        if (symbol.isTerminal() && symbol != Symbol.EPS_SYMBOL) {
             return symbol + " " + lineNumber + " " + originalText;
         } else {
             return symbol.toString();

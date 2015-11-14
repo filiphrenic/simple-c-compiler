@@ -1,6 +1,7 @@
 package hr.fer.zemris.ppj.syntax.grammar;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.TreeSet;
 
 import hr.fer.zemris.ppj.automaton.DFAExtended;
 import hr.fer.zemris.ppj.automaton.EpsilonNFA;
@@ -28,11 +28,14 @@ import hr.fer.zemris.ppj.syntax.actions.ReduceAction;
 public class Grammar {
 
     private List<Symbol> terminalSymbols;
+    private List<Symbol> nonTerminalSymbols;
     private Map<Symbol, List<Production>> productions;
     private Production startingProduction; // S' -> S
-    private Map<Symbol, Set<Symbol>> startSets;
-    
-    
+
+    private Map<Symbol, Integer> mapper;
+    private Map<Integer, Symbol> rmapper;
+    private BitSet[] starts;
+    private int T;
 
     private Map<Integer, Map<Symbol, LRAction>> actions;
     private Map<Integer, Map<Symbol, Integer>> newStates;
@@ -43,26 +46,22 @@ public class Grammar {
      * should be keys of the productions map.
      * 
      * @param terminalSymbols terminal symbols
+     * @param nonTerminalSymbols non terminal symbols
      * @param productions a map [non-terminal symbol => list of productions]
      * @param startingProduction starting production
      */
-    public Grammar(List<Symbol> terminalSymbols, Map<Symbol, List<Production>> productions,
-            Production startingProduction) {
+    public Grammar(List<Symbol> terminalSymbols, List<Symbol> nonTerminalSymbols,
+            Map<Symbol, List<Production>> productions, Production startingProduction) {
         this.terminalSymbols = terminalSymbols;
+        this.nonTerminalSymbols = nonTerminalSymbols;
         this.productions = productions;
         this.startingProduction = startingProduction;
         actions = new HashMap<>();
         newStates = new HashMap<>();
 
-        // finds empty symbols
         annotateEmptySymbols();
-
-        constructStartSets();
-
-        // find empty productions
-        annotateProductions();
-
-        // zadnja metoda u konstruktoru
+        initMappers();
+        initStartSets();
         buildParserTable(generateDFA());
     }
 
@@ -85,19 +84,6 @@ public class Grammar {
     }
 
     /**
-     * Annotates productions in a way that it finds the epsilon productions and
-     * those that contain all empty symbols.
-     */
-    private void annotateProductions() {
-        for (List<Production> ps : productions.values()) {
-            for (Production p : ps) {
-                p.annotate();
-            }
-        }
-        startingProduction.annotate();
-    }
-
-    /**
      * Annotates symbols so it finds all empty symbols.
      */
     private void annotateEmptySymbols() {
@@ -117,33 +103,6 @@ public class Grammar {
         if (foundNewEmpty) {
             annotateEmptySymbols();
         }
-    }
-
-    /**
-     * Returns start set of a given symbol.
-     * 
-     * @param sym symbol of interest
-     * @return start set
-     */
-    private Set<Symbol> startsWith(Symbol sym) {
-        return startSets.get(sym);
-    }
-
-    /**
-     * Returns a start set of an iterable of symbols
-     * 
-     * @param it iterable
-     * @return start set
-     */
-    private Set<Symbol> startsWith(Iterable<Symbol> it) {
-        Set<Symbol> set = new TreeSet<>();
-        for (Symbol s : it) {
-            set.addAll(startsWith(s));
-            if (!s.isEmpty()) {
-                break;
-            }
-        }
-        return set;
     }
 
     /**
@@ -176,40 +135,31 @@ public class Grammar {
                 }
 
                 if (complete) {
-
                     if (entry.getProduction().getLHS().equals(startingProduction.getLHS())) {
-                        for (Symbol a : entry.getStartSet()) {
+                        for (Symbol a : fromBitSet(entry.getStartSet())) {
                             // should be only one symbol, end_stream
-                            // System.err.println("Akcija[" + state + "," + a + "]=Prihvati()");
                             actions4State.put(a, new AcceptAction());
                         }
                     }
-
-                    for (Symbol a : entry.getStartSet()) {
+                    for (Symbol a : fromBitSet(entry.getStartSet())) {
                         if (!actions4State.containsKey(a)) {
                             // reduce/move contradiction
                             Production p = entry.getProduction();
-                            // System.err.println("Akcija[" + state + "," + a + "]=Reduciraj(" + p + ")");
                             actions4State.put(a, new ReduceAction(p));
-
                         }
                     }
 
                 } else {
                     Symbol a = entry.getTransitionSymbol();
                     Integer nextState = trans.get(a);
-
-                    if (a.getType() == SymbolType.NON_TERMINAL) {
-                        // System.err.println("NovoStanje[" + state + "," + a + "]=" + trans.get(a));
+                    if (!a.isTerminal()) {
                         if (!newStates4State.containsKey(a)) {
                             newStates4State.put(a, nextState);
                         }
-
                     } else {
                         if (nextState != null) {
+                            // move/move contradiction, only first
                             if (!actions4State.containsKey(a)) {
-                                // move/move contradiction, only first
-                                // System.err.println("Akcija[" + state + "," + a + "]=Pomakni(" + nextState + ")");
                                 actions4State.put(a, new MoveAction(nextState));
                             }
                         }
@@ -219,9 +169,16 @@ public class Grammar {
 
             actions.put(state, actions4State);
             newStates.put(state, newStates4State);
-            // System.err.println();
         }
 
+    }
+
+    private List<Symbol> fromBitSet(BitSet bs) {
+        List<Symbol> ls = new LinkedList<>();
+        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+            ls.add(rmapper.get(i + T));
+        }
+        return ls;
     }
 
     /**
@@ -238,7 +195,8 @@ public class Grammar {
         // S' -> .S, { STREAM_END } is the start state
         // S' -> S., { STREAM_END } is the final state
         // starts(S') = { STREAM_END }
-        Set<Symbol> startingStateStartSet = Collections.singleton(Symbol.STREAM_END);
+        BitSet startingStateStartSet = new BitSet(starts.length);
+        startingStateStartSet.set(mapper.get(Symbol.STREAM_END) - T);
         LREntry startState = new LREntry(startingProduction, startingStateStartSet);
         LREntry finalState = startState.next();
 
@@ -251,17 +209,16 @@ public class Grammar {
                 transitions, epsilonTransitions);
 
         Queue<LREntry> queue = new LinkedList<>();
+        Set<LREntry> enqueued = new HashSet<>();
         queue.add(startState);
+        enqueued.add(startState);
 
         /*
          * * * * * * * * * Add transitions to ENFA * * * * * * * * *
          */
-        System.out.println("gradim enfa");
-        long t1 = System.currentTimeMillis();
 
         while (!queue.isEmpty()) {
             LREntry entry = queue.poll();
-
             while (!entry.isComplete()) {
 
                 // case 4b
@@ -270,17 +227,18 @@ public class Grammar {
                 enfa.addTransition(entry, sym, next);
 
                 // case 4c
-                if (sym.getType() == SymbolType.NON_TERMINAL) {
-
+                if (!sym.isTerminal()) {
                     // entry = A -> x.By, {a1,...,an}
                     // next  = A -> xB.y, {a1,...,an}
 
                     // case 4 - c - i
+                    if (next.isComplete()) {
 
-                    Set<Symbol> newStartSet = next.getStartSetFromDot(startSets);
+                    }
+                    BitSet newStartSet = next.getStartSetFromDot();
                     if (next.isEmptyAfterDot()) {
                         // case 4 - c - ii
-                        newStartSet.addAll(entry.getStartSet());
+                        newStartSet.or(entry.getStartSet());
                     }
 
                     for (Production ntp : productions.get(sym)) {
@@ -288,9 +246,9 @@ public class Grammar {
                         enfa.addEpsilonTransition(entry, nonTermEntry);
 
                         // if not already processed
-                        if (!epsilonTransitions.containsKey(nonTermEntry)
-                                && !transitions.containsKey(nonTermEntry)) {
+                        if (!enqueued.contains(nonTermEntry)) {
                             queue.add(nonTermEntry);
+                            enqueued.add(nonTermEntry);
                         }
                     }
                 }
@@ -298,13 +256,105 @@ public class Grammar {
             }
         }
 
-        System.out.println("gotov enfa");
+        DFAExtended<LREntry, Symbol> dfa = enfa.toNFA().toDFA();
+        return dfa;
+    }
 
-        long t2 = System.currentTimeMillis();
-        double t = (t2 - t1) / 1000;
-        System.out.format("%.2f seconds\n", t);
+    /**
+     * Initializes mappers for symbols. Maps from symbol to integer (alias) and
+     * from integer to symbol.
+     */
+    private void initMappers() {
+        mapper = new HashMap<>();
+        rmapper = new HashMap<>();
+        int idx = 0;
+        for (Symbol s : nonTerminalSymbols) {
+            rmapper.put(idx, s);
+            mapper.put(s, idx++);
+        }
 
-        return enfa.toNFA().toDFA();
+        for (Symbol s : terminalSymbols) {
+            rmapper.put(idx, s);
+            mapper.put(s, idx++);
+        }
+    }
+
+    /**
+     * Initializes all possible start sets. For symbols and for productions.
+     */
+    private void initStartSets() {
+        T = nonTerminalSymbols.size();
+        int V = terminalSymbols.size();
+        int N = V + T;
+
+        // initial configuration
+        starts = new BitSet[N];
+        for (int t = 0; t < T; t++) {
+            starts[t] = new BitSet(V);
+        }
+        for (int v = T; v < N; v++) {
+            starts[v] = new BitSet(V);
+            starts[v].set(v - T);
+        }
+        starts[mapper.get(Symbol.START_SYMBOL)].set(mapper.get(Symbol.STREAM_END) - T);
+
+        // initializing helper map for configuring start sets
+        Map<Integer, Set<Integer>> helper = new HashMap<>();
+        for (Symbol nts : nonTerminalSymbols) {
+            int idx1 = mapper.get(nts);
+            Set<Integer> forIdx1 = new HashSet<>();
+
+            for (Production p : productions.get(nts)) {
+                if (p.isEpsilonProduction()) {
+                    continue;
+                }
+
+                for (int i = 0; i < p.getSize(); i++) {
+                    Symbol empty = p.getAt(i);
+                    int idx2 = mapper.get(empty);
+
+                    if (empty.isTerminal()) {
+                        starts[idx1].set(idx2 - T);
+                    } else {
+                        forIdx1.add(idx2);
+                    }
+
+                    if (!empty.isEmpty()) {
+                        break;
+                    }
+                }
+            }
+            helper.put(idx1, forIdx1);
+        }
+
+        // equivalence relation
+        boolean change;
+        do {
+            change = false;
+            for (int t = 0; t < T; t++) {
+                Set<Integer> neigh = helper.get(t);
+                Set<Integer> tmp = new HashSet<>(neigh);
+
+                for (Integer x : neigh) {
+                    change |= tmp.addAll(helper.get(x));
+                }
+                helper.put(t, tmp);
+            }
+        } while (change);
+
+        // creating final start sets
+        for (int t = 0; t < T; t++) {
+            for (Integer t2 : helper.get(t)) {
+                starts[t].or(starts[t2]);
+            }
+        }
+
+        // caching start sets to productions
+        for (List<Production> ps : productions.values()) {
+            for (Production p : ps) {
+                p.annotate(starts, mapper);
+            }
+        }
     }
 
     @Override
@@ -320,67 +370,6 @@ public class Grammar {
             }
         }
         return sb.toString();
-    }
-
-    /**
-     * Constructs a map of start sets.
-     * 
-     * @author dnakic
-     * @author fhrenic
-     */
-    private void constructStartSets() {
-
-        startSets = new HashMap<Symbol, Set<Symbol>>();
-
-        // startsDirectly
-        for (Symbol symbol : terminalSymbols) {
-            Set<Symbol> firstSet = new HashSet<Symbol>();
-            firstSet.add(symbol);
-            startSets.put(symbol, firstSet);
-        }
-
-        Set<Symbol> nonTerminalSymbols = productions.keySet();
-        for (Symbol symbol : nonTerminalSymbols) {
-            Set<Symbol> firstSet = new HashSet<Symbol>();
-
-            for (Production production : productions.get(symbol)) {
-                for (Symbol rhsSym : production.getRHS()) {
-                    firstSet.add(rhsSym);
-                    if (!rhsSym.isEmpty()) {
-                        break;
-                    }
-                }
-            }
-
-            startSets.put(symbol, firstSet);
-        }
-
-        // equivalence relation
-        boolean change;
-        do {
-
-            change = false;
-            for (Symbol symbol : nonTerminalSymbols) {
-                Set<Symbol> firstSet = startSets.get(symbol);
-                Set<Symbol> tmp = new HashSet<Symbol>(firstSet);
-                for (Symbol first : firstSet) {
-                    if (first.getType() == SymbolType.NON_TERMINAL) {
-                        if (tmp.addAll(startSets.get(first))) {
-                            change = true;
-                        }
-                    }
-                }
-                startSets.put(symbol, tmp);
-            }
-        } while (change);
-
-        // remove all non terminal symbols from every set
-        // also remove epsilon
-        for (Set<Symbol> set : startSets.values()) {
-            set.retainAll(terminalSymbols);
-            set.remove(Symbol.EPS_SYMBOL);
-        }
-
     }
 
 }
