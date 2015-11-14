@@ -40,9 +40,9 @@ public class SA {
      */
     @SuppressWarnings("unchecked")
     public void syntaxAnalysis() {
-        String fileName = Streamer.getFilename4Analyzer(Streamer.SYNTAX_OBJECTS);
-
-        try (ObjectInputStream stream = Streamer.getInput(fileName)) {
+        String filename = Streamer.getFilename4Analyzer(Streamer.SYNTAX_OBJECTS);
+        
+        try (ObjectInputStream stream = Streamer.getInput(filename)) {
             Map<Integer, Map<Symbol, LRAction>> actions = (Map<Integer, Map<Symbol, LRAction>>) stream
                     .readObject();
             Map<Integer, Map<Symbol, Integer>> newStates = (Map<Integer, Map<Symbol, Integer>>) stream

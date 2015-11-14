@@ -41,12 +41,14 @@ public class GSA {
      */
     public void generateSA() {
         SyntaxInputParser sip = new SyntaxInputParser(input);
-        Grammar grammar = sip.getConstructedGrammar();
-        String fileName = Streamer.getFilename4Generator(Streamer.SYNTAX_OBJECTS);
 
-        try (ObjectOutputStream stream = Streamer.getOutput(fileName)) {
+        Grammar grammar = sip.getConstructedGrammar();
+        String filename = Streamer.getFilename4Generator(Streamer.SYNTAX_OBJECTS);
+
+        try (ObjectOutputStream stream = Streamer.getOutput(filename)) {
             stream.writeObject(grammar.getActions());
             stream.writeObject(grammar.getNewStates());
+
         } catch (IOException ioe) {
             System.err.println("Error in GSA: " + ioe.getMessage());
         }

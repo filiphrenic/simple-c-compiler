@@ -42,9 +42,9 @@ public class LA {
      */
     @SuppressWarnings("unchecked")
     public void lexicalAnalysis() {
-        String fileName = Streamer.getFilename4Analyzer(Streamer.LEXICAL_OBJECTS);
+        String filename = Streamer.getFilename4Analyzer(Streamer.SYNTAX_OBJECTS);
 
-        try (ObjectInputStream stream = Streamer.getInput(fileName)) {
+        try (ObjectInputStream stream = Streamer.getInput(filename)) {
             String startState = (String) stream.readObject();
             HashMap<String, List<LexRule>> states = (HashMap<String, List<LexRule>>) stream
                     .readObject();
