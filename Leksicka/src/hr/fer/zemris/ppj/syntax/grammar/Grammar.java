@@ -255,8 +255,6 @@ public class Grammar {
                 entry = next;
             }
         }
-        
-        System.out.println(enfa);
 
         DFAExtended<LREntry, Symbol> dfa = enfa.toNFA().toDFA();
         return dfa;
