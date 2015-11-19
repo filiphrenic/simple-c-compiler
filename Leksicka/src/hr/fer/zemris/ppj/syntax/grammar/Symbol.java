@@ -22,22 +22,20 @@ public class Symbol implements Comparable<Symbol>, Serializable {
     public static final Symbol START_SYMBOL;
 
     static {
-        EPS_SYMBOL = new Symbol(EPS_SYMBOL_NAME, true, true);
+        EPS_SYMBOL = new Symbol(EPS_SYMBOL_NAME, true);
         EPS_SYMBOL.setEmpty(true);
-        STREAM_END = new Symbol(STREAM_END_NAME, true, false);
-        START_SYMBOL = new Symbol(START_SYMBOL_NAME, false, false);
+        STREAM_END = new Symbol(STREAM_END_NAME, true);
+        START_SYMBOL = new Symbol(START_SYMBOL_NAME, false);
     }
 
     private String name;
     private boolean isTerminal;
     private boolean empty;
-    private boolean printable;
     private boolean sync;
 
-    public Symbol(String name, boolean isTerminal, boolean isPrintable) {
+    public Symbol(String name, boolean isTerminal) {
         this.name = name;
         this.isTerminal = isTerminal;
-        this.printable = isPrintable;
         this.empty = false;
         this.sync = false;
     }
@@ -61,20 +59,6 @@ public class Symbol implements Comparable<Symbol>, Serializable {
      */
     public void setEmpty(boolean empty) {
         this.empty = empty;
-    }
-
-    /**
-     * @return the printable
-     */
-    public boolean isPrintable() {
-        return printable;
-    }
-
-    /**
-     * @param printable the printable to set
-     */
-    public void setPrintable(boolean printable) {
-        this.printable = printable;
     }
 
     /**

@@ -198,7 +198,7 @@ public class SyntaxInputParser {
 
         Symbol sym = map.get(name);
         if (store || sym == null) {
-            sym = new Symbol(name, isTerminal, true);
+            sym = new Symbol(name, isTerminal);
             map.put(name, sym);
         }
 

@@ -33,6 +33,7 @@ public class DFA<St, Sym> implements Automaton<Sym> {
 
     /**
      * Returns dfa transitions.
+     * 
      * @return transitions
      */
     public Map<St, Map<Sym, St>> getTransitions() {
@@ -69,6 +70,18 @@ public class DFA<St, Sym> implements Automaton<Sym> {
     @Override
     public boolean isDead() {
         return currentState == null;
+    }
+
+    @Override
+    public String toString() {
+        int numStates = 0;
+        int numTransitions = 0;
+        for (St state : transitions.keySet()) {
+            numStates++;
+            numTransitions += transitions.get(state).size();
+        }
+
+        return "DFA:[states=" + numStates + "; transitions=" + numTransitions + "]";
     }
 
 }

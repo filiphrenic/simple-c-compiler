@@ -29,7 +29,7 @@ public class LRSymbol {
             String currLine;
             while ((currLine = reader.readLine()) != null) {
                 String[] elements = currLine.split(" ", 3);
-                Symbol sym = new Symbol(elements[0], true, true);
+                Symbol sym = new Symbol(elements[0], true);
                 int lineNumber = Integer.parseInt(elements[1]);
                 String originalText = elements[2];
                 LRSymbol lrsym = new LRSymbol(sym, lineNumber, originalText);
