@@ -152,17 +152,16 @@ public class LRParser {
 
         // searching for valid transition
         while (true) {
+            if (stack.isEmpty()) {
+                System.err.println("Error recovery hasn't come to a valid state. Stoping analysis");
+                return;
+            }
             Map<Symbol, LRAction> map = actions.get(stack.peek().state);
             if (map == null || map.get(sync.getSymbol()) == null) {
                 stack.pop();
-                if (stack.isEmpty()) {
-                    System.err.println(
-                            "Error recovery hasn't come to a valid state. Stoping analysis");
-                    return;
-                }
-                continue;
+            } else {
+                break;
             }
-            break;
         }
         System.err.println("Continuing with the analysis...\n");
     }
