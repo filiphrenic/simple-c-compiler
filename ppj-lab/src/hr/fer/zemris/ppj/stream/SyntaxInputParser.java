@@ -26,6 +26,7 @@ public class SyntaxInputParser {
 
     private Map<String, Symbol> terminalSymbols;
     private Map<String, Symbol> nonTerminalSymbols;
+    private List<String> syncSymbols;
     private Map<Symbol, List<Production>> productions;
     private Production startingProduction;
     private String startState;
@@ -44,6 +45,7 @@ public class SyntaxInputParser {
     public SyntaxInputParser(InputStream input) {
         terminalSymbols = new HashMap<>();
         nonTerminalSymbols = new HashMap<>();
+        syncSymbols = new LinkedList<>();
         productions = new LinkedHashMap<>();
 
         terminalSymbols.put(Symbol.EPS_SYMBOL_NAME, Symbol.EPS_SYMBOL);
@@ -60,7 +62,8 @@ public class SyntaxInputParser {
         terminals.add(Symbol.STREAM_END);
         List<Symbol> nonTerminals = new ArrayList<>(nonTerminalSymbols.values());
 
-        grammar = new Grammar(terminals, nonTerminals, productions, startingProduction);
+        grammar = new Grammar(terminals, nonTerminals, syncSymbols, productions,
+                startingProduction);
     }
 
     /**
@@ -100,6 +103,7 @@ public class SyntaxInputParser {
         currLine = reader.readLine();
         for (Symbol sync : readSymbols(currLine.substring(currLine.indexOf(' ')), false)) {
             sync.setSync(true);
+            syncSymbols.add(sync.toString());
         }
 
         Symbol realStartSymbol = nonTerminalSymbols.get(startState);

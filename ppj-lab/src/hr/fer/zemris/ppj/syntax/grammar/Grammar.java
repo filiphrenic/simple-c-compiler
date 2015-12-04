@@ -29,6 +29,7 @@ public class Grammar {
 
     private List<Symbol> terminalSymbols;
     private List<Symbol> nonTerminalSymbols;
+    private List<String> syncSymbols;
     private Map<Symbol, List<Production>> productions;
     private Production startingProduction; // S' -> S
 
@@ -51,11 +52,13 @@ public class Grammar {
      * @param startingProduction starting production
      */
     public Grammar(List<Symbol> terminalSymbols, List<Symbol> nonTerminalSymbols,
-            Map<Symbol, List<Production>> productions, Production startingProduction) {
+            List<String> syncSymbols, Map<Symbol, List<Production>> productions,
+            Production startingProduction) {
         this.terminalSymbols = terminalSymbols;
         this.nonTerminalSymbols = nonTerminalSymbols;
         this.productions = productions;
         this.startingProduction = startingProduction;
+        this.syncSymbols = syncSymbols;
         actions = new HashMap<>();
         newStates = new HashMap<>();
 
@@ -81,6 +84,13 @@ public class Grammar {
      */
     public Map<Integer, Map<Symbol, Integer>> getNewStates() {
         return newStates;
+    }
+
+    /**
+     * @return sync symbols
+     */
+    public List<String> getSyncSymbols() {
+        return syncSymbols;
     }
 
     /**

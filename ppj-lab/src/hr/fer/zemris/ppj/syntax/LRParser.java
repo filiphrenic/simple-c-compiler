@@ -37,13 +37,13 @@ public class LRParser {
      * @param actions actions taken by the parser
      * @param newStates determines the new state upon reduction
      */
-    public LRParser(InputStream input, OutputStream output,
+    public LRParser(InputStream input, OutputStream output, List<String> syncSymbols,
             Map<Integer, Map<Symbol, LRAction>> actions,
             Map<Integer, Map<Symbol, Integer>> newStates) {
         this.output = output;
         this.actions = actions;
         this.newStates = newStates;
-        symbols = LRSymbol.readSymbolsFrom(input);
+        symbols = LRSymbol.readSymbolsFrom(input, syncSymbols);
         accepts = false;
     }
 

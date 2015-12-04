@@ -94,10 +94,10 @@ public class Streamer {
     }
 
     public static String getFilename4Generator(String filename) {
-        return filename;
+        return "analizator/" + filename;
     }
 
     public static String getFilename4Analyzer(String filename) {
-        return "../" + filename;
+        return "analizator/" + filename;
     }
 }

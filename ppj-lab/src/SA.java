@@ -1,7 +1,10 @@
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Map;
 
 import hr.fer.zemris.ppj.stream.Streamer;
@@ -15,8 +18,8 @@ import hr.fer.zemris.ppj.syntax.grammar.Symbol;
  * @author fhrenic
  */
 public class SA {
-    public static void main(String[] args) {
-        InputStream input = System.in;
+    public static void main(String[] args) throws FileNotFoundException {
+        InputStream input = new FileInputStream("tests_syntax/kanonska/test.in");
         new SA(input, System.out).syntaxAnalysis();
     }
 
@@ -41,13 +44,14 @@ public class SA {
     @SuppressWarnings("unchecked")
     public void syntaxAnalysis() {
         String filename = Streamer.getFilename4Analyzer(Streamer.SYNTAX_OBJECTS);
-        
+
         try (ObjectInputStream stream = Streamer.getInput(filename)) {
             Map<Integer, Map<Symbol, LRAction>> actions = (Map<Integer, Map<Symbol, LRAction>>) stream
                     .readObject();
             Map<Integer, Map<Symbol, Integer>> newStates = (Map<Integer, Map<Symbol, Integer>>) stream
                     .readObject();
-            new LRParser(input, output, actions, newStates).parse();
+            List<String> syncSymbols = (List<String>) stream.readObject();
+            new LRParser(input, output, syncSymbols, actions, newStates).parse();
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Error in SA: " + ex.getMessage());
         }

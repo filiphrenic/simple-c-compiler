@@ -1,4 +1,6 @@
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
@@ -15,8 +17,8 @@ import hr.fer.zemris.ppj.syntax.grammar.Grammar;
  */
 public class GSA {
 
-    public static void main(String[] args) {
-        InputStream input = System.in;
+    public static void main(String[] args) throws FileNotFoundException {
+        InputStream input = new FileInputStream("tests_syntax/kanonska/test.san");
         GSA generator = new GSA(input);
         generator.generateSA();
     }
@@ -48,6 +50,7 @@ public class GSA {
         try (ObjectOutputStream stream = Streamer.getOutput(filename)) {
             stream.writeObject(grammar.getActions());
             stream.writeObject(grammar.getNewStates());
+            stream.writeObject(grammar.getSyncSymbols());
 
         } catch (IOException ioe) {
             System.err.println("Error in GSA: " + ioe.getMessage());

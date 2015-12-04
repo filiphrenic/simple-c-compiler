@@ -22,7 +22,7 @@ public class LRSymbol {
      * @param input stream
      * @return list of read symbols
      */
-    public static List<LRSymbol> readSymbolsFrom(InputStream input) {
+    public static List<LRSymbol> readSymbolsFrom(InputStream input, List<String> syncSymbols) {
         List<LRSymbol> symbols = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
@@ -30,6 +30,9 @@ public class LRSymbol {
             while ((currLine = reader.readLine()) != null) {
                 String[] elements = currLine.split(" ", 3);
                 Symbol sym = new Symbol(elements[0], true);
+                if (syncSymbols.contains(sym.toString())) {
+                    sym.setSync(true);
+                }
                 int lineNumber = Integer.parseInt(elements[1]);
                 String originalText = elements[2];
                 LRSymbol lrsym = new LRSymbol(sym, lineNumber, originalText);
