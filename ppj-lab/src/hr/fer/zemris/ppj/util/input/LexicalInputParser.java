@@ -1,6 +1,5 @@
 package hr.fer.zemris.ppj.util.input;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,13 +12,14 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import hr.fer.zemris.ppj.automaton.Automaton;
-import hr.fer.zemris.ppj.automaton.AutomatonCreator;
 import hr.fer.zemris.ppj.lexical.LexRule;
 import hr.fer.zemris.ppj.lexical.actions.ChangeStateAction;
 import hr.fer.zemris.ppj.lexical.actions.GoBackAction;
 import hr.fer.zemris.ppj.lexical.actions.LexAction;
 import hr.fer.zemris.ppj.lexical.actions.NewLineAction;
 import hr.fer.zemris.ppj.lexical.actions.SkipAction;
+import hr.fer.zemris.ppj.lexical.automaton.LexAutomaton;
+import hr.fer.zemris.ppj.lexical.automaton.LexAutomatonHandler;
 
 /**
  * Class which reads definitions for generator of lexical analyzer and offers
@@ -39,12 +39,13 @@ public class LexicalInputParser {
     private List<String> stateNames;
     private List<String> lexClasses;
     private HashMap<String, List<LexRule>> states;
+    private LexAutomatonHandler handler;
 
     private String currLine;
 
     /**
-     * Creates new instance of {@link LexicalInputParser} which reads given input and
-     * parses it.
+     * Creates new instance of {@link LexicalInputParser} which reads given
+     * input and parses it.
      * 
      * @param input which contains definitions for generator of lexical analyzer
      */
@@ -52,6 +53,7 @@ public class LexicalInputParser {
         stateNames = new ArrayList<>();
         lexClasses = new ArrayList<>();
         states = new LinkedHashMap<>();
+        handler = LexAutomaton.getHandler();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
             parse(reader);
@@ -91,7 +93,8 @@ public class LexicalInputParser {
             int regdefEnd = currLine.indexOf('}');
             String regDefName = currLine.substring(1, regdefEnd);
             String regEx = currLine.substring(regdefEnd + 2);
-            AutomatonCreator.addRegularDefinition(regDefName, regEx);
+            //AutomatonCreator.addRegularDefinition(regDefName, regEx);
+            handler.addRegularDefinition(regDefName, regEx);
         }
     }
 
@@ -136,7 +139,8 @@ public class LexicalInputParser {
             int idx = currLine.indexOf('>');
             String state = currLine.substring(1, idx);
             String regEx = currLine.substring(idx + 1);
-            Automaton<Character> automaton = AutomatonCreator.fromString(regEx);
+            // Automaton<Character> automaton = AutomatonCreator.fromString(regEx);
+            Automaton<Character> automaton = handler.fromString(regEx);
 
             reader.readLine(); // reads the { symbol
             String lexClass = reader.readLine();
@@ -163,14 +167,16 @@ public class LexicalInputParser {
     private LexAction createAction(String line) {
         String args[] = line.split("\\s");
         /*
-         * This iffing can be avoided by little modification of creating abstract class which implements
-         * IAction interface and has private variable String for argument, and a few manipulations with
-         * creating new instances of IActions ...  
+         * This iffing can be avoided by little modification of creating
+         * abstract class which implements IAction interface and has private
+         * variable String for argument, and a few manipulations with creating
+         * new instances of IActions ...
          */
         /*
-         * Also, this part is very insensitive about errors: if first argument of action is not recognized
-         * as some action name, it is assumed that it is lexical class. But, input file is said to be
-         * always properly formatted so there shouldn't be any errors.
+         * Also, this part is very insensitive about errors: if first argument
+         * of action is not recognized as some action name, it is assumed that
+         * it is lexical class. But, input file is said to be always properly
+         * formatted so there shouldn't be any errors.
          */
         if (args[0].equals(NEW_LINE)) {
             return new NewLineAction();
@@ -207,6 +213,15 @@ public class LexicalInputParser {
      */
     public HashMap<String, List<LexRule>> getStates() {
         return states;
+    }
+
+    /**
+     * Gives the {@link AutomatonHandler}.
+     * 
+     * @return automaton handler
+     */
+    public LexAutomatonHandler getLexAutomatonHandler() {
+        return handler;
     }
 
     /**

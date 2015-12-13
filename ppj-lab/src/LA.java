@@ -7,6 +7,7 @@ import java.util.List;
 
 import hr.fer.zemris.ppj.lexical.Lex;
 import hr.fer.zemris.ppj.lexical.LexRule;
+import hr.fer.zemris.ppj.lexical.automaton.LexAutomatonHandler;
 import hr.fer.zemris.ppj.util.Streamer;
 
 /**
@@ -48,7 +49,8 @@ public class LA {
             String startState = (String) stream.readObject();
             HashMap<String, List<LexRule>> states = (HashMap<String, List<LexRule>>) stream
                     .readObject();
-            new Lex(startState, states, output).analyzeInput(input);
+            LexAutomatonHandler handler = (LexAutomatonHandler) stream.readObject();
+            new Lex(startState, states, handler, output).analyzeInput(input);
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Error in LA: " + ex.getMessage());
         }

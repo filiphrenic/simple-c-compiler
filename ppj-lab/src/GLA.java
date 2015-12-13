@@ -53,6 +53,7 @@ public class GLA {
         try (ObjectOutputStream stream = Streamer.getOutput(filename)) {
             stream.writeObject(parser.getStartState());
             stream.writeObject(parser.getStates());
+            stream.writeObject(parser.getLexAutomatonHandler());
         } catch (IOException ioe) {
             System.err.println("Error in GLA: " + ioe.getMessage());
         }
