@@ -3,6 +3,8 @@ package hr.fer.zemris.ppj.semantic;
 /**
  * @author fhrenic
  */
-public enum Property {
-    
+public enum Attribute {
+    LEXPR, // l-izraz
+    LOOP, // loop
+
 }

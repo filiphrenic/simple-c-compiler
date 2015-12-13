@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import hr.fer.zemris.ppj.util.Util;
+
 /**
  * Class that represents nodes of the parse tree created by the LR parser.
  * 
@@ -63,7 +65,7 @@ public class LRNode {
      */
     public String toString(int level) {
         StringBuilder sb = new StringBuilder();
-        String indent = spaces(level);
+        String indent = Util.spaces(level);
         sb.append(indent);
         sb.append(symbol);
         for (LRNode child : children) {
@@ -71,17 +73,6 @@ public class LRNode {
             sb.append(child.toString(level + 1));
         }
         return sb.toString();
-    }
-
-    /**
-     * Creates a string that contains only spaces, exactly the given number of
-     * them.
-     * 
-     * @param numberOfSpaces
-     * @return string with only spaces
-     */
-    private static String spaces(int numberOfSpaces) {
-        return new String(new char[numberOfSpaces]).replace('\0', ' ');
     }
 
 }

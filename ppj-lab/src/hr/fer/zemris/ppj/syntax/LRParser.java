@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import hr.fer.zemris.ppj.stream.Streamer;
 import hr.fer.zemris.ppj.syntax.actions.LRAction;
 import hr.fer.zemris.ppj.syntax.grammar.Production;
 import hr.fer.zemris.ppj.syntax.grammar.Symbol;
+import hr.fer.zemris.ppj.util.Streamer;
 
 /**
  * Parser who's main task is to parse the input and build a syntax tree.

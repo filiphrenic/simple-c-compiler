@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import hr.fer.zemris.ppj.util.Util;
+
 /**
  * Provides various static methods for automaton creation from regexes.
  * 
@@ -103,7 +105,7 @@ public class AutomatonCreator {
                 char symbol = regex.charAt(idx);
                 if (prefixed) {
                     prefixed = false;
-                    char escape = AutomatonUtility.unescape(symbol);
+                    char escape = Util.unescape(symbol);
                     state1 = getNewState();
                     state2 = getNewState();
                     enfa.addTransition(state1, escape, state2);

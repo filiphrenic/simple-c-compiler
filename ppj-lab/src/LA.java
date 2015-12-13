@@ -7,7 +7,7 @@ import java.util.List;
 
 import hr.fer.zemris.ppj.lexical.Lex;
 import hr.fer.zemris.ppj.lexical.LexRule;
-import hr.fer.zemris.ppj.stream.Streamer;
+import hr.fer.zemris.ppj.util.Streamer;
 
 /**
  * This class reads the automatons from a file, creates a lexical analyzer based

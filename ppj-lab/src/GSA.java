@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 
-import hr.fer.zemris.ppj.stream.Streamer;
-import hr.fer.zemris.ppj.stream.SyntaxInputParser;
 import hr.fer.zemris.ppj.syntax.grammar.Grammar;
+import hr.fer.zemris.ppj.util.Streamer;
+import hr.fer.zemris.ppj.util.input.SyntaxInputParser;
 
 /**
  * This class is used to generate a syntax analyzer. It reads in grammar

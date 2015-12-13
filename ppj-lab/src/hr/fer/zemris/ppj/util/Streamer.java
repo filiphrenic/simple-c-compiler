@@ -1,7 +1,7 @@
 /**
  * 
  */
-package hr.fer.zemris.ppj.stream;
+package hr.fer.zemris.ppj.util;
 
 import java.io.File;
 import java.io.FileInputStream;

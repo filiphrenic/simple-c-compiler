@@ -16,7 +16,7 @@ public class Trie {
     private TrieNode<String, ProductionEnum> root;
 
     public static void main(String[] args) throws IOException {
-        Trie t = new Trie("prod_bnf.txt");
+        new Trie("prod_bnf.txt");
     }
 
     public Trie(String filename) throws IOException {

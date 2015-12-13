@@ -3,8 +3,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 
-import hr.fer.zemris.ppj.stream.LexicalInputParser;
-import hr.fer.zemris.ppj.stream.Streamer;
+import hr.fer.zemris.ppj.util.Streamer;
+import hr.fer.zemris.ppj.util.input.LexicalInputParser;
 
 /**
  * This class is used to generate a lexical analyzer. It reads in definitions,

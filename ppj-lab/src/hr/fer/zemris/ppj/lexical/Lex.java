@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import hr.fer.zemris.ppj.automaton.Automaton;
-import hr.fer.zemris.ppj.stream.Streamer;
+import hr.fer.zemris.ppj.util.Streamer;
 
 /**
  * This class performs lexical analysis of the given input stream. It uses

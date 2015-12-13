@@ -30,6 +30,17 @@ public class SemNodeV extends SemNode {
         children.add(child);
     }
 
+    public void setAttributeRecursive(Attribute key, Object value) {
+        setAttribute(key, value);
+        for (SemNode child : children) {
+            if (child instanceof SemNodeV) {
+                ((SemNodeV) child).setAttributeRecursive(key, value);
+            } else {
+                child.setAttribute(key, value);
+            }
+        }
+    }
+
     @Override
     public String repr(int indent) {
         StringBuilder sb = new StringBuilder(getName());

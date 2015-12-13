@@ -7,10 +7,10 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
-import hr.fer.zemris.ppj.stream.Streamer;
 import hr.fer.zemris.ppj.syntax.LRParser;
 import hr.fer.zemris.ppj.syntax.actions.LRAction;
 import hr.fer.zemris.ppj.syntax.grammar.Symbol;
+import hr.fer.zemris.ppj.util.Streamer;
 
 /**
  * This class is used to do syntax analysis of a program. It uses LR(1) parser.

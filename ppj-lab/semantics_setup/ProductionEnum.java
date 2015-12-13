@@ -1,4 +1,4 @@
-package hr.fer.zemris.ppj.semantic.parse;
+package hr.fer.zemris.ppj.semantic;
 
 /**
  * @author fhrenic
