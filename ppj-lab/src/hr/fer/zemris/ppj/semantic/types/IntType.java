@@ -5,10 +5,6 @@ package hr.fer.zemris.ppj.semantic.types;
  */
 public class IntType extends NumericType {
 
-    protected IntType(boolean isConst) {
-        super(isConst);
-    }
-
     @Override
     protected boolean implicitNonRef(Type toType) {
         return toType == CONST_INT;

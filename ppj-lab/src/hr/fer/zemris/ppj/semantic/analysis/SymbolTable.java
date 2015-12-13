@@ -33,12 +33,27 @@ public class SymbolTable {
         return returnType;
     }
 
+    /**
+     * @param returnType
+     */
+    public void setReturnType(Type returnType) {
+        this.returnType = returnType;
+    }
+
+    public SymbolTableEntry getLocalEntry(String symbolName) {
+        return entries.get(symbolName);
+    }
+
     public SymbolTableEntry getEntry(String symbolName) {
         SymbolTableEntry ste = entries.get(symbolName);
         if (ste == null && parent != null) {
             return parent.getEntry(symbolName);
         }
         return ste;
+    }
+
+    public void addEntry(String symbolName, SymbolTableEntry ste) {
+        entries.put(symbolName, ste);
     }
 
     public SymbolTable createNested() {

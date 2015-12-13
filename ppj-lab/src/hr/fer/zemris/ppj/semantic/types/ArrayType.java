@@ -4,20 +4,20 @@ package hr.fer.zemris.ppj.semantic.types;
  * @author fhrenic
  */
 public class ArrayType extends Type {
-    private PrimitiveType type;
+    private NumericType type;
 
-    public ArrayType(PrimitiveType type) {
+    public ArrayType(NumericType type) {
         this.type = type;
     }
 
-    public PrimitiveType getType() {
+    public NumericType getType() {
         return type;
     }
 
     @Override
     protected boolean implicitNonRef(Type toType) {
         if (toType instanceof ArrayType) {
-            PrimitiveType ptype = ((ArrayType) toType).type;
+            NumericType ptype = ((ArrayType) toType).type;
             if (type == ptype) {
                 return true;
             }

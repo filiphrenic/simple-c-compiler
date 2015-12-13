@@ -1,11 +1,16 @@
 package hr.fer.zemris.ppj.semantic.analysis;
 
+import java.util.Collections;
+import java.util.List;
+
 import hr.fer.zemris.ppj.semantic.Attribute;
 import hr.fer.zemris.ppj.semantic.ProductionEnum;
+import hr.fer.zemris.ppj.semantic.SemNode;
 import hr.fer.zemris.ppj.semantic.SemNodeT;
 import hr.fer.zemris.ppj.semantic.SemNodeV;
 import hr.fer.zemris.ppj.semantic.parse.Trie;
 import hr.fer.zemris.ppj.semantic.types.ArrayType;
+import hr.fer.zemris.ppj.semantic.types.ConstType;
 import hr.fer.zemris.ppj.semantic.types.FunctionType;
 import hr.fer.zemris.ppj.semantic.types.ListType;
 import hr.fer.zemris.ppj.semantic.types.NumericType;
@@ -20,6 +25,7 @@ public class SemanticAnalyzer {
     private static final String ESCAPED = "tn0'\"\\";
 
     private Trie trie;
+    private SymbolTable global;
 
     private static String checkString(String s) {
         boolean escaping = false;
@@ -92,7 +98,7 @@ public class SemanticAnalyzer {
         if (pe == ProductionEnum.primarni_izraz_1) {
             // <primarni_izraz> ::= IDN
             SemNodeT idn = (SemNodeT) node.getChild(0);
-            SymbolTableEntry idnSte = table.getEntry(idn.getName());
+            SymbolTableEntry idnSte = table.getEntry(idn.getValue());
 
             // 1. IDN.ime je deklarirano
             if (idnSte == null) {
@@ -147,7 +153,7 @@ public class SemanticAnalyzer {
                 throw new SemanticException(error, node);
 
             // tip ← niz (const(char))
-            node.setType(Type.ARRAY_CONST_CHAR);
+            node.setType(new ArrayType(Type.CHAR));
             // l-izraz ← 0
             node.setAttribute(Attribute.LEXPR, false);
 
@@ -192,7 +198,7 @@ public class SemanticAnalyzer {
                 throw new SemanticException("Isn't numeric type", node);
             }
             NumericType nt = (NumericType) X;
-            node.setAttribute(Attribute.LEXPR, !nt.getIsConst());
+            node.setAttribute(Attribute.LEXPR, !nt.isConst());
 
         } else if (pe == ProductionEnum.postfiks_izraz_3) {
             // <postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA D_ZAGRADA
@@ -757,46 +763,463 @@ public class SemanticAnalyzer {
 
         } else if (pe == ProductionEnum.definicija_funkcije_1) {
             // <definicija_funkcije> ::= <ime_tipa> IDN L_ZAGRADA KR_VOID D_ZAGRADA <slozena_naredba>
+            SemNodeV ime_tipa = (SemNodeV) node.getChild(0);
+            SemNodeT idn = (SemNodeT) node.getChild(1);
+            SemNodeV slozena_naredba = (SemNodeV) node.getChild(5);
+
+            // 1. provjeri (<ime_tipa>)
+            check(ime_tipa, table);
+            // 2. <ime_tipa>.tip != const(T)
+            Type t = ime_tipa.getType();
+            if (!(t instanceof NumericType)) {
+                throw new SemanticException("Type is not a numeric type", node);
+            }
+            NumericType nt = (NumericType) t;
+            if (nt.isConst()) {
+                throw new SemanticException("Can't be const qualified", node);
+            }
+
+            SymbolTableEntry ste = global.getEntry(idn.getValue());
+            FunctionType ft = new FunctionType(new ListType(Type.VOID), t);
+            if (ste == null) {
+                ste = new SymbolTableEntry(ft);
+                global.addEntry(idn.getValue(), ste);
+            } else {
+                // 3. ne postoji prije definirana funkcija imena IDN.ime
+                if (ste.getDefined()) {
+                    throw new SemanticException("Function already defined", node);
+                }
+                // 4. ako postoji deklaracija imena IDN.ime u globalnom djelokrugu onda je pripadni
+                // tip te deklaracije funkcija(void → <ime_tipa>.tip)
+                if (!ste.getType().same(ft)) {
+                    throw new SemanticException("Function definitions differ", node);
+                }
+            }
+            // 5. zabiljezi definiciju i deklaraciju funkcije
+            ste.setDefined();
+            // 6. provjeri (<slozena_naredba>)
+            SymbolTable functionTable = table.createNested();
+            functionTable.setReturnType(t);
+            check(slozena_naredba, functionTable);
+
         } else if (pe == ProductionEnum.definicija_funkcije_2) {
             // <definicija_funkcije> ::= <ime_tipa> IDN L_ZAGRADA <lista_parametara> D_ZAGRADA <slozena_naredba>
+            SemNodeV ime_tipa = (SemNodeV) node.getChild(0);
+            SemNodeT idn = (SemNodeT) node.getChild(1);
+            SemNodeV lista_parametara = (SemNodeV) node.getChild(3);
+            SemNodeV slozena_naredba = (SemNodeV) node.getChild(5);
+
+            // 1. provjeri (<ime_tipa>)
+            check(ime_tipa, table);
+            // 2. <ime_tipa>.tip != const(T)
+            Type t = ime_tipa.getType();
+            if (!(t instanceof NumericType)) {
+                throw new SemanticException("Type is not a numeric type", node);
+            }
+            NumericType nt = (NumericType) t;
+            if (nt.isConst()) {
+                throw new SemanticException("Can't be const qualified", node);
+            }
+            // 3. ne postoji prije definirana funkcija imena IDN.ime
+            SymbolTableEntry ste = global.getEntry(idn.getValue());
+            if (ste != null && ste.getDefined()) {
+                throw new SemanticException("Function already defined", node);
+            }
+            // 4. provjeri (<lista_parametara>)
+            check(lista_parametara, table);
+            // 5. ako postoji deklaracija imena IDN.ime u globalnom djelokrugu onda je pripadni
+            // tip te deklaracije funkcija(<lista_parametara>.tipovi → <ime_tipa>.tip)
+            FunctionType ft = new FunctionType((ListType) lista_parametara.getType(), t);
+            if (ste != null && !ft.same(ste.getType())) {
+                throw new SemanticException("Parameters don't match", node);
+            }
+            if (ste == null) {
+                ste = new SymbolTableEntry(ft);
+                global.addEntry(idn.getValue(), ste);
+            }
+            // 6. zabiljezi definiciju i deklaraciju funkcije
+            ste.setDefined();
+            // 7. provjeri (<slozena_naredba>) uz parametre funkcije koriste ́ci <lista_parametara>.tipovi
+            // i <lista_parametara>.ime_imena
+            SymbolTable functionTable = table.createNested();
+            functionTable.setReturnType(t);
+
+            @SuppressWarnings("unchecked")
+            List<String> names = (List<String>) lista_parametara.getAttribute(Attribute.NAMES);
+            ListType types = (ListType) lista_parametara.getType();
+            int n = names.size();
+            for (int idx = 0; idx < n; idx++) {
+                functionTable.addEntry(names.get(idx), new SymbolTableEntry(types.getType(idx)));
+            }
+
+            check(slozena_naredba, functionTable);
+
         } else if (pe == ProductionEnum.lista_parametara_1) {
             // <lista_parametara> ::= <deklaracija_parametra>
+            SemNodeV deklaracija_parametara = (SemNodeV) node.getChild(0);
+
+            // 1. provjeri (<deklaracija_parametra>)
+            check(deklaracija_parametara, table);
+
+            // tipovi ← [ <deklaracija_parametra>.tip ]
+            node.setType(new ListType(deklaracija_parametara.getType()));
+            // imena ← [ <deklaracija_parametra>.ime ]
+            String name = (String) deklaracija_parametara.getAttribute(Attribute.NAME);
+            node.setAttribute(Attribute.NAMES, Collections.singletonList(name));
+
         } else if (pe == ProductionEnum.lista_parametara_2) {
             // <lista_parametara> ::= <lista_parametara> ZAREZ <deklaracija_parametra>
+            SemNodeV lista_parametara = (SemNodeV) node.getChild(0);
+            SemNodeV deklaracija_parametara = (SemNodeV) node.getChild(2);
+
+            // 1. provjeri (<lista_parametara>)
+            check(lista_parametara, table);
+            // 2. provjeri (<deklaracija_parametra>)
+            check(deklaracija_parametara, table);
+            // 3. <deklaracija_parametra>.ime ne postoji u <lista_parametara>.imena
+            @SuppressWarnings("unchecked")
+            List<String> names = (List<String>) lista_parametara.getAttribute(Attribute.NAMES);
+            String name = (String) deklaracija_parametara.getAttribute(Attribute.NAME);
+            if (names.contains(name)) {
+                throw new SemanticException("Parameter name already defined", node);
+            }
+
+            names.add(name);
+            ListType lt = (ListType) lista_parametara.getType();
+            lt.addType(deklaracija_parametara.getType());
+
+            // tipovi ← <lista_parametara>.tipovi + [ <deklaracija_parametra>.tip ]
+            node.setType(lt);
+            // imena ← <lista_parametara>.imena + [ <deklaracija_parametra>.ime ]
+            node.setAttribute(Attribute.NAMES, names);
+
         } else if (pe == ProductionEnum.deklaracija_parametra_1) {
             // <deklaracija_parametra> ::= <ime_tipa> IDN
+            SemNodeV ime_tipa = (SemNodeV) node.getChild(0);
+            SemNodeT idn = (SemNodeT) node.getChild(1);
+
+            // 1. provjeri (<ime_tipa>)
+            check(ime_tipa, table);
+            // 2. <ime_tipa>.tip != void
+            if (ime_tipa.getType() == Type.VOID) {
+                throw new SemanticException("Can't declare void type", node);
+            }
+
+            // tip ← <ime_tipa>.tip
+            node.setType(ime_tipa.getType());
+            // ime ← IDN.ime
+            node.setAttribute(Attribute.NAME, idn.getValue());
+
         } else if (pe == ProductionEnum.deklaracija_parametra_2) {
             // <deklaracija_parametra> ::= <ime_tipa> IDN L_UGL_ZAGRADA D_UGL_ZAGRADA
+            SemNodeV ime_tipa = (SemNodeV) node.getChild(0);
+            SemNodeT idn = (SemNodeT) node.getChild(1);
+
+            // 1. provjeri (<ime_tipa>)
+            check(ime_tipa, table);
+            // 2. <ime_tipa>.tip != void
+            if (ime_tipa.getType() == Type.VOID) {
+                throw new SemanticException("Can't declare void type", node);
+            }
+
+            // tip ← niz(<ime_tipa>.tip)
+            node.setType(new ArrayType((NumericType) ime_tipa.getType()));
+            // ime ← IDN.ime
+            node.setAttribute(Attribute.NAME, idn.getValue());
+
         } else if (pe == ProductionEnum.lista_deklaracija_1) {
             // <lista_deklaracija> ::= <deklaracija>
+            SemNodeV deklaracija = (SemNodeV) node.getChild(0);
+
+            // 1. provjeri (<deklaracija>)
+            check(deklaracija, table);
+
         } else if (pe == ProductionEnum.lista_deklaracija_2) {
             // <lista_deklaracija> ::= <lista_deklaracija> <deklaracija>
+            SemNodeV lista_deklaracija = (SemNodeV) node.getChild(0);
+            SemNodeV deklaracija = (SemNodeV) node.getChild(1);
+
+            // 1. provjeri (<lista_deklaracija>)
+            check(lista_deklaracija, table);
+            // 2. provjeri (<deklaracija>)
+            check(deklaracija, table);
+
         } else if (pe == ProductionEnum.deklaracija_1) {
             // <deklaracija> ::= <ime_tipa> <lista_init_deklaratora> TOCKAZAREZ
+            SemNodeV ime_tipa = (SemNodeV) node.getChild(0);
+            SemNodeV lista_init_deklaratora = (SemNodeV) node.getChild(1);
+
+            // 1. provjeri (<ime_tipa>)
+            check(ime_tipa, table);
+            // 2. provjeri (<lista_init_deklaratora>) uz nasljedno svojstvo
+            // <lista_init_deklaratora>.ntip ← <ime_tipa>.tip
+            lista_init_deklaratora.setAttribute(Attribute.NTYPE, ime_tipa.getType());
+            check(lista_init_deklaratora, table);
+
         } else if (pe == ProductionEnum.lista_init_deklaratora_1) {
             // <lista_init_deklaratora> ::= <init_deklarator>
+            SemNodeV init_deklarator = (SemNodeV) node.getChild(0);
+
+            // 1. provjeri (<init_deklarator>) uz nasljedno svojstvo
+            // <init_deklarator>.ntip ← <lista_init_deklaratora>.ntip
+            init_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
+            check(init_deklarator, table);
+
         } else if (pe == ProductionEnum.lista_init_deklaratora_2) {
             // <lista_init_deklaratora> ::= <lista_init_deklaratora> ZAREZ <init_deklarator>
+            SemNodeV lista_init_deklaratora = (SemNodeV) node.getChild(0);
+            SemNodeV init_deklarator = (SemNodeV) node.getChild(2);
+
+            // 1. provjeri (<lista_init_deklaratora> 2 ) uz nasljedno svojstvo
+            // <lista_init_deklaratora> 2 .ntip ← <lista_init_deklaratora> 1 .ntip
+            lista_init_deklaratora.setAttribute(Attribute.NTYPE,
+                    node.getAttribute(Attribute.NTYPE));
+            check(lista_init_deklaratora, table);
+            // 2. provjeri (<init_deklarator>) uz nasljedno svojstvo
+            // <init_deklarator>.ntip ← <lista_init_deklaratora> 1 .ntip
+            init_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
+            check(init_deklarator, table);
+
         } else if (pe == ProductionEnum.init_deklarator_1) {
             // <init_deklarator> ::= <izravni_deklarator>
+            SemNodeV izravni_deklarator = (SemNodeV) node.getChild(0);
+
+            // 1. provjeri (<izravni_deklarator>) uz nasljedno svojstvo
+            // <izravni_deklarator>.ntip ← <init_deklarator>.ntip
+            izravni_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
+            check(izravni_deklarator, table);
+            // 2. <izravni_deklarator>.tip != const(T)
+            // <izravni_deklarator>.tip != niz (const(T))
+            Type t = izravni_deklarator.getType();
+            if (t instanceof ConstType) {
+                throw new SemanticException("Can't be const", node);
+            } else if (t instanceof ArrayType) {
+                ArrayType at = (ArrayType) t;
+                if (at.getType().isConst()) {
+                    throw new SemanticException("Can't be const", node);
+                }
+            } else {
+                throw new SemanticException("Type must be numeric or array", node);
+            }
+
         } else if (pe == ProductionEnum.init_deklarator_2) {
             // <init_deklarator> ::= <izravni_deklarator> OP_PRIDRUZI <inicijalizator>
+            SemNodeV izravni_deklarator = (SemNodeV) node.getChild(0);
+            SemNodeV inicijalizator = (SemNodeV) node.getChild(2);
+
+            // 1. provjeri (<izravni_deklarator>) uz nasljedno svojstvo
+            // <izravni_deklarator>.ntip ← <init_deklarator>.ntip
+            izravni_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
+            check(izravni_deklarator, table);
+
+            // 2. provjeri (<incijalizator>)
+            check(inicijalizator, table);
+
+            // 3. ako je <izravni_deklarator>.tip T ili const(T) 
+            //      <inicijalizator>.tip ∼ T
+            // inace ako je <izravni_deklarator>.tip niz (T) ili niz (const(T))
+            //      <inicijalizator>.br-elem ≤ <izravni_deklarator>.br-elem 
+            //      za svaki U iz <inicijalizator>.tipovi vrijedi U ∼ T 
+            // inace greska
+            Type t = izravni_deklarator.getType();
+            if (t instanceof NumericType) {
+                Type to = t;
+                if (to instanceof ConstType) {
+                    to = ((ConstType) to).getType();
+                }
+                if (!inicijalizator.getType().implicit(to)) {
+                    throw new SemanticException("Can't convert to type", node);
+                }
+            } else if (t instanceof ArrayType) {
+                int inic_br_elem = (int) inicijalizator.getAttribute(Attribute.NUM_EL);
+                int izde_br_elem = (int) izravni_deklarator.getAttribute(Attribute.NUM_EL);
+                if (inic_br_elem > izde_br_elem) {
+                    throw new SemanticException("Index too big", node);
+                }
+
+                ListType lt = (ListType) inicijalizator.getType();
+                NumericType nt = ((ArrayType) t).getType();
+                if (nt instanceof ConstType) {
+                    nt = ((ConstType) nt).getType();
+                }
+                if (!lt.eachImplicit(nt)) {
+                    throw new SemanticException("Elements can't be converted", node);
+                }
+            } else {
+                throw new SemanticException("Invalid type", node);
+            }
+
         } else if (pe == ProductionEnum.izravni_deklarator_1) {
             // <izravni_deklarator> ::= IDN
+            SemNodeT idn = (SemNodeT) node.getChild(0);
+
+            // 1. ntip != void
+            Type ntype = (Type) node.getAttribute(Attribute.NTYPE);
+            if (ntype == Type.VOID) {
+                throw new SemanticException("Type can't be void", node);
+            }
+            // 2. IDN.ime nije deklarirano u lokalnom djelokrugu
+            if (table.getLocalEntry(idn.getValue()) != null) {
+                throw new SemanticException("Already declared identifier", node);
+            }
+            // 3. zabiljezi deklaraciju IDN.ime s odgovarajucim tipom
+            table.addEntry(idn.getValue(), new SymbolTableEntry(ntype));
+
+            // tip ← ntip
+            node.setType(ntype);
+
         } else if (pe == ProductionEnum.izravni_deklarator_2) {
             // <izravni_deklarator> ::= IDN L_UGL_ZAGRADA BROJ D_UGL_ZAGRADA
+            SemNodeT idn = (SemNodeT) node.getChild(0);
+            SemNodeT broj = (SemNodeT) node.getChild(2);
+
+            // 1. ntip != void
+            Type ntype = (Type) node.getAttribute(Attribute.NTYPE);
+            if (ntype == Type.VOID) {
+                throw new SemanticException("Type can't be void", node);
+            }
+            // 2. IDN.ime nije deklarirano u lokalnom djelokrugu
+            if (table.getLocalEntry(idn.getValue()) != null) {
+                throw new SemanticException("Already declared identifier", node);
+            }
+            // 3. BROJ.vrijednost je pozitivan broj (> 0) ne ve ci od 1024
+            int vrijednost = Integer.parseInt(broj.getValue());
+            if (vrijednost <= 0 || vrijednost > 1024) {
+                throw new SemanticException("Index out of bounds", node);
+            }
+            // 4. zabiljezi deklaraciju IDN.ime s odgovarajucim tipom
+            table.addEntry(idn.getValue(), new SymbolTableEntry(ntype));
+
+            // tip ← niz (ntip)
+            node.setType(new ArrayType((NumericType) ntype));
+            // br-elem ← BROJ.vrijednost
+            node.setAttribute(Attribute.NUM_EL, vrijednost);
+
         } else if (pe == ProductionEnum.izravni_deklarator_3) {
             // <izravni_deklarator> ::= IDN L_ZAGRADA KR_VOID D_ZAGRADA
+            SemNodeT idn = (SemNodeT) node.getChild(0);
+
+            Type ntype = (Type) node.getAttribute(Attribute.NTYPE);
+            FunctionType ft = new FunctionType(new ListType(Type.VOID), ntype);
+            SymbolTableEntry ste = table.getLocalEntry(idn.getValue());
+
+            if (ste != null) {
+                // 1. ako je IDN.ime deklarirano u lokalnom djelokrugu, tip prethodne deklaracije
+                // je jednak funkcija(void → ntip)
+                if (!ft.same(ste.getType())) {
+                    throw new SemanticException("Wrong function declaratioN", node);
+                }
+            } else {
+                // 2. zabiljezi deklaraciju IDN.ime s odgovaraju ́cim tipom ako ista funkcija vec nije
+                // deklarirana u lokalnom djelokrugu
+                table.addEntry(idn.getValue(), new SymbolTableEntry(ft));
+            }
+
+            // tip ← funkcija(void → ntip)
+            node.setType(ft);
+
         } else if (pe == ProductionEnum.izravni_deklarator_4) {
             // <izravni_deklarator> ::= IDN L_ZAGRADA <lista_parametara> D_ZAGRADA
+            SemNodeT idn = (SemNodeT) node.getChild(0);
+            SemNodeV lista_parametara = (SemNodeV) node.getChild(2);
+
+            Type ntype = (Type) node.getAttribute(Attribute.NTYPE);
+            FunctionType ft = new FunctionType((ListType) lista_parametara.getType(), ntype);
+            SymbolTableEntry ste = table.getLocalEntry(idn.getValue());
+
+            // 1. provjeri (<lista_parametara>)
+            check(lista_parametara, table);
+
+            if (ste != null) {
+                // 2. ako je IDN.ime deklarirano u lokalnom djelokrugu, tip prethodne deklaracije
+                // je jednak funkcija(<lista_parametara>.tipovi → ntip)
+                if (!ft.same(ste.getType())) {
+                    throw new SemanticException("Wrong function declaratioN", node);
+                }
+            } else {
+                // 3. zabiljezi deklaraciju IDN.ime s odgovaraju ́cim tipom ako ista funkcija vec nije
+                // deklarirana u lokalnom djelokrugu
+                table.addEntry(idn.getValue(), new SymbolTableEntry(ft));
+            }
+
+            // tip ← funkcija(<lista_parametara>.tipovi → ntip)
+            node.setType(ft);
+
         } else if (pe == ProductionEnum.inicijalizator_1) {
             // <inicijalizator> ::= <izraz_pridruzivanja>
+            SemNodeV izraz_pridruzivanje = (SemNodeV) node.getChild(0);
+
+            // 1. provjeri (<izraz_pridruzivanja>)
+            check(izraz_pridruzivanje, table);
+
+            // ako je <izraz_pridruzivanja> ⇒ NIZ_ZNAKOVA
+            //      br-elem ← duljina niza znakova + 1
+            //      tipovi ← lista duljine br-elem, svi elementi su char
+            // inace
+            //      tip ← <izraz_pridruzivanja>.tip
+            SemNode sn = izraz_pridruzivanje;
+            while (sn instanceof SemNodeV) {
+                SemNodeV snv = (SemNodeV) sn;
+                if (snv.numOfChildren() != 1) {
+                    break;
+                }
+                sn = snv.getChild(0);
+            }
+
+            if (sn instanceof SemNodeT && sn.getName().equals("NIZ_ZNAKOVA")) {
+                int duljina = ((SemNodeT) sn).getValue().length();
+                ListType lt = new ListType(Type.CHAR);
+                for (int i = 0; i < duljina; i++) {
+                    lt.addType(Type.CHAR);
+                }
+                node.setAttribute(Attribute.NUM_EL, duljina + 1);
+                node.setType(lt);
+            } else {
+                node.setType(izraz_pridruzivanje.getType());
+            }
+
         } else if (pe == ProductionEnum.inicijalizator_2) {
             // <inicijalizator> ::= L_VIT_ZAGRADA <lista_izraza_pridruzivanja> D_VIT_ZAGRADA
+            SemNodeV lista_izraza_pridruzivanja = (SemNodeV) node.getChild(1);
+
+            // 1. provjeri (<lista_izraza_pridruzivanja>)
+            check(lista_izraza_pridruzivanja, table);
+
+            // br-elem ← <lista_izraza_pridruzivanja>.br-elem
+            node.setAttribute(Attribute.NUM_EL,
+                    lista_izraza_pridruzivanja.getAttribute(Attribute.NUM_EL));
+            // tipovi ← <lista_izraza_pridruzivanja>.tipovi
+            node.setType(lista_izraza_pridruzivanja.getType());
+
         } else if (pe == ProductionEnum.lista_izraza_pridruzivanja_1) {
             // <lista_izraza_pridruzivanja> ::= <izraz_pridruzivanja>
+            SemNodeV izraz_pridruzivanja = (SemNodeV) node.getChild(0);
+
+            // 1. provjeri (<izraz_pridruzivanja>)
+            check(izraz_pridruzivanja, table);
+
+            // tipovi ← [ <izraz_pridruzivanja>.tip ]
+            node.setType(new ListType(izraz_pridruzivanja.getType()));
+            // br-elem ← 1
+            node.setAttribute(Attribute.NUM_EL, 1);
+
         } else if (pe == ProductionEnum.lista_izraza_pridruzivanja_2) {
             // <lista_izraza_pridruzivanja> ::= <lista_izraza_pridruzivanja> ZAREZ <izraz_pridruzivanja
+            SemNodeV lista_izraza_pridruzivanja = (SemNodeV) node.getChild(0);
+            SemNodeV izraz_pridruzivanja = (SemNodeV) node.getChild(2);
+
+            // 1. provjeri (<lista_izraza_pridruzivanja>)
+            check(lista_izraza_pridruzivanja, table);
+            // 2. provjeri (<izraz_pridruzivanja>)
+            check(izraz_pridruzivanja, table);
+
+            // tipovi ← <lista_izraza_pridruzivanja>.tipovi + [ <izraz_pridruzivanja>.tip ]
+            ListType lt = (ListType) lista_izraza_pridruzivanja.getType();
+            lt.addType(izraz_pridruzivanja.getType());
+            node.setType(lt);
+            // br-elem ← <lista_izraza_pridruzivanja>.br-elem+ 1
+            int numel = (int) lista_izraza_pridruzivanja.getAttribute(Attribute.NUM_EL) + 1;
+            node.setAttribute(Attribute.NUM_EL, numel);
         }
 
     }

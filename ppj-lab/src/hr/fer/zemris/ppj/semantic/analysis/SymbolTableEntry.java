@@ -9,6 +9,12 @@ import hr.fer.zemris.ppj.semantic.types.Type;
 public class SymbolTableEntry {
 
     private Type type;
+    private boolean defined;
+
+    public SymbolTableEntry(Type type) {
+        this.type = type;
+        defined = false;
+    }
 
     /**
      * @return the type
@@ -17,15 +23,25 @@ public class SymbolTableEntry {
         return type;
     }
 
-    public boolean isLExpression() {
-        return type instanceof NumericType;
-    }
-
     /**
      * @param type the type to set
      */
     public void setType(Type type) {
         this.type = type;
+    }
+
+    public boolean isLExpression() {
+        return type instanceof NumericType;
+    }
+
+    public boolean getDefined() {
+        return defined;
+    }
+
+    /**
+     */
+    public void setDefined() {
+        defined = true;
     }
 
 }

@@ -8,19 +8,32 @@ import java.util.List;
  */
 public class ListType extends Type {
 
-    private List<PrimitiveType> types;
+    private List<Type> types;
 
-    public ListType(PrimitiveType type) {
+    public ListType(Type type) {
         types = new ArrayList<>();
-        addType(type);
+        types.add(type);
     }
 
-    public void addType(PrimitiveType type) {
+    public void addType(Type type) {
         types.add(type);
+    }
+
+    public Type getType(int idx) {
+        return types.get(idx);
     }
 
     public boolean isVoid() {
         return types.size() == 1 && types.get(0) == Type.VOID;
+    }
+
+    public boolean eachImplicit(Type toType) {
+        for (Type t : types) {
+            if (!t.implicit(toType)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -39,6 +52,24 @@ public class ListType extends Type {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean same(Type t) {
+        if (!(t instanceof ListType)) {
+            return false;
+        }
+        ListType lt = (ListType) t;
+        int n = types.size();
+        if (lt.types.size() != n) {
+            return false;
+        }
+        for (int idx = 0; idx < n; idx++) {
+            if (!types.get(idx).same(lt.types.get(idx))) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

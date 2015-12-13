@@ -5,12 +5,6 @@ package hr.fer.zemris.ppj.semantic.types;
  */
 public abstract class NumericType extends PrimitiveType {
 
-    private boolean isConst;
-
-    public NumericType(boolean isConst) {
-        this.isConst = isConst;
-    }
-
     public abstract int getLow();
 
     public abstract int getTop();
@@ -21,8 +15,8 @@ public abstract class NumericType extends PrimitiveType {
         return value >= getLow() && value <= getTop();
     }
 
-    public boolean getIsConst() {
-        return isConst;
+    public final boolean isConst() {
+        return this instanceof ConstType;
     }
 
 }
