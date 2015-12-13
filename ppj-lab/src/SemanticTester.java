@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -30,9 +29,6 @@ public class SemanticTester {
     }
 
     private static void generateSemInput() throws IOException {
-
-//        new File(getFileName(LEX2SYN)).createNewFile();
-//        new File(getFileName(SYN2SEM)).createNewFile();
 
         // lexical
         FileInputStream lexIn = new FileInputStream(new File(getFileName(LEX_IN)));
