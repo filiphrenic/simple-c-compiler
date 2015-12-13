@@ -42,7 +42,7 @@ public class LA {
      */
     @SuppressWarnings("unchecked")
     public void lexicalAnalysis() {
-        String filename = Streamer.getFilename4Analyzer(Streamer.SYNTAX_OBJECTS);
+        String filename = Streamer.getFilename4Analyzer(Streamer.LEXICAL_OBJECTS);
 
         try (ObjectInputStream stream = Streamer.getInput(filename)) {
             String startState = (String) stream.readObject();
