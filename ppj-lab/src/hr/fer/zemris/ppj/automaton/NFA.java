@@ -123,6 +123,7 @@ public class NFA<St, Sym> implements Automaton<Sym> {
      * @return dfa
      */
     public DFAExtended<St, Sym> toDFA() {
+
         // for dfa
         int state = 0;
         Set<Integer> acceptableStates = new LinkedHashSet<>();

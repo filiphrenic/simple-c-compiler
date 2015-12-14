@@ -1,5 +1,6 @@
 package hr.fer.zemris.ppj.automaton;
 
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -21,6 +22,11 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
     private Map<St, Map<Sym, Set<St>>> transitions;
     private Map<St, Set<St>> epsilonTransitions;
     private boolean accepts;
+
+    private boolean valid;
+    private Mapper<St> mapper;
+    private BitSet calculating;
+    private Map<Integer, BitSet> epsilonEnvironment;
 
     /**
      * Creates a new automaton with given left and right state. This should be
@@ -84,6 +90,8 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
      */
     public NFA<St, Sym> toNFA() {
 
+        // TODO switch to bitsets
+
         Set<St> acceptableStates = new LinkedHashSet<>();
         acceptableStates.add(finalState);
         Set<St> epsStartState = epsilonEnv(startState);
@@ -141,31 +149,6 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
     }
 
     /**
-     * Updates the current states to the epsilon environment of those states.
-     */
-    protected void updateCurrentStates() {
-        accepts = false;
-        Set<St> newStates;
-
-        do {
-            newStates = new LinkedHashSet<>();
-            for (St state : currentStates) {
-                if (state == finalState) {
-                    accepts = true;
-                }
-                Set<St> epsStates = epsilonTransitions.get(state);
-                if (epsStates != null) {
-                    newStates.addAll(epsStates);
-                }
-            }
-        } while (currentStates.addAll(newStates));
-
-        if (!accepts && currentStates.contains(finalState)) {
-            accepts = true;
-        }
-    }
-
-    /**
      * Add a transition from left to right state via given symbol
      * 
      * @param left left state
@@ -184,6 +167,8 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
         states.add(right);
         transitionMap.put(symbol, states);
         transitions.put(left, transitionMap);
+
+        valid = false;
     }
 
     /**
@@ -199,6 +184,8 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
         }
         states.add(right);
         epsilonTransitions.put(left, states);
+
+        valid = false;
     }
 
     /**
@@ -216,25 +203,33 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
     }
 
     /**
+     * Updates the current states to the epsilon environment of those states.
+     */
+    private void updateCurrentStates() {
+        checkValid();
+
+        BitSet b = new BitSet(calculating.size());
+        for (St s : currentStates) {
+            b.or(getEpsilonEnvironment(s));
+        }
+
+        accepts = false;
+        currentStates = bitsetToSet(b);
+        if (currentStates.contains(finalState)) {
+            accepts = true;
+        }
+    }
+
+    /**
      * Calculates epsilon environment of a given state
      * 
      * @param state
      * @return epsilon environment
      */
     private Set<St> epsilonEnv(St state) {
-        Set<St> states = new LinkedHashSet<>();
-        states.add(state);
-        Set<St> newStates;
-        do {
-            newStates = new LinkedHashSet<>();
-            for (St st : states) {
-                Set<St> epsStates = epsilonTransitions.get(st);
-                if (epsStates != null) {
-                    newStates.addAll(epsStates);
-                }
-            }
-        } while (states.addAll(newStates));
-        return states;
+        checkValid();
+        BitSet b = getEpsilonEnvironment(state);
+        return bitsetToSet(b);
     }
 
     /**
@@ -244,11 +239,100 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
      * @return union of epsilon environments of all states
      */
     private Set<St> epsilonEnv(Set<St> states) {
-        Set<St> epsStates = new LinkedHashSet<>();
+        checkValid();
+        BitSet b = new BitSet(calculating.size());
         for (St s : states) {
-            epsStates.addAll(epsilonEnv(s));
+            b.or(getEpsilonEnvironment(s));
         }
-        return epsStates;
+        return bitsetToSet(b);
+    }
+
+    /**
+     * Returns the epsilon environment of the given state.
+     * 
+     * @param state
+     * @return epsilon environment
+     */
+    private BitSet getEpsilonEnvironment(St state) {
+        int x = mapper.getForValue(state);
+        if (!epsilonEnvironment.containsKey(x)) {
+            calculating.set(x);
+            epsilonEnvironment.put(x, findEpsilonEnvironment(x));
+            calculating.clear(x);
+        }
+        return epsilonEnvironment.get(x);
+    }
+
+    /**
+     * Finds the epsilon environment of a given states index.
+     * 
+     * @param x state index
+     * @return epsilon environment
+     */
+    private BitSet findEpsilonEnvironment(int x) {
+        BitSet b = new BitSet();
+        b.set(x);
+        Set<St> states = epsilonTransitions.get(mapper.getForIndex(x));
+        if (states != null) {
+            for (St s : states) {
+                int y = mapper.getForValue(s);
+                b.set(y);
+                if (!calculating.get(y)) {
+                    b.or(getEpsilonEnvironment(s));
+                }
+            }
+        }
+        return b;
+    }
+
+    /**
+     * Builds a {@link Mapper} object for this automatons states.
+     * 
+     * @param transitions
+     * @param epsilonTransitions
+     */
+    private void buildMapper(Map<St, Map<Sym, Set<St>>> transitions,
+            Map<St, Set<St>> epsilonTransitions) {
+        Set<St> states = new LinkedHashSet<>();
+        for (Entry<St, Map<Sym, Set<St>>> e1 : transitions.entrySet()) {
+            states.add(e1.getKey());
+            for (Entry<Sym, Set<St>> e2 : e1.getValue().entrySet()) {
+                states.addAll(e2.getValue());
+            }
+        }
+        for (Entry<St, Set<St>> e : epsilonTransitions.entrySet()) {
+            states.add(e.getKey());
+            states.addAll(e.getValue());
+        }
+
+        epsilonEnvironment = new HashMap<>();
+        calculating = new BitSet(states.size());
+        mapper = new Mapper<>(states);
+    }
+
+    /**
+     * Invariant check. If automaton is in invalid state, puts it in a valid
+     * state.
+     */
+    private void checkValid() {
+        if (!valid) {
+            buildMapper(transitions, epsilonTransitions);
+            valid = true;
+        }
+    }
+
+    /**
+     * Turns bitset representation to set.
+     * 
+     * @param b bitset with states
+     * @return set
+     */
+    private Set<St> bitsetToSet(BitSet b) {
+        Set<St> states = new LinkedHashSet<>();
+        for (int idx = b.nextSetBit(0); idx >= 0; idx = b.nextSetBit(idx + 1)) {
+            states.add(mapper.getForIndex(idx));
+        }
+        return states;
     }
 
     @Override

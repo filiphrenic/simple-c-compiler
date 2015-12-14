@@ -180,7 +180,6 @@ public class Grammar {
             actions.put(state, actions4State);
             newStates.put(state, newStates4State);
         }
-
     }
 
     private List<Symbol> fromBitSet(BitSet bs) {
