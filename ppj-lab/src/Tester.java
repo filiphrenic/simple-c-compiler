@@ -16,8 +16,8 @@ import java.util.List;
 public abstract class Tester {
 
     public static void main(String[] args) throws IOException {
-        //lexTester.run();
-        sinTester.generateAnalyzeCompare();
+        //lexTester.generateAnalyzeCompare();
+        //sinTester.generateAnalyzeCompare();
     }
 
     private Path dir;
@@ -35,8 +35,14 @@ public abstract class Tester {
     }
 
     public void generateAnalyzeCompare() throws IOException {
+
+        long start = System.currentTimeMillis();
+        boolean allGood = true;
+        int n = 0;
+
         long t1, t2;
         for (File test : dir.toFile().listFiles()) {
+            n++;
 
             FileInputStream gfis = new FileInputStream(get_path(test, gen_in).toFile());
             FileInputStream afis = new FileInputStream(get_path(test, ana_in).toFile());
@@ -58,9 +64,16 @@ public abstract class Tester {
 
             List<String> out = readFile(test, ana_out);
             List<String> my = readFile(test, my_out);
-            System.out.println("\tSame outputs? " + my.equals(out));
+            boolean ok = my.equals(out);
+            allGood &= ok;
+            System.out.println("\tSame outputs? " + ok);
             System.out.println();
         }
+
+        long end = System.currentTimeMillis();
+
+        System.out.format("Total time for %d tests: %.2f seconds\n", n, (end - start) / 1000.0);
+        System.out.println("All ok: " + allGood);
     }
 
     private List<String> readFile(File folder_name, String file_name) throws IOException {

@@ -23,6 +23,13 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
     private Map<St, Set<St>> epsilonTransitions;
     private boolean accepts;
 
+    /*
+     * Automaton is in valid state only if after the mapper has been built, no
+     * other transitions have been added. Adding transitions after building the
+     * mapper invalidates automaton and mapper needs to be rebuilt. Fortunately,
+     * my code doesn't build an mapper and then adds transitions, but this still
+     * has to be checked just in case.
+     */
     private boolean valid;
     private Mapper<St> mapper;
     private BitSet calculating;
@@ -91,6 +98,9 @@ public class EpsilonNFA<St, Sym> implements Automaton<Sym> {
     public NFA<St, Sym> toNFA() {
 
         // TODO switch to bitsets
+        // when creating lr-parser, this is what happens:
+        // enfa -> nfa -> dfa
+        // this is the main time consumer 
 
         Set<St> acceptableStates = new LinkedHashSet<>();
         acceptableStates.add(finalState);
