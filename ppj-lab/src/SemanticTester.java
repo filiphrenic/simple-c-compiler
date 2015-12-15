@@ -25,7 +25,7 @@ public class SemanticTester {
     }
 
     private static void semanticAnalysis() {
-
+        
     }
 
     private static void generateSemInput() throws IOException {

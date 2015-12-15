@@ -1,7 +1,8 @@
 void p(void); 
 
-int main(void){
-         int p(int a); 
+int main(){
+         int p(int a);
+         int bla; 
          return 0;
 }
 

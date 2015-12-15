@@ -17,7 +17,7 @@ public abstract class Tester {
 
     public static void main(String[] args) throws IOException {
         lexTester.generateAnalyzeCompare(false);
-        sinTester.generateAnalyzeCompare(true);
+        sinTester.generateAnalyzeCompare(false);
     }
 
     private Path dir;
