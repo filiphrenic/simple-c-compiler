@@ -8,6 +8,7 @@ import java.util.List;
  */
 public class SemNodeV extends SemNode {
 
+    private boolean lexpression;
     private List<SemNode> children;
 
     /**
@@ -28,6 +29,14 @@ public class SemNodeV extends SemNode {
 
     public void addChild(SemNode child) {
         children.add(child);
+    }
+
+    public void setLExpr(boolean lexpr) {
+        lexpression = lexpr;
+    }
+
+    public boolean getLExpr() {
+        return lexpression;
     }
 
     public void setAttributeRecursive(Attribute key, Object value) {

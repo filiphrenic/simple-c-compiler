@@ -15,8 +15,4 @@ public abstract class NumericType extends PrimitiveType {
         return value >= getLow() && value <= getTop();
     }
 
-    public final boolean isConst() {
-        return this instanceof ConstType;
-    }
-
 }

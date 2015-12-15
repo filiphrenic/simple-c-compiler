@@ -5,13 +5,13 @@ package hr.fer.zemris.ppj.semantic.types;
  */
 public class ConstType extends NumericType {
 
-    private NumericType type;
+    private NumberType type;
 
-    protected ConstType(NumericType type) {
+    protected ConstType(NumberType type) {
         this.type = type;
     }
 
-    public NumericType getType() {
+    public NumberType getType() {
         return type;
     }
 
@@ -32,8 +32,12 @@ public class ConstType extends NumericType {
 
     @Override
     protected boolean implicitNonRef(Type toType) {
-        // TODO Auto-generated method stub
-        return false;
+        return type.implicit(toType);
+    }
+
+    @Override
+    public boolean isConst() {
+        return true;
     }
 
 }

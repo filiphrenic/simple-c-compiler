@@ -21,4 +21,12 @@ public class SemanticException extends RuntimeException {
         this.node = node;
     }
 
+    /**
+     * @return
+     */
+    public String createError() {
+        // TODO rewrite toString method in nodes
+        return node.toString();
+    }
+
 }

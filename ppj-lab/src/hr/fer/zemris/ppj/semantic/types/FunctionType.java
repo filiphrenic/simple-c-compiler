@@ -29,11 +29,11 @@ public class FunctionType extends Type {
 
     @Override
     protected boolean implicitNonRef(Type toType) {
-        if (toType instanceof FunctionType) {
-            FunctionType ft = (FunctionType) toType;
-            return returnType.implicit(ft.returnType) && parameterTypes.implicit(ft.parameterTypes);
+        if (!(toType instanceof FunctionType)) {
+            return false;
         }
-        return false;
+        FunctionType ft = (FunctionType) toType;
+        return returnType.implicit(ft.returnType) && parameterTypes.implicit(ft.parameterTypes);
     }
 
     public boolean same(Type t) {
@@ -41,9 +41,6 @@ public class FunctionType extends Type {
             return false;
         }
         FunctionType ft = (FunctionType) t;
-        if (!returnType.same(ft.returnType) || !parameterTypes.same(ft.parameterTypes)) {
-            return false;
-        }
-        return true;
+        return returnType.same(ft.returnType) && parameterTypes.same(ft.parameterTypes);
     }
 }

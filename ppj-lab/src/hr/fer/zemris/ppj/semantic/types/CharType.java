@@ -3,10 +3,11 @@ package hr.fer.zemris.ppj.semantic.types;
 /**
  * @author fhrenic
  */
-public class CharType extends NumericType {
+public class CharType extends NumberType {
 
     @Override
     protected boolean implicitNonRef(Type toType) {
+        // int, char, const int, const char
         return toType instanceof NumericType;
     }
 

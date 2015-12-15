@@ -16,8 +16,8 @@ import java.util.List;
 public abstract class Tester {
 
     public static void main(String[] args) throws IOException {
-        //lexTester.generateAnalyzeCompare();
-        //sinTester.generateAnalyzeCompare();
+        lexTester.generateAnalyzeCompare(false);
+        sinTester.generateAnalyzeCompare(true);
     }
 
     private Path dir;
@@ -25,6 +25,7 @@ public abstract class Tester {
     private String ana_in;
     private String ana_out;
     private String my_out;
+    private boolean verbose;
 
     public Tester(String dir, String gen_in, String ana_in, String ana_out, String my_out) {
         this.dir = Paths.get(dir);
@@ -32,10 +33,21 @@ public abstract class Tester {
         this.ana_in = ana_in;
         this.ana_out = ana_out;
         this.my_out = my_out;
+        verbose = true;
     }
 
-    public void generateAnalyzeCompare() throws IOException {
+    private void maybe(String message) {
+        if (verbose) {
+            output(message);
+        }
+    }
 
+    private void output(String message) {
+        System.out.println(message);
+    }
+
+    public void generateAnalyzeCompare(boolean verbose) throws IOException {
+        this.verbose = verbose;
         long start = System.currentTimeMillis();
         boolean allGood = true;
         int n = 0;
@@ -48,32 +60,31 @@ public abstract class Tester {
             FileInputStream afis = new FileInputStream(get_path(test, ana_in).toFile());
             FileOutputStream afos = new FileOutputStream(get_path(test, my_out).toFile());
 
-            System.out.println("Performing " + test);
+            maybe("Performing " + test);
 
-            System.out.println("\tGenerating...");
+            maybe("\tGenerating...");
             t1 = System.currentTimeMillis();
             generate(gfis);
             t2 = System.currentTimeMillis();
-            System.out.format("\tTook %.2f seconds\n", (t2 - t1) / 1000.0);
+            maybe(String.format("\tTook %.2f seconds", (t2 - t1) / 1000.0));
 
-            System.out.println("\tAnalyzing...");
+            maybe("\tAnalyzing...");
             t1 = System.currentTimeMillis();
             analyze(afis, afos);
             t2 = System.currentTimeMillis();
-            System.out.format("\tTook %.2f seconds\n", (t2 - t1) / 1000.0);
+            maybe(String.format("\tTook %.2f seconds", (t2 - t1) / 1000.0));
 
             List<String> out = readFile(test, ana_out);
             List<String> my = readFile(test, my_out);
             boolean ok = my.equals(out);
             allGood &= ok;
-            System.out.println("\tSame outputs? " + ok);
-            System.out.println();
+            maybe("\tSame outputs? " + ok + "\n");
         }
 
         long end = System.currentTimeMillis();
 
-        System.out.format("Total time for %d tests: %.2f seconds\n", n, (end - start) / 1000.0);
-        System.out.println("All ok: " + allGood);
+        output(String.format("Total time for %d tests: %.2f seconds", n, (end - start) / 1000.0));
+        output("All ok: " + allGood);
     }
 
     private List<String> readFile(File folder_name, String file_name) throws IOException {

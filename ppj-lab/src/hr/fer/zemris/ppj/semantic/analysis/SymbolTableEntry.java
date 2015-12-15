@@ -1,6 +1,6 @@
 package hr.fer.zemris.ppj.semantic.analysis;
 
-import hr.fer.zemris.ppj.semantic.types.NumericType;
+import hr.fer.zemris.ppj.semantic.types.NumberType;
 import hr.fer.zemris.ppj.semantic.types.Type;
 
 /**
@@ -31,7 +31,7 @@ public class SymbolTableEntry {
     }
 
     public boolean isLExpression() {
-        return type instanceof NumericType;
+        return type instanceof NumberType;
     }
 
     public boolean getDefined() {

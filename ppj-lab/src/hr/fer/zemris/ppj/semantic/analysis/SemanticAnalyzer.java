@@ -2,6 +2,7 @@ package hr.fer.zemris.ppj.semantic.analysis;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 
 import hr.fer.zemris.ppj.semantic.Attribute;
 import hr.fer.zemris.ppj.semantic.ProductionEnum;
@@ -26,6 +27,28 @@ public class SemanticAnalyzer {
 
     private Trie trie;
     private SymbolTable global;
+    private String error;
+
+    public SemanticAnalyzer(String trieFilename) {
+        trie = new Trie(trieFilename);
+        error = "";
+    }
+
+    public void analysis(SemNodeV tree) {
+        global = new SymbolTable();
+        try {
+            check(tree, global);
+            checkMain();
+            checkFunctions(global);
+        } catch (SemanticException e) {
+            error = e.createError();
+        } catch (SemanticFunctionException e) {
+            error = e.getFunctionName();
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
+    }
 
     private static String checkString(String s) {
         boolean escaping = false;
@@ -67,7 +90,7 @@ public class SemanticAnalyzer {
         // tip ← int
         node.setType(Type.INT);
         // l-izraz ← 0
-        node.setAttribute(Attribute.LEXPR, false);
+        node.setLExpr(false);
     }
 
     private void unaryProduction(SemNodeV node, SymbolTable table) {
@@ -79,7 +102,7 @@ public class SemanticAnalyzer {
         // tip ← <child>.tip
         node.setType(child.getType());
         // l-izraz ← <child>.l-izraz
-        node.setAttribute(Attribute.LEXPR, child.getAttribute(Attribute.LEXPR));
+        node.setLExpr(child.getLExpr());
     }
 
     private static void checkImplicit2Int(SemNodeV nodeToCheck, SemNodeV parent) {
@@ -88,7 +111,46 @@ public class SemanticAnalyzer {
         }
     }
 
-    public void check(SemNodeV node, SymbolTable table) {
+    private void checkMain() {
+        SymbolTableEntry main = global.getEntry("main");
+        if (main == null) {
+            throw new SemanticFunctionException("main", "Main not defined");
+        }
+        FunctionType mainType = new FunctionType(new ListType(Type.VOID), Type.INT);
+        if (!mainType.same(main.getType())) {
+            throw new SemanticFunctionException("main", "Main has wrong type");
+        }
+    }
+
+    private void checkFunctions(SymbolTable table) {
+        for (Entry<String, SymbolTableEntry> entry : table.getAllEntries()) {
+            if (entry.getValue().getType() instanceof FunctionType) {
+                String functionName = entry.getKey();
+                SymbolTableEntry function = global.getEntry(functionName);
+                
+                if (function == null) {
+                    // shouldn't happen, will throw exception before this
+                    throw new SemanticFunctionException("funkcija",
+                            "Function not found in global table");
+                }
+
+                if (!function.getDefined()) {
+                    throw new SemanticFunctionException("funkcija",
+                            "Function " + functionName + " not defined");
+                }
+
+                if (!function.getType().same(entry.getValue().getType())) {
+                    throw new SemanticFunctionException("funkcija",
+                            "Function parameters and/or return type don't match");
+                }
+            }
+        }
+        for (SymbolTable child : table.getNestedTables()) {
+            checkFunctions(child);
+        }
+    }
+
+    private void check(SemNodeV node, SymbolTable table) {
 
         ProductionEnum pe = trie.findProduction(node);
         if (pe == null) {
@@ -108,7 +170,7 @@ public class SemanticAnalyzer {
             // tip ← IDN.tip
             node.setType(idnSte.getType());
             // l-izraz ← IDN.l-izraz
-            node.setAttribute(Attribute.LEXPR, idnSte.isLExpression());
+            node.setLExpr(idnSte.isLExpression());
 
         } else if (pe == ProductionEnum.primarni_izraz_2) {
             // <primarni_izraz> ::= BROJ
@@ -123,7 +185,7 @@ public class SemanticAnalyzer {
             // tip ← int
             node.setType(Type.INT);
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.primarni_izraz_3) {
             // <primarni_izraz> ::= ZNAK
@@ -141,7 +203,7 @@ public class SemanticAnalyzer {
             // tip ← char
             node.setType(Type.CHAR);
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.primarni_izraz_4) {
             // <primarni_izraz> ::= NIZ_ZNAKOVA
@@ -153,9 +215,9 @@ public class SemanticAnalyzer {
                 throw new SemanticException(error, node);
 
             // tip ← niz (const(char))
-            node.setType(new ArrayType(Type.CHAR));
+            node.setType(Type.A_CONST_CHAR);
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.primarni_izraz_5) {
             // <primarni_izraz> ::= L_ZAGRADA <izraz> D_ZAGRADA
@@ -167,7 +229,7 @@ public class SemanticAnalyzer {
             // tip ← <izraz>.tip
             node.setType(izraz.getType());
             // l-izraz ← <izraz>.l-izraz
-            node.setAttribute(Attribute.LEXPR, izraz.getAttribute(Attribute.LEXPR));
+            node.setLExpr(izraz.getLExpr());
 
         } else if (pe == ProductionEnum.postfiks_izraz_1) {
             // <postfiks_izraz> ::= <primarni_izraz>
@@ -191,14 +253,10 @@ public class SemanticAnalyzer {
             checkImplicit2Int(izraz, node);
 
             //tip ← X
-            Type X = ((ArrayType) pi_type).getType();
+            NumericType X = ((ArrayType) pi_type).getType();
             node.setType(X);
             //l-izraz ← X != const(T)
-            if (!(X instanceof NumericType)) {
-                throw new SemanticException("Isn't numeric type", node);
-            }
-            NumericType nt = (NumericType) X;
-            node.setAttribute(Attribute.LEXPR, !nt.isConst());
+            node.setLExpr(!X.isConst());
 
         } else if (pe == ProductionEnum.postfiks_izraz_3) {
             // <postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA D_ZAGRADA
@@ -219,7 +277,7 @@ public class SemanticAnalyzer {
             // tip ← pov
             node.setType(ft.getReturnType());
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.postfiks_izraz_4) {
             // <postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA <lista_argumenata> D_ZAGRADA
@@ -248,7 +306,7 @@ public class SemanticAnalyzer {
             // tip ← pov
             node.setType(ft.getReturnType());
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.postfiks_izraz_5 || pe == ProductionEnum.postfiks_izraz_6) {
             // <postfiks_izraz> ::= <postfiks_izraz> (OP_INC | OP_DEC)
@@ -258,8 +316,7 @@ public class SemanticAnalyzer {
             check(postfiks_izraz, table);
 
             // 2. <postfiks_izraz>.l-izraz = 1 i <postfiks_izraz>.tip ∼ int
-            boolean lexpr = (boolean) postfiks_izraz.getAttribute(Attribute.LEXPR);
-            if (!lexpr) {
+            if (!postfiks_izraz.getLExpr()) {
                 throw new SemanticException("Not an L-expression", node);
             }
             checkImplicit2Int(postfiks_izraz, node);
@@ -267,7 +324,7 @@ public class SemanticAnalyzer {
             // tip ← int
             node.setType(Type.INT);
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.lista_argumenata_1) {
             // <lista_argumenata> ::= <izraz_pridruzivanja>
@@ -277,11 +334,7 @@ public class SemanticAnalyzer {
             check(izraz_pridruzivanja, table);
 
             // tipovi ← [ <izraz_pridruzivanja>.tip ]
-            Type t = izraz_pridruzivanja.getType();
-            if (!(t instanceof PrimitiveType)) {
-                throw new SemanticException("Can't have list of types other than primitives", node);
-            }
-            node.setType(new ListType((PrimitiveType) t));
+            node.setType(new ListType(izraz_pridruzivanja.getType()));
 
         } else if (pe == ProductionEnum.lista_argumenata_2) {
             // <lista_argumenata> ::= <lista_argumenata> ZAREZ <izraz_pridruzivanja>
@@ -294,12 +347,8 @@ public class SemanticAnalyzer {
             check(izraz_pridruzivanja, table);
 
             // tipovi ← <lista_argumenata>.tipovi + [ <izraz_pridruzivanja>.tip ]
-            Type t = izraz_pridruzivanja.getType();
-            if (!(t instanceof PrimitiveType)) {
-                throw new SemanticException("Can't have list of types other than primitives", node);
-            }
             ListType lt = (ListType) lista_argumenata.getType();
-            lt.addType((PrimitiveType) t);
+            lt.addType(izraz_pridruzivanja.getType());
             node.setType(lt);
 
         } else if (pe == ProductionEnum.unarni_izraz_1) {
@@ -313,8 +362,7 @@ public class SemanticAnalyzer {
             // 1. provjeri (<unarni_izraz>)
             check(unarni_izraz, table);
             // 2. <unarni_izraz>.l-izraz = 1 i <unarni_izraz>.tip ∼ int
-            boolean lexpr = (boolean) unarni_izraz.getAttribute(Attribute.LEXPR);
-            if (!lexpr) {
+            if (!unarni_izraz.getLExpr()) {
                 throw new SemanticException("Not an L-expression", node);
             }
             checkImplicit2Int(unarni_izraz, node);
@@ -322,7 +370,7 @@ public class SemanticAnalyzer {
             // tip ← int
             node.setType(Type.INT);
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.unarni_izraz_4) {
             // <unarni_izraz> ::= <unarni_operator> <cast_izraz>
@@ -337,7 +385,7 @@ public class SemanticAnalyzer {
             // tip ← int
             node.setType(Type.INT);
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.unarni_operator_1) {
             // <unarni_operator> ::= PLUS
@@ -376,7 +424,7 @@ public class SemanticAnalyzer {
             // tip ← <ime_tipa>.tip
             node.setType(ime_tipa.getType());
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.ime_tipa_1) {
             // <ime_tipa> ::= <specifikator_tipa>
@@ -400,7 +448,7 @@ public class SemanticAnalyzer {
             }
 
             // tip ← const(<specifikator_tipa>.tip)
-            Type t = Type.CONST.get(specifikator_tipa.getType());
+            Type t = Type.getConst(specifikator_tipa.getType());
             if (t == null) {
                 throw new SemanticException("Type isn't a numeric type", node);
             }
@@ -514,7 +562,7 @@ public class SemanticAnalyzer {
             // 1. provjeri (<postfiks_izraz>)
             check(postfiks_izraz, table);
             // 2. <postfiks_izraz>.l-izraz = 1
-            if (!((boolean) postfiks_izraz.getAttribute(Attribute.LEXPR))) {
+            if (!postfiks_izraz.getLExpr()) {
                 throw new SemanticException("Not an L-expression", node);
             }
             // 3. provjeri (<izraz_pridruzivanja>)
@@ -528,7 +576,7 @@ public class SemanticAnalyzer {
             // tip ← <postfiks_izraz>.tip
             node.setType(postfiks_izraz.getType());
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.izraz_1) {
             // <izraz> ::= <izraz_pridruzivanja>
@@ -547,7 +595,7 @@ public class SemanticAnalyzer {
             // tip ← <izraz_pridruzivanja>.tip
             node.setType(izraz_pridruzivanja.getType());
             // l-izraz ← 0
-            node.setAttribute(Attribute.LEXPR, false);
+            node.setLExpr(false);
 
         } else if (pe == ProductionEnum.slozena_naredba_1) {
             // <slozena_naredba> ::= L_VIT_ZAGRADA <lista_naredbi> D_VIT_ZAGRADA
@@ -780,7 +828,7 @@ public class SemanticAnalyzer {
             }
 
             SymbolTableEntry ste = global.getEntry(idn.getValue());
-            FunctionType ft = new FunctionType(new ListType(Type.VOID), t);
+            FunctionType ft = new FunctionType(new ListType(Type.VOID), nt);
             if (ste == null) {
                 ste = new SymbolTableEntry(ft);
                 global.addEntry(idn.getValue(), ste);
@@ -829,7 +877,7 @@ public class SemanticAnalyzer {
             check(lista_parametara, table);
             // 5. ako postoji deklaracija imena IDN.ime u globalnom djelokrugu onda je pripadni
             // tip te deklaracije funkcija(<lista_parametara>.tipovi → <ime_tipa>.tip)
-            FunctionType ft = new FunctionType((ListType) lista_parametara.getType(), t);
+            FunctionType ft = new FunctionType((ListType) lista_parametara.getType(), nt);
             if (ste != null && !ft.same(ste.getType())) {
                 throw new SemanticException("Parameters don't match", node);
             }
@@ -1100,7 +1148,7 @@ public class SemanticAnalyzer {
             SemNodeT idn = (SemNodeT) node.getChild(0);
 
             Type ntype = (Type) node.getAttribute(Attribute.NTYPE);
-            FunctionType ft = new FunctionType(new ListType(Type.VOID), ntype);
+            FunctionType ft = new FunctionType(new ListType(Type.VOID), (PrimitiveType) ntype);
             SymbolTableEntry ste = table.getLocalEntry(idn.getValue());
 
             if (ste != null) {

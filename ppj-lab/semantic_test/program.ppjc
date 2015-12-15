@@ -1,11 +1,10 @@
-void fun(int a, char b[]) {
-    return;
+void p(void); 
+
+int main(void){
+         int p(int a); 
+         return 0;
 }
 
-int main(void) {
-    int A[512];
-    const char tmp[6] = "te  \nst";
-    int a;
-    a = 1 + 2 * 3;
-    return 0;
+void p(void){
+        return;
 }

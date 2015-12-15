@@ -1,7 +1,11 @@
 package hr.fer.zemris.ppj.semantic.analysis;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import hr.fer.zemris.ppj.semantic.types.Type;
 
@@ -13,6 +17,7 @@ public class SymbolTable {
     private Type returnType;
     private Map<String, SymbolTableEntry> entries;
     private SymbolTable parent;
+    private List<SymbolTable> nestedTables;
 
     public SymbolTable() {
         this(null);
@@ -22,8 +27,10 @@ public class SymbolTable {
         this.parent = parent;
         if (parent != null) {
             returnType = parent.returnType;
+            parent.nestedTables.add(this);
         }
         entries = new HashMap<>();
+        nestedTables = new LinkedList<>();
     }
 
     /**
@@ -52,12 +59,20 @@ public class SymbolTable {
         return ste;
     }
 
+    public Set<Entry<String, SymbolTableEntry>> getAllEntries() {
+        return entries.entrySet();
+    }
+
     public void addEntry(String symbolName, SymbolTableEntry ste) {
         entries.put(symbolName, ste);
     }
 
     public SymbolTable createNested() {
         return new SymbolTable(this);
+    }
+
+    public List<SymbolTable> getNestedTables() {
+        return nestedTables;
     }
 
 }

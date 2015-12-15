@@ -12,7 +12,7 @@ public class ListType extends Type {
 
     public ListType(Type type) {
         types = new ArrayList<>();
-        types.add(type);
+        addType(type);
     }
 
     public void addType(Type type) {

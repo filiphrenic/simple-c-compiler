@@ -3,10 +3,11 @@ package hr.fer.zemris.ppj.semantic.types;
 /**
  * @author fhrenic
  */
-public class IntType extends NumericType {
+public class IntType extends NumberType {
 
     @Override
     protected boolean implicitNonRef(Type toType) {
+        // int, const int
         return toType == CONST_INT;
     }
 

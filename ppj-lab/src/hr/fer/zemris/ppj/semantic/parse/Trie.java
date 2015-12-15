@@ -13,21 +13,27 @@ import hr.fer.zemris.ppj.semantic.SemNodeV;
  */
 public class Trie {
 
+    public static final String PRODUCTIONS = "prod_bnf.txt";
+
     private TrieNode<String, ProductionEnum> root;
 
-    public static void main(String[] args) throws IOException {
-        new Trie("prod_bnf.txt");
+    public static void main(String[] args) {
+        new Trie(PRODUCTIONS);
     }
 
-    public Trie(String filename) throws IOException {
+    public Trie(String filename) {
         root = new TrieNode<>();
         ProductionEnum[] pes = ProductionEnum.values();
 
-        for (String line : Files.readAllLines(Paths.get(filename), StandardCharsets.UTF_8)) {
-            // pe_index lhs ::= [rhs]
-            String[] parts = line.split(" ");
-            ProductionEnum pe = pes[Integer.parseInt(parts[0])];
-            addProduction(pe, parts);
+        try {
+            for (String line : Files.readAllLines(Paths.get(filename), StandardCharsets.UTF_8)) {
+                // pe_index lhs ::= [rhs]
+                String[] parts = line.split(" ");
+                ProductionEnum pe = pes[Integer.parseInt(parts[0])];
+                addProduction(pe, parts);
+            }
+        } catch (NumberFormatException | IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 
