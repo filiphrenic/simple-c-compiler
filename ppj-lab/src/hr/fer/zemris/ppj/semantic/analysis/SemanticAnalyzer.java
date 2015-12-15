@@ -571,7 +571,6 @@ public class SemanticAnalyzer {
             if (!izraz_pridruzivanja.getType().implicit(postfiks_izraz.getType())) {
                 throw new SemanticException("Can't convert implicitly", node);
             }
-            checkImplicit2Int(izraz_pridruzivanja, node);
 
             // tip ← <postfiks_izraz>.tip
             node.setType(postfiks_izraz.getType());
