@@ -1,11 +1,7 @@
-void p(void); 
+int a[2]={2};
+char b[8]="\"\0\n\t\\"";
 
-int main(){
-         int p(int a);
-         int bla; 
-         return 0;
-}
-
-void p(void){
-        return;
+int main(int a)
+{ b[0]=(char)('\0'+-19;
+return a;
 }

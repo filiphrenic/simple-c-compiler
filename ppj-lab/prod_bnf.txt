@@ -99,4 +99,4 @@
 98 <inicijalizator> ::= <izraz_pridruzivanja>
 99 <inicijalizator> ::= L_VIT_ZAGRADA <lista_izraza_pridruzivanja> D_VIT_ZAGRADA
 100 <lista_izraza_pridruzivanja> ::= <izraz_pridruzivanja>
-101 <lista_izraza_pridruzivanja> ::= <lista_izraza_pridruzivanja> ZAREZ <izraz_pridruzivanja
+101 <lista_izraza_pridruzivanja> ::= <lista_izraza_pridruzivanja> ZAREZ <izraz_pridruzivanja>
