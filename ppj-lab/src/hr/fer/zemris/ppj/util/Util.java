@@ -37,6 +37,7 @@ public class Util {
      * @return string with only spaces
      */
     public static String spaces(int numberOfSpaces) {
+        if (numberOfSpaces < 0) return "";
         return new String(new char[numberOfSpaces]).replace('\0', ' ');
     }
 
