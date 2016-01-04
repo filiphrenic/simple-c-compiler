@@ -329,17 +329,48 @@ public class CodeGen {
      * Multiply values in R1 and R2 and push the result onto stack.
      */
     private void multiplication() {
-        // TODO R2 is negative?
+
+        String multi = tmpLabel();
+        String check = tmpLabel();
         String loop = tmpLabel();
         String end = tmpLabel();
 
-        curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(0)))); // R0 = 0;
+        // r3 = 0;
+        curr.add(new Code(new Command("MOVE", Param.num(1), Param.reg(3))));
+        // cmp r2, 0
+        curr.add(new Code(new Command("CMP", Param.reg(2), Param.num(0))));
+        // r2 > 0 ? go to multiplication
+        curr.add(new Code(new Command("JR_SGT", Param.label(multi))));
+        // r2 = r3 - r2 = -r2
+        curr.add(new Code(new Command("SUB", Param.reg(3), Param.reg(2), Param.reg(2))));
+        // r3 = 1
+        curr.add(new Code(new Command("MOVE", Param.num(1), Param.reg(3))));
 
-        curr.add(new Code(loop, new Command("SUB", Param.reg(2), Param.num(1), Param.reg(2)))); // R2--;
-        curr.add(new Code(new Command("JR_EQ", Param.label(end)))); // R2 == 0
+        // multiplication
 
-        curr.add(new Code(new Command("ADD", Param.reg(0), Param.reg(1), Param.reg(0)))); // R0 += R1;
-        curr.add(new Code(new Command("JR", Param.label(loop)))); // again
+        // r0 = 0
+        curr.add(new Code(multi, new Command("MOVE", Param.num(0), Param.reg(0))));
+        // r2--;
+        curr.add(new Code(loop, new Command("SUB", Param.reg(2), Param.num(1), Param.reg(2))));
+        // r2 == 0 ? finished, go to check
+        curr.add(new Code(new Command("JR_EQ", Param.label(check))));
+        // r0 += r1;
+        curr.add(new Code(new Command("ADD", Param.reg(0), Param.reg(1), Param.reg(0))));
+        // try another loop
+        curr.add(new Code(new Command("JR", Param.label(loop))));
+
+        // check
+
+        // cmp r3, 0
+        curr.add(new Code(check, new Command("CMP", Param.reg(3), Param.num(0))));
+        // r3 == 0 ? go to end
+        curr.add(new Code(new Command("JR_EQ", Param.label(end))));
+        // r3 = 0
+        curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(3))));
+        // r1 = r3 - r1 = -r1
+        curr.add(new Code(new Command("SUB", Param.reg(3), Param.reg(1), Param.reg(1))));
+
+        // end
 
         curr.add(new Code(end, new Command("PUSH", Param.reg(0)))); // push result stored in R0
     }
