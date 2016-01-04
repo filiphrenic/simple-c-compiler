@@ -30,6 +30,8 @@ public class CodeGen {
     private CodeBlock data;
     private CodeBlock curr;
 
+    private CodeBlock buffer;
+
     private Counter dataLabeler;
     private Counter temporaryLabeler;
 
@@ -41,6 +43,7 @@ public class CodeGen {
         startBlock = new CodeBlock();
         blocks = new LinkedList<>();
         data = new CodeBlock();
+
         curr = startBlock;
 
         // labels
@@ -55,6 +58,10 @@ public class CodeGen {
     public void blabla() {
         startBlock.add(new Code(new Command("CALL", Param.label(functionLabel("main")))));
         startBlock.add(new Code(new Command("HALT")));
+    }
+
+    public void flushBuffer() {
+        curr.consume(buffer);
     }
 
     // allocation, reference and assignment 
@@ -82,8 +89,11 @@ public class CodeGen {
      * @param vName variable name
      * @param oneByte is the variable one byte
      * @param byValue is the value at that label a value (or an address)
+     * @param bufferIt if <code>true</code> don't add code but buffer it
      */
-    public void globalRef(String vName, boolean oneByte, boolean byValue) {
+    public void globalRef(String vName, boolean oneByte, boolean byValue, boolean bufferIt) {
+        CodeBlock tmpCurr = curr;
+        if (bufferIt) curr = buffer = new CodeBlock();
         String label = startBlock.getLabel(vName);
         if (byValue) {
             addMemoryCode(true, oneByte, Param.reg(1), Param.aLabel(label));
@@ -91,6 +101,7 @@ public class CodeGen {
             curr.add(new Code(new Command("MOVE", Param.label(label), Param.reg(1))));
         }
         stackOp(true, 1);
+        curr = tmpCurr;
     }
 
     /**
@@ -99,8 +110,11 @@ public class CodeGen {
      * @param offset + for local variable, - for parameter
      * @param oneByte
      * @param byValue
+     * @param bufferIt if <code>true</code> don't add code but buffer it
      */
-    public void localRef(int offset, boolean oneByte, boolean byValue) {
+    public void localRef(int offset, boolean oneByte, boolean byValue, boolean bufferIt) {
+        CodeBlock tmpCurr = curr;
+        if (bufferIt) curr = buffer = new CodeBlock();
         if (byValue) {
             addMemoryCode(true, oneByte, Param.reg(1), Param.aRegwOff(FRAME_PTR, offset));
         } else {
@@ -108,6 +122,7 @@ public class CodeGen {
                     new Command("ADD", Param.reg(FRAME_PTR), Param.num(offset), Param.reg(1))));
         }
         stackOp(true, 1);
+        curr = tmpCurr;
     }
 
     public void assign(boolean oneByte) {
@@ -123,12 +138,20 @@ public class CodeGen {
      */
     public void functionStart(String functionName) {
         String startLabel = functionLabel(functionName);
-        curr = new CodeBlock();
+        curr = new CodeBlock(functionName);
         blocks.add(curr);
 
         // init frame pointer
         curr.add(
                 new Code(startLabel, new Command("MOVE", Param.reg(SP_REG), Param.reg(FRAME_PTR))));
+    }
+
+    /**
+     * Jump to function end
+     */
+    public void functionReturn() {
+        String label = functionEndLabel(curr.getName());
+        curr.add(new Code(new Command("JR", Param.label(label))));
     }
 
     /**
@@ -138,6 +161,8 @@ public class CodeGen {
      * @param numberOfLocalVariables
      */
     public void functionEnd(String functionName, int numberOfLocalVariables, boolean returns) {
+        String label = functionEndLabel(curr.getName());
+        curr.labelNext(label);
         if (returns) stackOp(false, RET_REG, "return value");
         if (numberOfLocalVariables > 0) removeFromStack(numberOfLocalVariables);
         curr.add(new Code(new Command("RET")));
@@ -241,7 +266,7 @@ public class CodeGen {
      * @param leftByValue left operand is represented by value (could be by reference)
      * @param rightByValue the same as for the left operand
      */
-    public void binaryOp(String operator) {//, boolean leftByValue, boolean rightByValue) {
+    public void binaryOp(String operator) { //, boolean leftByValue, boolean rightByValue) {
         stackOp(false, 2); // right operand
         // if (!rightByValue) addMemoryCode(true, false, Param.reg(2), Param.aReg(2));
 
@@ -332,7 +357,7 @@ public class CodeGen {
      * 
      * @param oneByte memory size of one element in array
      */
-    public void arrayAccess(boolean oneByte) {
+    public void arrayAccess(boolean oneByte, boolean byValue) {
         // a[idx]
         stackOp(false, 1); // idx
         stackOp(false, 2); // a
@@ -346,7 +371,7 @@ public class CodeGen {
         curr.add(new Code(new Command("ADD", Param.reg(1), Param.reg(2), Param.reg(1))));
 
         // r1 = element
-        addMemoryCode(true, oneByte, Param.reg(1), Param.aReg(1));
+        if (byValue) addMemoryCode(true, oneByte, Param.reg(1), Param.aReg(1));
 
         stackOp(true, 1); // push result
     }
@@ -413,6 +438,49 @@ public class CodeGen {
         stackOp(true, 2, "add address to stack");
     }
 
+    public String logicOperator(String operator) {
+        String condition;
+        int value;
+        if (operator.equals("||")) {
+            condition = "NE";
+            value = 1;
+        } else {
+            condition = "EQ";
+            value = 0;
+        }
+
+        String label = tmpLabel();
+        stackOp(false, 1, "operator " + operator);
+        curr.add(new Code(new Command("MOVE", Param.num(value), Param.reg(2))));
+        stackOp(true, 2);
+        curr.add(new Code(new Command("CMP", Param.reg(1), Param.num(0))));
+        curr.add(new Code(new Command("JR_" + condition, Param.label(label))));
+        stackOp(false, 2);
+        return label;
+    }
+
+    public String evalIf() {
+        String label = tmpLabel();
+        stackOp(false, 1, "evaluated condition");
+        curr.add(new Code(new Command("CMP", Param.reg(1), Param.num(0)), "decide if"));
+        curr.add(new Code(new Command("JR_EQ", Param.label(label))));
+        return label;
+    }
+
+    public String afterIf() {
+        String label = tmpLabel();
+        curr.add(new Code(new Command("JR", Param.label(label))));
+        return label;
+    }
+
+    public void labelNext(String label) {
+        curr.labelNext(label);
+    }
+
+    public void pushR1() {
+        stackOp(true, 1);
+    }
+
     /**
      * Stack operation without comment. See stackOp with three parameters for more info.
      * 
@@ -449,6 +517,10 @@ public class CodeGen {
 
     private String functionLabel(String functionName) {
         return "F_" + functionName.toUpperCase();
+    }
+
+    private String functionEndLabel(String functionName) {
+        return "R_" + functionName.toUpperCase();
     }
 
     private String dataLabel(String varName) {

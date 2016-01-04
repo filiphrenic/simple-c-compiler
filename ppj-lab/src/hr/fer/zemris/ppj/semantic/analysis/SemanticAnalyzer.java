@@ -40,6 +40,7 @@ public class SemanticAnalyzer {
     private String error;
 
     private CodeGen codegen;
+    private boolean rhs = true;
 
     /**
      * Creates a new {@link SemanticAnalyzer} that will do semantic analysis and code generation.
@@ -121,9 +122,10 @@ public class SemanticAnalyzer {
         return x;
     }
 
-    private void binaryOperatorINT(SemNodeV node, SymbolTable table) {
+    private void binaryOperator(SemNodeV node, SymbolTable table) {
         SemNodeV left = (SemNodeV) node.getChild(0);
         SemNodeV right = (SemNodeV) node.getChild(2);
+        String operator = ((SemNodeT) node.getChild(1)).getValue();
 
         // 1. provjeri (<left>)
         check(left, table);
@@ -139,8 +141,33 @@ public class SemanticAnalyzer {
         // l-izraz <- 0
         node.setLExpr(false);
 
-        String operator = ((SemNodeT) node.getChild(1)).getValue();
         codegen.binaryOp(operator);
+    }
+
+    private void logicOperator(SemNodeV node, SymbolTable table) {
+        SemNodeV left = (SemNodeV) node.getChild(0);
+        SemNodeV right = (SemNodeV) node.getChild(2);
+        String operator = ((SemNodeT) node.getChild(1)).getValue();
+
+        // 1. provjeri (<left>)
+        check(left, table);
+        // 2. <left>.tip ~ int
+        checkImplicit2Int(left, node);
+
+        String label = codegen.logicOperator(operator);
+
+        // 3. provjeri (<right>)
+        check(right, table);
+        // 4. <right>.tip ~ int
+        checkImplicit2Int(right, node);
+
+        codegen.labelNext(label);
+
+        // tip <- int
+        node.setType(Type.INT);
+        // l-izraz <- 0
+        node.setLExpr(false);
+
     }
 
     private void unaryProduction(SemNodeV node, SymbolTable table) {
@@ -224,20 +251,21 @@ public class SemanticAnalyzer {
             // l-izraz <- IDN.l-izraz
             node.setLExpr(idnSte.isLExpression());
 
-            boolean byValue = idnSte.isLExpression();
+            boolean byValue = idnSte.isLExpression() & rhs;
 
             if (idnTip instanceof FunctionType) {
                 codegen.prepareForFunctionCall(idn.getValue());
                 return;
             }
 
+            boolean bufferIt = false;
             boolean oneByte = false;
             if (idnTip instanceof NumericType) oneByte = ((NumericType) idnTip).bytes() == 1;
 
             if (idnSte.isGlobal()) {
-                codegen.globalRef(idn.getValue(), oneByte, byValue);
+                codegen.globalRef(idn.getValue(), oneByte, byValue, bufferIt);
             } else {
-                codegen.localRef(idnSte.getOffset(table), oneByte, byValue);
+                codegen.localRef(idnSte.getOffset(table), oneByte, byValue, bufferIt);
             }
 
         } else if (pe == ProductionEnum.primarni_izraz_2) {
@@ -327,7 +355,7 @@ public class SemanticAnalyzer {
             //l-izraz <- X != const(T)
             node.setLExpr(!X.isConst());
 
-            codegen.arrayAccess(X.bytes() == 1);
+            codegen.arrayAccess(X.bytes() == 1, rhs);
 
         } else if (pe == ProductionEnum.postfiks_izraz_3) {
             // <postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA D_ZAGRADA
@@ -574,7 +602,7 @@ public class SemanticAnalyzer {
                 || pe == ProductionEnum.multiplikativni_izraz_4) {
             // <multiplikativni_izraz> ::= <multiplikativni_izraz> 
             // (OP_PUTA | OP_DIJELI | OP_MOD) <cast_izraz>
-            binaryOperatorINT(node, table);
+            binaryOperator(node, table);
 
         } else if (pe == ProductionEnum.aditivni_izraz_1) {
             // <aditivni_izraz> ::= <multiplikativni_izraz>
@@ -582,7 +610,7 @@ public class SemanticAnalyzer {
 
         } else if (pe == ProductionEnum.aditivni_izraz_2 || pe == ProductionEnum.aditivni_izraz_3) {
             // <aditivni_izraz> ::= <aditivni_izraz> (PLUS | MINUS) <multiplikativni_izraz>
-            binaryOperatorINT(node, table);
+            binaryOperator(node, table);
 
         } else if (pe == ProductionEnum.odnosni_izraz_1) {
             // <odnosni_izraz> ::= <aditivni_izraz>
@@ -592,7 +620,7 @@ public class SemanticAnalyzer {
                 || pe == ProductionEnum.odnosni_izraz_4 || pe == ProductionEnum.odnosni_izraz_5) {
             // <odnosni_izraz> ::= <odnosni_izraz> 
             // (OP_LT | OP_GT | OP_LTE | OP_GTE) <aditivni_izraz>
-            binaryOperatorINT(node, table);
+            binaryOperator(node, table);
 
         } else if (pe == ProductionEnum.jednakosni_izraz_1) {
             // <jednakosni_izraz> ::= <odnosni_izraz>
@@ -601,7 +629,7 @@ public class SemanticAnalyzer {
         } else if (pe == ProductionEnum.jednakosni_izraz_2
                 || pe == ProductionEnum.jednakosni_izraz_3) {
             // <jednakosni_izraz> ::= <jednakosni_izraz> (OP_EQ | OP_NEQ) <odnosni_izraz>
-            binaryOperatorINT(node, table);
+            binaryOperator(node, table);
 
         } else if (pe == ProductionEnum.bin_i_izraz_1) {
             // <bin_i_izraz> ::= <jednakosni_izraz>
@@ -609,7 +637,7 @@ public class SemanticAnalyzer {
 
         } else if (pe == ProductionEnum.bin_i_izraz_2) {
             // <bin_i_izraz> ::= <bin_i_izraz> OP_BIN_I <jednakosni_izraz>
-            binaryOperatorINT(node, table);
+            binaryOperator(node, table);
 
         } else if (pe == ProductionEnum.bin_xili_izraz_1) {
             // <bin_xili_izraz> ::= <bin_i_izraz>
@@ -617,7 +645,7 @@ public class SemanticAnalyzer {
 
         } else if (pe == ProductionEnum.bin_xili_izraz_2) {
             // <bin_xili_izraz> ::= <bin_xili_izraz> OP_BIN_XILI <bin_i_izraz>
-            binaryOperatorINT(node, table);
+            binaryOperator(node, table);
 
         } else if (pe == ProductionEnum.bin_ili_izraz_1) {
             // <bin_ili_izraz> ::= <bin_xili_izraz>
@@ -625,7 +653,7 @@ public class SemanticAnalyzer {
 
         } else if (pe == ProductionEnum.bin_ili_izraz_2) {
             // <bin_ili_izraz> ::= <bin_ili_izraz> OP_BIN_ILI <bin_xili_izraz>
-            binaryOperatorINT(node, table);
+            binaryOperator(node, table);
 
         } else if (pe == ProductionEnum.log_i_izraz_1) {
             // <log_i_izraz> ::= <bin_ili_izraz>
@@ -633,7 +661,7 @@ public class SemanticAnalyzer {
 
         } else if (pe == ProductionEnum.log_i_izraz_2) {
             // <log_i_izraz> ::= <log_i_izraz> OP_I <bin_ili_izraz>
-            binaryOperatorINT(node, table);
+            logicOperator(node, table);
 
         } else if (pe == ProductionEnum.log_ili_izraz_1) {
             // <log_ili_izraz> ::= <log_i_izraz>
@@ -641,7 +669,7 @@ public class SemanticAnalyzer {
 
         } else if (pe == ProductionEnum.log_ili_izraz_2) {
             // <log_ili_izraz> ::= <log_ili_izraz> OP_ILI <log_i_izraz>
-            binaryOperatorINT(node, table);
+            logicOperator(node, table);
 
         } else if (pe == ProductionEnum.izraz_pridruzivanja_1) {
             // <izraz_pridruzivanja> ::= <log_ili_izraz>
@@ -652,12 +680,15 @@ public class SemanticAnalyzer {
             SemNodeV postfiks_izraz = (SemNodeV) node.getChild(0);
             SemNodeV izraz_pridruzivanja = (SemNodeV) node.getChild(2);
 
+            rhs = false;
             // 1. provjeri (<postfiks_izraz>)
             check(postfiks_izraz, table);
             // 2. <postfiks_izraz>.l-izraz = 1
             if (!postfiks_izraz.getLExpr()) {
                 throw new SemanticException("Not an L-expression", node);
             }
+            codegen.flushBuffer(); // get address
+            rhs = true;
             // 3. provjeri (<izraz_pridruzivanja>)
             check(izraz_pridruzivanja, table);
             // 4. <izraz_pridruzivanja>.tip ~ <postfiks_izraz>.tip
@@ -673,6 +704,7 @@ public class SemanticAnalyzer {
             boolean oneByte = false;
             if (postfiks_izraz.getType() instanceof NumericType)
                 oneByte = ((NumericType) postfiks_izraz.getType()).bytes() == 1;
+
             codegen.assign(oneByte);
 
         } else if (pe == ProductionEnum.izraz_1) {
@@ -771,8 +803,13 @@ public class SemanticAnalyzer {
             check(izraz, table);
             // 2. <izraz>.tip ~ int
             checkImplicit2Int(izraz, node);
+
+            String label = codegen.evalIf();
+
             // 3. provjeri (<naredba>)
             check(naredba, table);
+
+            codegen.labelNext(label);
 
         } else if (pe == ProductionEnum.naredba_grananja_2) {
             // <naredba_grananja> ::= KR_IF L_ZAGRADA <izraz> D_ZAGRADA <naredba> KR_ELSE <naredba>
@@ -784,10 +821,19 @@ public class SemanticAnalyzer {
             check(izraz, table);
             // 2. <izraz>.tip ~ int
             checkImplicit2Int(izraz, node);
+
+            String ifFalse = codegen.evalIf();
+
             // 3. provjeri (<naredba> 1)
             check(naredba1, table);
+
+            String cont = codegen.afterIf();
+            codegen.labelNext(ifFalse);
+
             // 4. provjeri (<naredba> 2)
             check(naredba2, table);
+
+            codegen.labelNext(cont);
 
         } else if (pe == ProductionEnum.naredba_petlje_1) {
             // <naredba_petlje> ::= KR_WHILE L_ZAGRADA <izraz> D_ZAGRADA <naredba>
@@ -861,6 +907,8 @@ public class SemanticAnalyzer {
                 throw new SemanticException("Return without parameters", node);
             }
 
+            codegen.functionReturn();
+
         } else if (pe == ProductionEnum.naredba_skoka_4) {
             // <naredba_skoka> ::= KR_RETURN <izraz> TOCKAZAREZ
             SemNodeV izraz = (SemNodeV) node.getChild(1);
@@ -874,6 +922,8 @@ public class SemanticAnalyzer {
             if (t == null || !izraz.getType().implicit(t)) {
                 throw new SemanticException("Return types don't match", node);
             }
+
+            codegen.functionReturn();
 
         } else if (pe == ProductionEnum.prijevodna_jedinica_1) {
             // <prijevodna_jedinica> ::= <vanjska_deklaracija>
@@ -1163,11 +1213,14 @@ public class SemanticAnalyzer {
             SemNodeV izravni_deklarator = (SemNodeV) node.getChild(0);
             SemNodeV inicijalizator = (SemNodeV) node.getChild(2);
 
+            rhs = false;
             // 1. provjeri (<izravni_deklarator>) uz nasljedno svojstvo
             // <izravni_deklarator>.ntip <- <init_deklarator>.ntip
             izravni_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
             check(izravni_deklarator, table);
 
+            codegen.flushBuffer(); // get address
+            rhs = true;
             // 2. provjeri (<incijalizator>)
             check(inicijalizator, table);
 
@@ -1214,6 +1267,7 @@ public class SemanticAnalyzer {
                 throw new SemanticException("Invalid type", node);
             }
 
+            codegen.pushR1();
             codegen.assign(oneByte);
 
         } else if (pe == ProductionEnum.izravni_deklarator_1) {
@@ -1239,13 +1293,13 @@ public class SemanticAnalyzer {
 
             boolean oneByte = false;
             if (ntype instanceof NumericType) oneByte = ((NumericType) ntype).bytes() == 1;
-
+            boolean bufferIt = true;
             if (table.isGlobal()) {
                 codegen.allocGlobal(varName, oneByte);
-                codegen.globalRef(varName, oneByte, false);
+                codegen.globalRef(varName, oneByte, false, bufferIt);
             } else {
                 codegen.allocLocal(varName);
-                codegen.localRef(ste.getOffset(table), oneByte, false);
+                codegen.localRef(ste.getOffset(table), oneByte, false, bufferIt);
             }
 
         } else if (pe == ProductionEnum.izravni_deklarator_2) {
@@ -1278,15 +1332,16 @@ public class SemanticAnalyzer {
             // br-elem <- BROJ.vrijednost
             node.setAttribute(Attribute.NUM_EL, vrijednost);
 
+            boolean bufferIt = true;
             boolean oneByte = false; // false because its a pointer = int
             if (table.isGlobal()) {
                 codegen.allocGlobal(varName, oneByte);
                 codegen.arrayAlloc(varName, vrijednost, oneByte);
-                codegen.globalRef(varName, oneByte, false);
+                codegen.globalRef(varName, oneByte, false, bufferIt);
             } else {
                 codegen.allocLocal(varName);
                 codegen.arrayAlloc(varName, vrijednost, oneByte);
-                codegen.localRef(ste.getOffset(table), oneByte, false);
+                codegen.localRef(ste.getOffset(table), oneByte, false, bufferIt);
             }
 
         } else if (pe == ProductionEnum.izravni_deklarator_3) {

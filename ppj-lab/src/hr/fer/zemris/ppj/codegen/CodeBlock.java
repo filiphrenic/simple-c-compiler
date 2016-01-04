@@ -7,17 +7,43 @@ import java.util.Map;
 
 public class CodeBlock {
 
+    private String name;
     private List<Code> codes;
     private Map<String, String> labels;
     private String lastLabel;
+    private String nextLabel;
 
     public CodeBlock() {
+        this("");
+    }
+
+    public CodeBlock(String name) {
         codes = new LinkedList<>();
         labels = new HashMap<>();
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public void add(Code code) {
+        if (nextLabel != null) {
+            code.setLabel(nextLabel);
+            nextLabel = null;
+        }
         codes.add(code);
+    }
+
+    public void labelNext(String label) {
+        nextLabel = label;
+    }
+
+    public void consume(CodeBlock block) {
+        for (Code code : block.codes) {
+            add(code);
+        }
+        block.codes.clear();
     }
 
     public void addLabel(String name, String label) {

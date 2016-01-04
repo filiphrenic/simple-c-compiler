@@ -5,7 +5,6 @@ import java.util.List;
 
 import hr.fer.zemris.ppj.automaton.Automaton;
 import hr.fer.zemris.ppj.lexical.actions.LexAction;
-import hr.fer.zemris.ppj.lexical.automaton.LexAutomaton;
 
 /**
  * This class represent a rule that is executed when this rule's regex matches a
