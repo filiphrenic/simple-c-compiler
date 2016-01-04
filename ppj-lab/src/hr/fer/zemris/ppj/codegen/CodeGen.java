@@ -30,10 +30,12 @@ public class CodeGen {
     private CodeBlock data;
     private CodeBlock curr;
 
-    private CodeBlock buffer;
-
     private Counter dataLabeler;
     private Counter temporaryLabeler;
+
+    private Counter loopLabeler;
+    private String loopStart; // current loop start label
+    private String loopEnd; // current loop end label
 
     public CodeGen() {
         this(SP);
@@ -49,6 +51,7 @@ public class CodeGen {
         // labels
         dataLabeler = new Counter("G");
         temporaryLabeler = new Counter("T");
+        loopLabeler = new Counter("L");
 
         // initialize stack pointer
         startBlock.add(new Code(new Command("MOVE", Param.num(stackSize), Param.reg(SP_REG)),
@@ -58,10 +61,6 @@ public class CodeGen {
     public void blabla() {
         startBlock.add(new Code(new Command("CALL", Param.label(functionLabel("main")))));
         startBlock.add(new Code(new Command("HALT")));
-    }
-
-    public void flushBuffer() {
-        curr.consume(buffer);
     }
 
     // allocation, reference and assignment 
@@ -81,6 +80,9 @@ public class CodeGen {
         if (!oneByte) size *= 4;
         String varLabel = dataLabel(arrName);
         data.add(new Code(varLabel, new Command("DS", Param.num(size))));
+        stackOp(false, 1);
+        curr.add(new Code(new Command("MOVE", Param.label(varLabel), Param.reg(1))));
+        stackOp(true, 1);
     }
 
     /**
@@ -89,11 +91,8 @@ public class CodeGen {
      * @param vName variable name
      * @param oneByte is the variable one byte
      * @param byValue is the value at that label a value (or an address)
-     * @param bufferIt if <code>true</code> don't add code but buffer it
      */
-    public void globalRef(String vName, boolean oneByte, boolean byValue, boolean bufferIt) {
-        CodeBlock tmpCurr = curr;
-        if (bufferIt) curr = buffer = new CodeBlock();
+    public void globalRef(String vName, boolean oneByte, boolean byValue) {
         String label = startBlock.getLabel(vName);
         if (byValue) {
             addMemoryCode(true, oneByte, Param.reg(1), Param.aLabel(label));
@@ -101,7 +100,6 @@ public class CodeGen {
             curr.add(new Code(new Command("MOVE", Param.label(label), Param.reg(1))));
         }
         stackOp(true, 1);
-        curr = tmpCurr;
     }
 
     /**
@@ -112,9 +110,7 @@ public class CodeGen {
      * @param byValue
      * @param bufferIt if <code>true</code> don't add code but buffer it
      */
-    public void localRef(int offset, boolean oneByte, boolean byValue, boolean bufferIt) {
-        CodeBlock tmpCurr = curr;
-        if (bufferIt) curr = buffer = new CodeBlock();
+    public void localRef(int offset, boolean oneByte, boolean byValue) {
         if (byValue) {
             addMemoryCode(true, oneByte, Param.reg(1), Param.aRegwOff(FRAME_PTR, offset));
         } else {
@@ -122,13 +118,13 @@ public class CodeGen {
                     new Command("ADD", Param.reg(FRAME_PTR), Param.num(offset), Param.reg(1))));
         }
         stackOp(true, 1);
-        curr = tmpCurr;
     }
 
     public void assign(boolean oneByte) {
         stackOp(false, 1, "value"); // value
         stackOp(false, 2, "var address"); // variable address
         addMemoryCode(false, oneByte, Param.reg(1), Param.aReg(2)); // assign
+        stackOp(true, 1, "push value");
     }
 
     /**
@@ -459,8 +455,13 @@ public class CodeGen {
         return label;
     }
 
-    public String evalIf() {
-        String label = tmpLabel();
+    /**
+     * 
+     * @param loop <code>true</code> if condition part of loop
+     * @return label
+     */
+    public String evalIf(boolean loop) {
+        String label = loop ? loopEndLabel() : tmpLabel();
         stackOp(false, 1, "evaluated condition");
         curr.add(new Code(new Command("CMP", Param.reg(1), Param.num(0)), "decide if"));
         curr.add(new Code(new Command("JR_EQ", Param.label(label))));
@@ -477,8 +478,8 @@ public class CodeGen {
         curr.labelNext(label);
     }
 
-    public String labelNextSelf() {
-        String label = tmpLabel();
+    public String loopStart() {
+        String label = loopStartLabel();
         curr.labelNext(label);
         return label;
     }
@@ -487,8 +488,8 @@ public class CodeGen {
         curr.add(new Code(new Command("JR", Param.label(label))));
     }
 
-    public void pushR1() {
-        stackOp(true, 1);
+    public void discardOne() {
+        stackOp(false, 1);
     }
 
     /**
@@ -541,6 +542,22 @@ public class CodeGen {
 
     private String tmpLabel() {
         return temporaryLabeler.next();
+    }
+
+    private String loopStartLabel() {
+        String label = loopLabel();
+        loopStart = label;
+        return label;
+    }
+
+    private String loopEndLabel() {
+        String label = loopLabel();
+        loopEnd = label;
+        return label;
+    }
+
+    private String loopLabel() {
+        return loopLabeler.next();
     }
 
     private static boolean in20bit(int n) {

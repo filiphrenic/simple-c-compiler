@@ -257,14 +257,13 @@ public class SemanticAnalyzer {
                 return;
             }
 
-            boolean bufferIt = false;
             boolean oneByte = false;
             if (idnTip instanceof NumericType) oneByte = ((NumericType) idnTip).bytes() == 1;
 
             if (idnSte.isGlobal()) {
-                codegen.globalRef(idn.getValue(), oneByte, byValue, bufferIt);
+                codegen.globalRef(idn.getValue(), oneByte, byValue);
             } else {
-                codegen.localRef(idnSte.getOffset(table), oneByte, byValue, bufferIt);
+                codegen.localRef(idnSte.getOffset(table), oneByte, byValue);
             }
 
         } else if (pe == ProductionEnum.primarni_izraz_2) {
@@ -690,7 +689,7 @@ public class SemanticAnalyzer {
             if (!postfiks_izraz.getLExpr()) {
                 throw new SemanticException("Not an L-expression", node);
             }
-            codegen.flushBuffer(); // get address
+            // XXX codegen.flushBuffer(); // get address
             forceAddress = true;
             // 3. provjeri (<izraz_pridruzivanja>)
             check(izraz_pridruzivanja, table);
@@ -709,7 +708,6 @@ public class SemanticAnalyzer {
                 oneByte = ((NumericType) postfiks_izraz.getType()).bytes() == 1;
 
             codegen.assign(oneByte);
-            codegen.pushR1();
 
         } else if (pe == ProductionEnum.izraz_1) {
             // <izraz> ::= <izraz_pridruzivanja>
@@ -798,6 +796,8 @@ public class SemanticAnalyzer {
             // tip <- <izraz>.tip
             node.setType(izraz.getType());
 
+            codegen.discardOne();
+
         } else if (pe == ProductionEnum.naredba_grananja_1) {
             // <naredba_grananja> ::= KR_IF L_ZAGRADA <izraz> D_ZAGRADA <naredba>
             SemNodeV izraz = (SemNodeV) node.getChild(2);
@@ -808,7 +808,7 @@ public class SemanticAnalyzer {
             // 2. <izraz>.tip ~ int
             checkImplicit2Int(izraz, node);
 
-            String label = codegen.evalIf();
+            String label = codegen.evalIf(false);
 
             // 3. provjeri (<naredba>)
             check(naredba, table);
@@ -826,7 +826,7 @@ public class SemanticAnalyzer {
             // 2. <izraz>.tip ~ int
             checkImplicit2Int(izraz, node);
 
-            String ifFalse = codegen.evalIf();
+            String ifFalse = codegen.evalIf(false);
 
             // 3. provjeri (<naredba> 1)
             check(naredba1, table);
@@ -846,21 +846,21 @@ public class SemanticAnalyzer {
 
             node.setAttributeRecursive(Attribute.LOOP, true);
 
-            String condition = codegen.labelNextSelf();
+            String loopStart = codegen.loopStart();
 
             // 1. provjeri (<izraz>)
             check(izraz, table);
             // 2. <izraz>.tip ~ int
             checkImplicit2Int(izraz, node);
 
-            String whileEnd = codegen.evalIf();
+            String loopEnd = codegen.evalIf(true);
 
             // 3. provjeri (<naredba>)
             check(naredba, table);
 
-            codegen.jumpTo(condition);
+            codegen.jumpTo(loopStart);
 
-            codegen.labelNext(whileEnd);
+            codegen.labelNext(loopEnd);
 
         } else if (pe == ProductionEnum.naredba_petlje_2) {
             // <naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> D_ZAGRADA <naredba>
@@ -1177,6 +1177,8 @@ public class SemanticAnalyzer {
             lista_init_deklaratora.setAttribute(Attribute.NTYPE, ime_tipa.getType());
             check(lista_init_deklaratora, table);
 
+            codegen.discardOne();
+
         } else if (pe == ProductionEnum.lista_init_deklaratora_1) {
             // <lista_init_deklaratora> ::= <init_deklarator>
             SemNodeV init_deklarator = (SemNodeV) node.getChild(0);
@@ -1196,6 +1198,9 @@ public class SemanticAnalyzer {
             lista_init_deklaratora.setAttribute(Attribute.NTYPE,
                     node.getAttribute(Attribute.NTYPE));
             check(lista_init_deklaratora, table);
+
+            codegen.discardOne();
+
             // 2. provjeri (<init_deklarator>) uz nasljedno svojstvo
             // <init_deklarator>.ntip <- <lista_init_deklaratora> 1 .ntip
             init_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
@@ -1232,7 +1237,7 @@ public class SemanticAnalyzer {
             izravni_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
             check(izravni_deklarator, table);
 
-            codegen.flushBuffer(); // get address
+            // XXX codegen.flushBuffer(); // get address
             forceAddress = true;
             // 2. provjeri (<incijalizator>)
             check(inicijalizator, table);
@@ -1305,13 +1310,12 @@ public class SemanticAnalyzer {
 
             boolean oneByte = false;
             if (ntype instanceof NumericType) oneByte = ((NumericType) ntype).bytes() == 1;
-            boolean bufferIt = true;
             if (table.isGlobal()) {
                 codegen.allocGlobal(varName, oneByte);
-                codegen.globalRef(varName, oneByte, false, bufferIt);
+                codegen.globalRef(varName, oneByte, false);
             } else {
                 codegen.allocLocal(varName);
-                codegen.localRef(ste.getOffset(table), oneByte, false, bufferIt);
+                codegen.localRef(ste.getOffset(table), oneByte, false);
             }
 
         } else if (pe == ProductionEnum.izravni_deklarator_2) {
@@ -1344,16 +1348,15 @@ public class SemanticAnalyzer {
             // br-elem <- BROJ.vrijednost
             node.setAttribute(Attribute.NUM_EL, vrijednost);
 
-            boolean bufferIt = true;
             boolean oneByte = false; // false because its a pointer = int
             if (table.isGlobal()) {
                 codegen.allocGlobal(varName, oneByte);
+                codegen.globalRef(varName, oneByte, false);
                 codegen.arrayAlloc(varName, vrijednost, oneByte);
-                codegen.globalRef(varName, oneByte, false, bufferIt);
             } else {
                 codegen.allocLocal(varName);
+                codegen.localRef(ste.getOffset(table), oneByte, false);
                 codegen.arrayAlloc(varName, vrijednost, oneByte);
-                codegen.localRef(ste.getOffset(table), oneByte, false, bufferIt);
             }
 
         } else if (pe == ProductionEnum.izravni_deklarator_3) {
