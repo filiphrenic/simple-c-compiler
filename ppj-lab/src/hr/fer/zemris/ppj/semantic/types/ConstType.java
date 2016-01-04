@@ -26,8 +26,8 @@ public class ConstType extends NumericType {
     }
 
     @Override
-    public int memoryInBits() {
-        return type.memoryInBits();
+    public int bytes() {
+        return type.bytes();
     }
 
     @Override

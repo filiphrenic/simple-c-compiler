@@ -3,6 +3,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import hr.fer.zemris.ppj.semantic.SemNodeV;
+import hr.fer.zemris.ppj.semantic.analysis.SemanticAnalyzer;
+import hr.fer.zemris.ppj.util.input.SemanticInputParser;
+
 /**
  * @author fhrenic
  */
@@ -20,12 +24,22 @@ public class SemanticTester {
 
     public static void main(String[] args) throws IOException {
         generateSemInput();
-        semanticAnalysis();        
+        semanticAnalysis();
     }
 
     private static void semanticAnalysis() throws IOException {
         FileInputStream fis = new FileInputStream(new File(getFileName(SYN2SEM)));
-        new SemantickiAnalizator().analyse(fis);
+        SemanticInputParser sip = new SemanticInputParser();
+        sip.parse(fis);
+        SemNodeV tree = sip.getRoot();
+        SemanticAnalyzer sema = new SemanticAnalyzer("prod_bnf.txt");
+        sema.analysis(tree);
+        if (sema.getError() != null) {
+            System.out.println(sema.getError());
+        } else {
+            System.out.println(sema.getCodeGen());
+        }
+
     }
 
     private static void generateSemInput() throws IOException {
@@ -43,6 +57,8 @@ public class SemanticTester {
         FileInputStream lex2syn_in = new FileInputStream(new File(getFileName(LEX2SYN)));
         FileOutputStream syn2sem_out = new FileOutputStream(new File(getFileName(SYN2SEM)));
         new SA(lex2syn_in, syn2sem_out).syntaxAnalysis();
+
+        System.err.println("Done");
     }
 
 }

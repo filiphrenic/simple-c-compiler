@@ -22,8 +22,8 @@ public class IntType extends NumberType {
     }
 
     @Override
-    public int memoryInBits() {
-        return 32;
+    public int bytes() {
+        return 4;
     }
 
     @Override

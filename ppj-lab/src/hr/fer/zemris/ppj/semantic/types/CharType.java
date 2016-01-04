@@ -22,8 +22,8 @@ public class CharType extends NumberType {
     }
 
     @Override
-    public int memoryInBits() {
-        return 8;
+    public int bytes() {
+        return 1;
     }
 
     @Override

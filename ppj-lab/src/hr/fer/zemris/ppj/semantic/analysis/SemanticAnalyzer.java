@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import hr.fer.zemris.ppj.codegen.CodeGen;
 import hr.fer.zemris.ppj.semantic.Attribute;
 import hr.fer.zemris.ppj.semantic.ProductionEnum;
 import hr.fer.zemris.ppj.semantic.SemNode;
@@ -20,20 +21,39 @@ import hr.fer.zemris.ppj.semantic.types.Type;
 import hr.fer.zemris.ppj.util.Util;
 
 /**
+ * Version 1.0:
+ *      This class performs semantic analysis of the program.
+ * Version 2.0:
+ *      Added code generation into analysis.
+ * 
  * @author fhrenic
+ * @version 2.0
  */
 public class SemanticAnalyzer {
 
+    // maximum number of elements in an array
     private static final int ARRAY_TOP = 1024;
     private static final String ESCAPED = "tn0'\"\\";
 
-    private Trie trie;
+    private Trie productionTrie;
     private SymbolTable global;
     private String error;
 
+    private CodeGen codegen;
+
+    /**
+     * Creates a new {@link SemanticAnalyzer} that will do semantic analysis and code generation.
+     * 
+     * @param trieFilename file path to production definitions
+     */
     public SemanticAnalyzer(String trieFilename) {
-        trie = new Trie(trieFilename);
+        productionTrie = new Trie(trieFilename);
         error = null;
+        codegen = new CodeGen();
+    }
+
+    public CodeGen getCodeGen() {
+        return codegen;
     }
 
     public String getError() {
@@ -56,7 +76,6 @@ public class SemanticAnalyzer {
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
-
     }
 
     private static String parseString(String s, SemNodeV node) {
@@ -93,24 +112,9 @@ public class SemanticAnalyzer {
     }
 
     private static int parseInt(String value, SemNodeV node) {
-        if (value.equals("0")) {
-            return 0;
-        }
         int x = 0;
-        int radix = 10;
-        if (value.length() > 2) {
-            if (value.charAt(0) == '0') {
-                if (value.charAt(1) == 'x' || value.charAt(1) == 'X') {
-                    radix = 16;
-                    value = value.substring(2);
-                } else {
-                    radix = 8;
-                    value = value.substring(1);
-                }
-            }
-        }
         try {
-            x = Integer.parseInt(value, radix);
+            x = Integer.decode(value);
         } catch (NumberFormatException e) {
             throw new SemanticException("Invalid number: " + value, node);
         }
@@ -134,6 +138,9 @@ public class SemanticAnalyzer {
         node.setType(Type.INT);
         // l-izraz <- 0
         node.setLExpr(false);
+
+        String operator = ((SemNodeT) node.getChild(1)).getValue();
+        codegen.binaryOp(operator);
     }
 
     private void unaryProduction(SemNodeV node, SymbolTable table) {
@@ -195,7 +202,7 @@ public class SemanticAnalyzer {
 
     private void check(SemNodeV node, SymbolTable table) {
 
-        ProductionEnum pe = trie.findProduction(node);
+        ProductionEnum pe = productionTrie.findProduction(node);
         if (pe == null) {
             throw new SemanticException("Production not found", node);
         }
@@ -210,10 +217,28 @@ public class SemanticAnalyzer {
                 throw new SemanticException("IDN.ime not declared", node);
             }
 
+            Type idnTip = idnSte.getType();
+
             // tip <- IDN.tip
             node.setType(idnSte.getType());
             // l-izraz <- IDN.l-izraz
             node.setLExpr(idnSte.isLExpression());
+
+            boolean byValue = idnSte.isLExpression();
+
+            if (idnTip instanceof FunctionType) {
+                codegen.prepareForFunctionCall(idn.getValue());
+                return;
+            }
+
+            boolean oneByte = false;
+            if (idnTip instanceof NumericType) oneByte = ((NumericType) idnTip).bytes() == 1;
+
+            if (idnSte.isGlobal()) {
+                codegen.globalRef(idn.getValue(), oneByte, byValue);
+            } else {
+                codegen.localRef(idnSte.getOffset(table), oneByte, byValue);
+            }
 
         } else if (pe == ProductionEnum.primarni_izraz_2) {
             // <primarni_izraz> ::= BROJ
@@ -230,33 +255,38 @@ public class SemanticAnalyzer {
             // l-izraz <- 0
             node.setLExpr(false);
 
+            codegen.numberCode(intValue);
+
         } else if (pe == ProductionEnum.primarni_izraz_3) {
             // <primarni_izraz> ::= ZNAK
             SemNodeT znak = (SemNodeT) node.getChild(0);
 
             // 1. vrijednost je u redu po 4.3.2
-            String znakValue = znak.getValue();
-            if (znakValue.length() > 4) {
+            String znakValue = parseString(znak.getValue(), node);
+            if (znakValue.length() != 1) {
                 throw new SemanticException("Invalid sign " + znakValue, node);
             }
-            parseString(znakValue, node);
 
             // tip <- char
             node.setType(Type.CHAR);
             // l-izraz <- 0
             node.setLExpr(false);
 
+            codegen.characterCode(znakValue.charAt(0));
+
         } else if (pe == ProductionEnum.primarni_izraz_4) {
             // <primarni_izraz> ::= NIZ_ZNAKOVA
             SemNodeT niz_znakova = (SemNodeT) node.getChild(0);
 
             // 1. konstantni niz znakova je ispravan po 4.3.2
-            parseString(niz_znakova.getValue(), node);
+            String str = parseString(niz_znakova.getValue(), node);
 
             // tip <- niz (const(char))
             node.setType(Type.A_CONST_CHAR);
             // l-izraz <- 0
             node.setLExpr(false);
+
+            codegen.stringCode(str);
 
         } else if (pe == ProductionEnum.primarni_izraz_5) {
             // <primarni_izraz> ::= L_ZAGRADA <izraz> D_ZAGRADA
@@ -297,6 +327,8 @@ public class SemanticAnalyzer {
             //l-izraz <- X != const(T)
             node.setLExpr(!X.isConst());
 
+            codegen.arrayAccess(X.bytes() == 1);
+
         } else if (pe == ProductionEnum.postfiks_izraz_3) {
             // <postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA D_ZAGRADA
             SemNodeV postfiks_izraz = (SemNodeV) node.getChild(0);
@@ -318,15 +350,27 @@ public class SemanticAnalyzer {
             // l-izraz <- 0
             node.setLExpr(false);
 
+            codegen.call(ft.getReturnType() != Type.VOID);
+
         } else if (pe == ProductionEnum.postfiks_izraz_4) {
             // <postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA <lista_argumenata> D_ZAGRADA
             SemNodeV postfiks_izraz = (SemNodeV) node.getChild(0);
             SemNodeV lista_argumenata = (SemNodeV) node.getChild(2);
 
-            //1. provjeri (<postfiks_izraz>)
-            check(postfiks_izraz, table);
+            // XXX
+            // changed order of first and second check
+            // that way I can have paramaters push onto stack and then I get function address
+            // It is easier to call the function that way
+            // also, these two parts don't relly one on another so it is not wrong to change
+            // order
+
+            // this also allows for multiple consecutive calls like:
+            // int x = f(f(f(5)));
+
             // 2. provjeri (<lista_argumenata>)
             check(lista_argumenata, table);
+            //1. provjeri (<postfiks_izraz>)
+            check(postfiks_izraz, table);
             // 3. <postfiks_izraz>.tip = funkcija(params -> pov ) i redom po elementima
             // arg-tip iz <lista_argumenata>.tipovi i param-tip iz params vrijedi arg-tip
             // ~ param-tip
@@ -347,6 +391,8 @@ public class SemanticAnalyzer {
             // l-izraz <- 0
             node.setLExpr(false);
 
+            codegen.call(ft.getReturnType() != Type.VOID);
+
         } else if (pe == ProductionEnum.postfiks_izraz_5 || pe == ProductionEnum.postfiks_izraz_6) {
             // <postfiks_izraz> ::= <postfiks_izraz> (OP_INC | OP_DEC)
             SemNodeV postfiks_izraz = (SemNodeV) node.getChild(0);
@@ -364,6 +410,9 @@ public class SemanticAnalyzer {
             node.setType(Type.INT);
             // l-izraz <- 0
             node.setLExpr(false);
+
+            boolean oneByte = ((NumericType) postfiks_izraz.getType()).bytes() == 1;
+            codegen.byOne(false, pe == ProductionEnum.postfiks_izraz_5, oneByte);
 
         } else if (pe == ProductionEnum.lista_argumenata_1) {
             // <lista_argumenata> ::= <izraz_pridruzivanja>
@@ -411,6 +460,9 @@ public class SemanticAnalyzer {
             // l-izraz <- 0
             node.setLExpr(false);
 
+            boolean oneByte = ((NumericType) unarni_izraz.getType()).bytes() == 1;
+            codegen.byOne(true, pe == ProductionEnum.unarni_izraz_2, oneByte);
+
         } else if (pe == ProductionEnum.unarni_izraz_4) {
             // <unarni_izraz> ::= <unarni_operator> <cast_izraz>
             // SemNodeV unarni_operator = (SemNodeV) node.getChild(0);
@@ -433,6 +485,8 @@ public class SemanticAnalyzer {
         } else if (pe == ProductionEnum.unarni_operator_2) {
             // <unarni_operator> ::= MINUS
             // nista ne treba u analizi
+
+            codegen.negative();
 
         } else if (pe == ProductionEnum.unarni_operator_3) {
             // <unarni_operator> ::= OP_TILDA
@@ -615,6 +669,11 @@ public class SemanticAnalyzer {
             node.setType(postfiks_izraz.getType());
             // l-izraz <- 0
             node.setLExpr(false);
+
+            boolean oneByte = false;
+            if (postfiks_izraz.getType() instanceof NumericType)
+                oneByte = ((NumericType) postfiks_izraz.getType()).bytes() == 1;
+            codegen.assign(oneByte);
 
         } else if (pe == ProductionEnum.izraz_1) {
             // <izraz> ::= <izraz_pridruzivanja>
@@ -864,11 +923,13 @@ public class SemanticAnalyzer {
                 }
             }
 
-            SymbolTableEntry ste = global.getEntry(idn.getValue());
+            String fName = idn.getValue();
+
+            SymbolTableEntry ste = global.getEntry(fName);
             FunctionType ft = new FunctionType(new ListType(Type.VOID), t);
             if (ste == null) {
                 ste = new SymbolTableEntry(ft);
-                table.addEntry(idn.getValue(), ste);
+                table.addEntry(fName, ste);
             } else {
                 // 3. ne postoji prije definirana funkcija imena IDN.ime
                 if (ste.getDefined()) {
@@ -885,7 +946,14 @@ public class SemanticAnalyzer {
             // 6. provjeri (<slozena_naredba>)
             SymbolTable functionTable = table.createNested();
             functionTable.setReturnType(t);
+
+            codegen.functionStart(fName);
+
             check(slozena_naredba, functionTable);
+
+            int numberOfLocalVariables = functionTable.getLocalSize();
+            boolean returns = t != Type.VOID;
+            codegen.functionEnd(fName, numberOfLocalVariables, returns);
 
         } else if (pe == ProductionEnum.definicija_funkcije_2) {
             // <definicija_funkcije> ::= <ime_tipa> IDN L_ZAGRADA <lista_parametara> D_ZAGRADA <slozena_naredba>
@@ -904,8 +972,9 @@ public class SemanticAnalyzer {
                     throw new SemanticException("Can't be const qualified", node);
                 }
             }
+            String fName = idn.getValue();
             // 3. ne postoji prije definirana funkcija imena IDN.ime
-            SymbolTableEntry ste = global.getEntry(idn.getValue());
+            SymbolTableEntry ste = global.getEntry(fName);
             if (ste != null && ste.getDefined()) {
                 throw new SemanticException("Function already defined", node);
             }
@@ -919,7 +988,7 @@ public class SemanticAnalyzer {
             }
             if (ste == null) {
                 ste = new SymbolTableEntry(ft);
-                table.addEntry(idn.getValue(), ste);
+                table.addEntry(fName, ste);
             }
             // 6. zabiljezi definiciju i deklaraciju funkcije
             ste.setDefined();
@@ -931,12 +1000,15 @@ public class SemanticAnalyzer {
             @SuppressWarnings("unchecked")
             List<String> names = (List<String>) lista_parametara.getAttribute(Attribute.NAMES);
             ListType types = (ListType) lista_parametara.getType();
-            int n = names.size();
-            for (int idx = 0; idx < n; idx++) {
-                functionTable.addEntry(names.get(idx), new SymbolTableEntry(types.getType(idx)));
-            }
+            functionTable.addParameters(names, types);
+
+            codegen.functionStart(fName);
 
             check(slozena_naredba, functionTable);
+
+            int numberOfLocalVariables = functionTable.getLocalSize();
+            boolean returns = t != Type.VOID;
+            codegen.functionEnd(fName, numberOfLocalVariables, returns);
 
         } else if (pe == ProductionEnum.lista_parametara_1) {
             // <lista_parametara> ::= <deklaracija_parametra>
@@ -1099,6 +1171,7 @@ public class SemanticAnalyzer {
             // 2. provjeri (<incijalizator>)
             check(inicijalizator, table);
 
+            boolean oneByte = false;
             // 3. ako je <izravni_deklarator>.tip T ili const(T) 
             //      <inicijalizator>.tip ~ T
             // inace ako je <izravni_deklarator>.tip niz (T) ili niz (const(T))
@@ -1114,6 +1187,9 @@ public class SemanticAnalyzer {
                 if (!inicijalizator.getType().implicit(to)) {
                     throw new SemanticException("Can't convert to type", node);
                 }
+
+                oneByte = ((NumericType) t).bytes() == 1;
+
             } else if (t instanceof ArrayType) {
                 if (!inicijalizator.hasAttribute(Attribute.NUM_EL)) {
                     throw new SemanticException("When char a[2] = \"a\"; char b[2] = a;", node);
@@ -1138,9 +1214,12 @@ public class SemanticAnalyzer {
                 throw new SemanticException("Invalid type", node);
             }
 
+            codegen.assign(oneByte);
+
         } else if (pe == ProductionEnum.izravni_deklarator_1) {
             // <izravni_deklarator> ::= IDN
             SemNodeT idn = (SemNodeT) node.getChild(0);
+            String varName = idn.getValue();
 
             // 1. ntip != void
             Type ntype = (Type) node.getAttribute(Attribute.NTYPE);
@@ -1148,19 +1227,32 @@ public class SemanticAnalyzer {
                 throw new SemanticException("Type can't be void", node);
             }
             // 2. IDN.ime nije deklarirano u lokalnom djelokrugu
-            if (table.getLocalEntry(idn.getValue()) != null) {
+            if (table.getLocalEntry(varName) != null) {
                 throw new SemanticException("Already declared identifier", node);
             }
             // 3. zabiljezi deklaraciju IDN.ime s odgovarajucim tipom
-            table.addEntry(idn.getValue(), new SymbolTableEntry(ntype));
+            SymbolTableEntry ste = new SymbolTableEntry(ntype);
+            table.addEntry(varName, ste);
 
             // tip <- ntip
             node.setType(ntype);
+
+            boolean oneByte = false;
+            if (ntype instanceof NumericType) oneByte = ((NumericType) ntype).bytes() == 1;
+
+            if (table.isGlobal()) {
+                codegen.allocGlobal(varName, oneByte);
+                codegen.globalRef(varName, oneByte, false);
+            } else {
+                codegen.allocLocal(varName);
+                codegen.localRef(ste.getOffset(table), oneByte, false);
+            }
 
         } else if (pe == ProductionEnum.izravni_deklarator_2) {
             // <izravni_deklarator> ::= IDN L_UGL_ZAGRADA BROJ D_UGL_ZAGRADA
             SemNodeT idn = (SemNodeT) node.getChild(0);
             SemNodeT broj = (SemNodeT) node.getChild(2);
+            String varName = idn.getValue();
 
             // 1. ntip != void
             Type ntype = (Type) node.getAttribute(Attribute.NTYPE);
@@ -1168,7 +1260,7 @@ public class SemanticAnalyzer {
                 throw new SemanticException("Type can't be void", node);
             }
             // 2. IDN.ime nije deklarirano u lokalnom djelokrugu
-            if (table.getLocalEntry(idn.getValue()) != null) {
+            if (table.getLocalEntry(varName) != null) {
                 throw new SemanticException("Already declared identifier", node);
             }
             // 3. BROJ.vrijednost je pozitivan broj (> 0) ne veci od 1024
@@ -1178,12 +1270,24 @@ public class SemanticAnalyzer {
             }
             Type arrayNtype = Type.getArray(ntype);
             // 4. zabiljezi deklaraciju IDN.ime s odgovarajucim tipom
-            table.addEntry(idn.getValue(), new SymbolTableEntry(arrayNtype));
+            SymbolTableEntry ste = new SymbolTableEntry(arrayNtype);
+            table.addEntry(varName, ste);
 
             // tip <- niz (ntip)
             node.setType(arrayNtype);
             // br-elem <- BROJ.vrijednost
             node.setAttribute(Attribute.NUM_EL, vrijednost);
+
+            boolean oneByte = false; // false because its a pointer = int
+            if (table.isGlobal()) {
+                codegen.allocGlobal(varName, oneByte);
+                codegen.arrayAlloc(varName, vrijednost, oneByte);
+                codegen.globalRef(varName, oneByte, false);
+            } else {
+                codegen.allocLocal(varName);
+                codegen.arrayAlloc(varName, vrijednost, oneByte);
+                codegen.localRef(ste.getOffset(table), oneByte, false);
+            }
 
         } else if (pe == ProductionEnum.izravni_deklarator_3) {
             // <izravni_deklarator> ::= IDN L_ZAGRADA KR_VOID D_ZAGRADA
@@ -1238,17 +1342,17 @@ public class SemanticAnalyzer {
 
         } else if (pe == ProductionEnum.inicijalizator_1) {
             // <inicijalizator> ::= <izraz_pridruzivanja>
-            SemNodeV izraz_pridruzivanje = (SemNodeV) node.getChild(0);
+            SemNodeV izraz_pridruzivanja = (SemNodeV) node.getChild(0);
 
             // 1. provjeri (<izraz_pridruzivanja>)
-            check(izraz_pridruzivanje, table);
+            check(izraz_pridruzivanja, table);
 
             // ako je <izraz_pridruzivanja> => NIZ_ZNAKOVA
             //      br-elem <- duljina niza znakova + 1
             //      tipovi <- lista duljine br-elem, svi elementi su char
             // inace
             //      tip <- <izraz_pridruzivanja>.tip
-            SemNode sn = izraz_pridruzivanje;
+            SemNode sn = izraz_pridruzivanja;
             while (sn instanceof SemNodeV) {
                 SemNodeV snv = (SemNodeV) sn;
                 if (snv.numOfChildren() != 1) {
@@ -1267,7 +1371,7 @@ public class SemanticAnalyzer {
                 node.setAttribute(Attribute.NUM_EL, duljina + 1);
                 node.setType(lt);
             } else {
-                node.setType(izraz_pridruzivanje.getType());
+                node.setType(izraz_pridruzivanja.getType());
             }
 
         } else if (pe == ProductionEnum.inicijalizator_2) {
@@ -1277,11 +1381,16 @@ public class SemanticAnalyzer {
             // 1. provjeri (<lista_izraza_pridruzivanja>)
             check(lista_izraza_pridruzivanja, table);
 
+            int brElem = (int) lista_izraza_pridruzivanja.getAttribute(Attribute.NUM_EL);
             // br-elem <- <lista_izraza_pridruzivanja>.br-elem
-            node.setAttribute(Attribute.NUM_EL,
-                    lista_izraza_pridruzivanja.getAttribute(Attribute.NUM_EL));
+            node.setAttribute(Attribute.NUM_EL, brElem);
             // tipovi <- <lista_izraza_pridruzivanja>.tipovi
             node.setType(lista_izraza_pridruzivanja.getType());
+
+            boolean oneByte = false;
+            Type t = ((ListType) lista_izraza_pridruzivanja.getType()).getType(0);
+            if (t instanceof NumericType) oneByte = ((NumericType) t).bytes() == 1;
+            codegen.arrayInitialization(brElem, oneByte);
 
         } else if (pe == ProductionEnum.lista_izraza_pridruzivanja_1) {
             // <lista_izraza_pridruzivanja> ::= <izraz_pridruzivanja>

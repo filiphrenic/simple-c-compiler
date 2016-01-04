@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import hr.fer.zemris.ppj.semantic.types.FunctionType;
+import hr.fer.zemris.ppj.semantic.types.ListType;
 import hr.fer.zemris.ppj.semantic.types.Type;
 
 /**
@@ -19,8 +21,15 @@ public class SymbolTable {
     private SymbolTable parent;
     private List<SymbolTable> nestedTables;
 
+    private int numberOfParameters;
+    private int ticketForLocals;
+
     public SymbolTable() {
         this(null);
+    }
+
+    public boolean isGlobal() {
+        return parent == null;
     }
 
     private SymbolTable(SymbolTable parent) {
@@ -31,6 +40,9 @@ public class SymbolTable {
         }
         entries = new HashMap<>();
         nestedTables = new LinkedList<>();
+
+        numberOfParameters = 0;
+        ticketForLocals = 0;
     }
 
     /**
@@ -63,8 +75,20 @@ public class SymbolTable {
         return entries.entrySet();
     }
 
+    public void addParameters(List<String> names, ListType types) {
+        numberOfParameters = names.size();
+        for (int idx = 0; idx < numberOfParameters; idx++) {
+            SymbolTableEntry ste = new SymbolTableEntry(types.getType(idx));
+            ste.prepareOffset(true, idx);
+            entries.put(names.get(idx), ste);
+        }
+    }
+
     public void addEntry(String symbolName, SymbolTableEntry ste) {
         entries.put(symbolName, ste);
+        if (ste.getType() instanceof FunctionType) return;
+        if (isGlobal()) ste.setGlobal();
+        else ste.prepareOffset(false, ticketForLocals++);
     }
 
     public SymbolTable createNested() {
@@ -73,6 +97,14 @@ public class SymbolTable {
 
     public List<SymbolTable> getNestedTables() {
         return nestedTables;
+    }
+
+    public int getLocalSize() {
+        return ticketForLocals;
+    }
+
+    public int getNumberOfParameters() {
+        return numberOfParameters;
     }
 
 }

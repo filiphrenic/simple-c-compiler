@@ -12,15 +12,23 @@ public class Code {
     private String comment;
 
     public Code(Command command) {
-        this(command, null);
+        this(null, command, null);
+    }
+
+    public Code(String label, Command command) {
+        this(label, command, null);
     }
 
     public Code(Command command, String comment) {
-        this.label = null;
+        this(null, command, comment);
+    }
+
+    public Code(String label, Command command, String comment) {
+        this.label = label;
         this.command = command;
         this.comment = comment;
     }
-    
+
     public void setLabel(String label) {
         this.label = label;
     }
