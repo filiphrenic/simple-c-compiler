@@ -498,6 +498,10 @@ public class CodeGen {
         stackOp(false, 1);
     }
 
+    public void addLastValue() {
+        stackOp(true, 1);
+    }
+
     /**
      * Stack operation without comment. See stackOp with three parameters for more info.
      * 

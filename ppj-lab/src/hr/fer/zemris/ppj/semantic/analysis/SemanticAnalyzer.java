@@ -689,7 +689,6 @@ public class SemanticAnalyzer {
             if (!postfiks_izraz.getLExpr()) {
                 throw new SemanticException("Not an L-expression", node);
             }
-            // XXX codegen.flushBuffer(); // get address
             forceAddress = true;
             // 3. provjeri (<izraz_pridruzivanja>)
             check(izraz_pridruzivanja, table);
@@ -859,7 +858,6 @@ public class SemanticAnalyzer {
             check(naredba, table);
 
             codegen.jumpTo(loopStart);
-
             codegen.labelNext(loopEnd);
 
         } else if (pe == ProductionEnum.naredba_petlje_2) {
@@ -872,12 +870,22 @@ public class SemanticAnalyzer {
 
             // 1. provjeri (<izraz_naredba> 1)
             check(izraz_naredba1, table);
+
+            String loopStart = codegen.loopStart();
+
             // 2. provjeri (<izraz_naredba> 2)
             check(izraz_naredba2, table);
             // 3. <izraz_naredba> 2 .tip ~ int
             checkImplicit2Int(izraz_naredba2, node);
+
+            codegen.addLastValue(); // return evaluated condition to stack
+            String loopEnd = codegen.evalIf(true);
+
             // 4. provjeri (<naredba>)
             check(naredba, table);
+
+            codegen.jumpTo(loopStart);
+            codegen.labelNext(loopEnd);
 
         } else if (pe == ProductionEnum.naredba_petlje_3) {
             // <naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> <izraz> D_ZAGRADA <naredba>
@@ -890,14 +898,37 @@ public class SemanticAnalyzer {
 
             // 1. provjeri (<izraz_naredba>1)
             check(izraz_naredba1, table);
+
+            String loopStart = codegen.loopStart();
+
             // 2. provjeri (<izraz_naredba>2)
             check(izraz_naredba2, table);
             // 3. <izraz_naredba>2.tip ~ int
             checkImplicit2Int(izraz_naredba2, node);
-            // 4. provjeri (<izraz>)
-            check(izraz, table);
+
+            codegen.addLastValue(); // return evaluated condition to stack
+            String loopEnd = codegen.evalIf(true);
+
+            // XXX swapped order to get:
+            //            for(init; cond; expr) command
+            //
+            //            init
+            //            for_start   cond
+            //                        command
+            //                        expr
+            //                        jump for_start
+            //            for_end     ...
+
             // 5. provjeri (<naredba>)
             check(naredba, table);
+
+            // 4. provjeri (<izraz>)
+            check(izraz, table);
+
+            codegen.discardOne(); // discard last entry from izraz
+
+            codegen.jumpTo(loopStart);
+            codegen.labelNext(loopEnd);
 
         } else if (pe == ProductionEnum.naredba_skoka_1 || pe == ProductionEnum.naredba_skoka_2) {
             // <naredba_skoka> ::= (KR_CONTINUE | KR_BREAK) TOCKAZAREZ
