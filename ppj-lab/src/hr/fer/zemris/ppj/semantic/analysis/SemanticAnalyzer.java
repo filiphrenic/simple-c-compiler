@@ -912,6 +912,8 @@ public class SemanticAnalyzer {
                 throw new SemanticException("Jump command outside of a loop", node);
             }
 
+            codegen.loop(pe == ProductionEnum.naredba_skoka_1);
+
         } else if (pe == ProductionEnum.naredba_skoka_3) {
             // <naredba_skoka> ::= KR_RETURN TOCKAZAREZ
 

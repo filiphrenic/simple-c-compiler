@@ -150,6 +150,12 @@ public class CodeGen {
         curr.add(new Code(new Command("JR", Param.label(label))));
     }
 
+    public void loop(boolean loopContinue) {
+        String label = loopContinue ? loopStart : loopEnd;
+        String comment = loopContinue ? "continue" : "break";
+        curr.add(new Code(new Command("JR", Param.label(label)), comment));
+    }
+
     /**
      * Generate code for function end.
      * 
