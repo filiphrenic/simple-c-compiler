@@ -388,14 +388,14 @@ public class CodeGen {
         String op = increment ? "ADD" : "SUB";
         Code opCode = new Code(new Command(op, Param.reg(1), Param.num(1), Param.reg(1)));
 
-        stackOp(false, 0); // variable address
-        addMemoryCode(true, oneByte, Param.reg(1), Param.aReg(0)); // load variable
+        stackOp(false, 2); // variable address
+        addMemoryCode(true, oneByte, Param.reg(1), Param.aReg(2)); // load variable
 
         if (pre) curr.add(opCode);
         stackOp(true, 1); // push result
         if (!pre) curr.add(opCode);
 
-        addMemoryCode(false, oneByte, Param.reg(2), Param.aReg(1)); // store variable
+        addMemoryCode(false, oneByte, Param.reg(1), Param.aReg(2)); // store variable
     }
 
     public void negative() {
@@ -475,6 +475,16 @@ public class CodeGen {
 
     public void labelNext(String label) {
         curr.labelNext(label);
+    }
+
+    public String labelNextSelf() {
+        String label = tmpLabel();
+        curr.labelNext(label);
+        return label;
+    }
+
+    public void jumpTo(String label) {
+        curr.add(new Code(new Command("JR", Param.label(label))));
     }
 
     public void pushR1() {
