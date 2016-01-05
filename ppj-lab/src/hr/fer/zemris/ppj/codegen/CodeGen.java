@@ -330,6 +330,12 @@ public class CodeGen {
      */
     private void multiplication() {
 
+        // first check if r2 is negative
+        // if it's negative then remember it is negative and make it positive
+        // multiply r1 and r2 into r0 like: for(r0=0;r2>0;r2--) r0+=r1;
+        // if r2 was negative, make r0 negative
+        // push r0
+
         String multi = tmpLabel();
         String check = tmpLabel();
         String loop = tmpLabel();
@@ -350,12 +356,12 @@ public class CodeGen {
 
         // r0 = 0
         curr.add(new Code(multi, new Command("MOVE", Param.num(0), Param.reg(0))));
-        // r2--;
-        curr.add(new Code(loop, new Command("SUB", Param.reg(2), Param.num(1), Param.reg(2))));
         // r2 == 0 ? finished, go to check
-        curr.add(new Code(new Command("JR_EQ", Param.label(check))));
+        curr.add(new Code(loop, new Command("JR_EQ", Param.label(check))));
         // r0 += r1;
         curr.add(new Code(new Command("ADD", Param.reg(0), Param.reg(1), Param.reg(0))));
+        // r2--;
+        curr.add(new Code(new Command("SUB", Param.reg(2), Param.num(1), Param.reg(2))));
         // try another loop
         curr.add(new Code(new Command("JR", Param.label(loop))));
 
@@ -371,18 +377,100 @@ public class CodeGen {
         curr.add(new Code(new Command("SUB", Param.reg(3), Param.reg(1), Param.reg(1))));
 
         // end
-
-        curr.add(new Code(end, new Command("PUSH", Param.reg(0)))); // push result stored in R0
+        labelNext(end);
+        // push result stored in R0
+        stackOp(true, 0);
     }
 
     private void division() {
-        // TODO
-        // R1 <- R1 / R2
+
+        curr.add(new Code(new Command("MOVE", Param.num(1), Param.reg(3)), "division"));
+
+        getIsNegative(1);
+        getIsNegative(2);
+
+        String check = tmpLabel();
+        String finish = tmpLabel();
+
+        // division
+
+        // r0 = 0
+        curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(0))));
+        // while (r1 > r2)
+        curr.add(new Code(check, new Command("CMP", Param.reg(1), Param.reg(2))));
+        curr.add(new Code(new Command("JR_SLE", Param.label(finish))));
+        // r1 -= r2
+        curr.add(new Code(new Command("SUB", Param.reg(1), Param.reg(2), Param.reg(1))));
+        // r0 ++
+        curr.add(new Code(new Command("ADD", Param.reg(0), Param.num(1), Param.reg(0))));
+        // jump to condition
+        curr.add(new Code(new Command("JR", Param.label(check))));
+
+        String end = tmpLabel();
+
+        /*
+         * finish: cmp r3, 0
+         * jr_ne end
+         * sub r3, r0, r0
+         * end: push r0
+         */
+
+        curr.add(new Code(finish, new Command("CMP", Param.reg(3), Param.num(0))));
+        curr.add(new Code(new Command("JR_NE", Param.label(end))));
+        curr.add(new Code(new Command("SUB", Param.reg(3), Param.reg(0), Param.reg(0))));
+
+        // result = div
+        labelNext(end);
+        stackOp(true, 0, "division over");
+    }
+
+    /**
+     * This function will generate code that will test if the number in reg is negative.
+     * If it is, than it will make it positive and xor the value in reg 3 with 1, otherwise with 0.
+     * 
+     * @param reg register that we want to check
+     */
+    private void getIsNegative(int reg) {
+        /*
+         * move 0, use
+         * cmp reg, 0
+         * jp_slt next
+         * move 1, use
+         * sub zero, reg, reg // reg = -reg
+         * next: xor reg, res, res
+         */
+
+        int res = 3;
+        int use = 4;
+
+        String next = tmpLabel();
+
+        curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(use))));
+        curr.add(new Code(new Command("CMP", Param.reg(reg), Param.num(0))));
+        curr.add(new Code(new Command("JR_SLT", Param.label(next))));
+        curr.add(new Code(new Command("SUB", Param.reg(use), Param.reg(reg), Param.reg(reg))));
+        curr.add(new Code(new Command("MOVE", Param.num(1), Param.reg(use))));
+        curr.add(
+                new Code(next, new Command("XOR", Param.reg(use), Param.reg(res), Param.reg(res))));
     }
 
     private void modulo() {
-        // TODO
-        // R1 <- R1 % R2
+        String check = tmpLabel();
+        String end = tmpLabel();
+
+        // r0 = 0
+        curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(0))));
+        // while (r1 > r2)
+        curr.add(new Code(check, new Command("CMP", Param.reg(1), Param.reg(2))));
+        curr.add(new Code(new Command("JR_SLE", Param.label(end))));
+        // r1 -= r2
+        curr.add(new Code(new Command("SUB", Param.reg(1), Param.reg(2), Param.reg(1))));
+        // jump to condition
+        curr.add(new Code(new Command("JR", Param.label(check))));
+
+        // r1 = r1%r2
+        labelNext(end);
+        stackOp(true, 1);
     }
 
     /**

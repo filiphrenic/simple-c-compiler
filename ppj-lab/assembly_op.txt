@@ -1,0 +1,61 @@
+r1 r2 - vrijednosti
+r0 = rezultat
+
+provjera za negativan r2
+
+r3 = 1;
+cmp r2, 0
+JR_VECI op
+r3 = 0
+r2 = r3 - r2
+r3 = -1;
+op: operacija
+check: cmp r3, 1
+JR_EQ gotovo
+r3 = 0
+r1 = r3 - r1
+gotovo: push r1
+
+=============================
+
+MNOZENJE:
+
+r0 = 0
+loop: r2 == 0? goto check
+r0 += r1
+r2--
+goto loop
+
+
+DIJELJENJE:
+
+r0 = 0
+loop: r1<=r2 goto check
+r0++
+r1 -= r2
+goto loop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
