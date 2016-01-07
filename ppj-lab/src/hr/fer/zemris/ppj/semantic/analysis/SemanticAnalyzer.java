@@ -77,6 +77,8 @@ public class SemanticAnalyzer {
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+        
+        codegen.callMain();
     }
 
     private static String parseString(String s, SemNodeV node) {
@@ -860,6 +862,8 @@ public class SemanticAnalyzer {
             codegen.jumpTo(loopStart);
             codegen.labelNext(loopEnd);
 
+            codegen.loopOver();
+
         } else if (pe == ProductionEnum.naredba_petlje_2) {
             // <naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> D_ZAGRADA <naredba>
             SemNodeV izraz_naredba1 = (SemNodeV) node.getChild(2);
@@ -887,6 +891,8 @@ public class SemanticAnalyzer {
             codegen.jumpTo(loopStart);
             codegen.labelNext(loopEnd);
 
+            codegen.loopOver();
+
         } else if (pe == ProductionEnum.naredba_petlje_3) {
             // <naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> <izraz> D_ZAGRADA <naredba>
             SemNodeV izraz_naredba1 = (SemNodeV) node.getChild(2);
@@ -896,11 +902,29 @@ public class SemanticAnalyzer {
 
             node.setAttributeRecursive(Attribute.LOOP, true);
 
+            // XXX swapped order to get:
+            //            for(init; cond; expr) command
+            //
+            //            init
+            //            jump cond
+            //            for_start   expr
+            //             cond:      cond
+            //                        command
+            //                        jump for_start
+            //            for_end     ...
+
             // 1. provjeri (<izraz_naredba>1)
             check(izraz_naredba1, table);
+            String condLabel = codegen.newLabel();
+            codegen.jumpTo(condLabel);
 
             String loopStart = codegen.loopStart();
 
+            // 4. provjeri (<izraz>)
+            check(izraz, table);
+            codegen.discardOne(); // discard last entry from izraz
+
+            codegen.labelNext(condLabel);
             // 2. provjeri (<izraz_naredba>2)
             check(izraz_naredba2, table);
             // 3. <izraz_naredba>2.tip ~ int
@@ -909,26 +933,13 @@ public class SemanticAnalyzer {
             codegen.addLastValue(); // return evaluated condition to stack
             String loopEnd = codegen.evalIf(true);
 
-            // XXX swapped order to get:
-            //            for(init; cond; expr) command
-            //
-            //            init
-            //            for_start   cond
-            //                        command
-            //                        expr
-            //                        jump for_start
-            //            for_end     ...
-
             // 5. provjeri (<naredba>)
             check(naredba, table);
 
-            // 4. provjeri (<izraz>)
-            check(izraz, table);
-
-            codegen.discardOne(); // discard last entry from izraz
-
             codegen.jumpTo(loopStart);
             codegen.labelNext(loopEnd);
+
+            codegen.loopOver();
 
         } else if (pe == ProductionEnum.naredba_skoka_1 || pe == ProductionEnum.naredba_skoka_2) {
             // <naredba_skoka> ::= (KR_CONTINUE | KR_BREAK) TOCKAZAREZ
@@ -1269,8 +1280,6 @@ public class SemanticAnalyzer {
             // <izravni_deklarator>.ntip <- <init_deklarator>.ntip
             izravni_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
             check(izravni_deklarator, table);
-
-            // XXX codegen.flushBuffer(); // get address
             forceAddress = true;
             // 2. provjeri (<incijalizator>)
             check(inicijalizator, table);

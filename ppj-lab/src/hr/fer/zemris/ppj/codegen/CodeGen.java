@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 public class CodeGen {
     public static final int NUM_REGS = 8; // number of registers, [0,NUM_REG>
@@ -34,8 +35,12 @@ public class CodeGen {
     private Counter temporaryLabeler;
 
     private Counter loopLabeler;
-    private String loopStart; // current loop start label
-    private String loopEnd; // current loop end label
+    private Stack<LabelPair> loopLabels; // used for nested loops, for break and continue
+
+    private static class LabelPair {
+        String start;
+        String end;
+    }
 
     public CodeGen() {
         this(SP);
@@ -53,12 +58,14 @@ public class CodeGen {
         temporaryLabeler = new Counter("T");
         loopLabeler = new Counter("L");
 
+        loopLabels = new Stack<>();
+
         // initialize stack pointer
         startBlock.add(new Code(new Command("MOVE", Param.num(stackSize), Param.reg(SP_REG)),
                 "initialize stack pointer"));
     }
 
-    public void blabla() {
+    public void callMain() {
         startBlock.add(new Code(new Command("CALL", Param.label(functionLabel("main")))));
         startBlock.add(new Code(new Command("HALT")));
     }
@@ -151,9 +158,14 @@ public class CodeGen {
     }
 
     public void loop(boolean loopContinue) {
-        String label = loopContinue ? loopStart : loopEnd;
+        LabelPair lp = loopLabels.peek();
+        String label = loopContinue ? lp.start : lp.end;
         String comment = loopContinue ? "continue" : "break";
         curr.add(new Code(new Command("JR", Param.label(label)), comment));
+    }
+
+    public void loopOver() {
+        loopLabels.pop();
     }
 
     /**
@@ -603,6 +615,10 @@ public class CodeGen {
         curr.labelNext(label);
     }
 
+    public String newLabel() {
+        return tmpLabel();
+    }
+
     public String loopStart() {
         String label = loopStartLabel();
         curr.labelNext(label);
@@ -675,13 +691,15 @@ public class CodeGen {
 
     private String loopStartLabel() {
         String label = loopLabel();
-        loopStart = label;
+        LabelPair lp = new LabelPair();
+        lp.start = label;
+        loopLabels.push(lp);
         return label;
     }
 
     private String loopEndLabel() {
         String label = loopLabel();
-        loopEnd = label;
+        loopLabels.peek().end = label;
         return label;
     }
 
@@ -696,7 +714,6 @@ public class CodeGen {
 
     @Override
     public String toString() {
-        blabla(); // TODO
 
         char delim = '\n';
         StringBuilder sb = new StringBuilder();

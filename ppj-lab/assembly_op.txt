@@ -37,25 +37,14 @@ goto loop
 
 
 
+// OPTIMIZACIJA
 
+optimize:
 
+something( Rx <- result )
+push(Rx)
+pop(Ry)
 
+into
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+something( Ry <- result)
