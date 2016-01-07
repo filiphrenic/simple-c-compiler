@@ -79,7 +79,8 @@ public class SymbolTable {
         numberOfParameters = names.size();
         for (int idx = 0; idx < numberOfParameters; idx++) {
             SymbolTableEntry ste = new SymbolTableEntry(types.getType(idx));
-            ste.prepareOffset(true, idx);
+            int off = numberOfParameters + 1 - idx;
+            ste.setOffset(off);
             entries.put(names.get(idx), ste);
         }
     }
@@ -88,7 +89,7 @@ public class SymbolTable {
         entries.put(symbolName, ste);
         if (ste.getType() instanceof FunctionType) return;
         if (isGlobal()) ste.setGlobal();
-        else ste.prepareOffset(false, ticketForLocals++);
+        else ste.setOffset(-(++ticketForLocals));
     }
 
     public SymbolTable createNested() {

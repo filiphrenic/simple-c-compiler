@@ -265,7 +265,7 @@ public class SemanticAnalyzer {
             if (idnSte.isGlobal()) {
                 codegen.globalRef(idn.getValue(), oneByte, byValue);
             } else {
-                codegen.localRef(idnSte.getOffset(table), oneByte, byValue);
+                codegen.localRef(idnSte.getOffset(), oneByte, byValue);
             }
 
         } else if (pe == ProductionEnum.primarni_izraz_2) {
@@ -907,11 +907,11 @@ public class SemanticAnalyzer {
             //
             //            init
             //            jump cond
-            //            for_start   expr
-            //             cond:      cond
+            //            for_start:  expr
+            //            cond:       cond
             //                        command
             //                        jump for_start
-            //            for_end     ...
+            //            for_end:s    ...
 
             // 1. provjeri (<izraz_naredba>1)
             check(izraz_naredba1, table);
@@ -1357,7 +1357,7 @@ public class SemanticAnalyzer {
                 codegen.globalRef(varName, oneByte, false);
             } else {
                 codegen.allocLocal(varName);
-                codegen.localRef(ste.getOffset(table), oneByte, false);
+                codegen.localRef(ste.getOffset(), oneByte, false);
             }
 
         } else if (pe == ProductionEnum.izravni_deklarator_2) {
@@ -1397,7 +1397,7 @@ public class SemanticAnalyzer {
                 codegen.arrayAlloc(varName, vrijednost, oneByte);
             } else {
                 codegen.allocLocal(varName);
-                codegen.localRef(ste.getOffset(table), oneByte, false);
+                codegen.localRef(ste.getOffset(), oneByte, false);
                 codegen.arrayAlloc(varName, vrijednost, oneByte);
             }
 

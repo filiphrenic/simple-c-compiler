@@ -47,23 +47,13 @@ public class SymbolTableEntry {
     // for code generator
 
     private boolean global;
-    private boolean parameter;
-    private int ticket;
+    private int offset;
 
-    public boolean isGlobal() {
-        return global;
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
-    public void setGlobal() {
-        global = true;
-    }
-
-    public void prepareOffset(boolean parameter, int ticket) {
-        this.parameter = parameter;
-        this.ticket = ticket;
-    }
-
-    public int getOffset(SymbolTable parent) {
+    public int getOffset() {
 
         /*
          * Lets say that main called function fun. Also, function fun takes 
@@ -84,13 +74,15 @@ public class SymbolTableEntry {
          */
 
         assert !global;
-        int off;
-        if (parameter) {
-            off = parent.getNumberOfParameters() + 1 - ticket; // +1 because of the frame pointer
-        } else { // local variable
-            off = -(ticket + 1);
-        }
-        return off * 4;
+        return offset * 4;
+    }
+
+    public boolean isGlobal() {
+        return global;
+    }
+
+    public void setGlobal() {
+        global = true;
     }
 
 }
