@@ -26,6 +26,10 @@ public class ListType extends Type {
     public boolean isVoid() {
         return types.size() == 1 && types.get(0) == Type.VOID;
     }
+    
+    public int getSize(){
+        return types.size();
+    }
 
     public boolean eachImplicit(Type toType) {
         for (Type t : types) {

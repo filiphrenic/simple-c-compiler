@@ -77,7 +77,7 @@ public class SemanticAnalyzer {
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
-        
+
         codegen.callMain();
     }
 
@@ -378,7 +378,7 @@ public class SemanticAnalyzer {
             // l-izraz <- 0
             node.setLExpr(false);
 
-            codegen.call(ft.getReturnType() != Type.VOID);
+            codegen.call(ft.getReturnType() != Type.VOID, 0);
 
         } else if (pe == ProductionEnum.postfiks_izraz_4) {
             // <postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA <lista_argumenata> D_ZAGRADA
@@ -419,7 +419,7 @@ public class SemanticAnalyzer {
             // l-izraz <- 0
             node.setLExpr(false);
 
-            codegen.call(ft.getReturnType() != Type.VOID);
+            codegen.call(ft.getReturnType() != Type.VOID, ltf.getSize());
 
         } else if (pe == ProductionEnum.postfiks_izraz_5 || pe == ProductionEnum.postfiks_izraz_6) {
             // <postfiks_izraz> ::= <postfiks_izraz> (OP_INC | OP_DEC)

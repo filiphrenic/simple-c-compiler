@@ -75,7 +75,7 @@ public class CodeGen {
     public void allocGlobal(String varName, boolean oneByte) {
         String label = dataLabel(varName);
         int size = oneByte ? 1 : 4;
-        data.add(new Code(label, new Command("DS", Param.num(size)), "var " + varName));
+        data.add(new Code(label, new Command("`DS", Param.num(size)), "var " + varName));
     }
 
     public void allocLocal(String varName) {
@@ -86,7 +86,7 @@ public class CodeGen {
     public void arrayAlloc(String arrName, int size, boolean oneByte) {
         if (!oneByte) size *= 4;
         String varLabel = dataLabel(arrName);
-        data.add(new Code(varLabel, new Command("DS", Param.num(size))));
+        data.add(new Code(varLabel, new Command("`DS", Param.num(size))));
         stackOp(false, 1);
         curr.add(new Code(new Command("MOVE", Param.label(varLabel), Param.reg(1))));
         stackOp(true, 1);
@@ -180,6 +180,8 @@ public class CodeGen {
         if (returns) stackOp(false, RET_REG, "return value");
         if (numberOfLocalVariables > 0) removeFromStack(numberOfLocalVariables);
         curr.add(new Code(new Command("RET")));
+
+        curr = startBlock;
     }
 
     /**
@@ -251,11 +253,12 @@ public class CodeGen {
      * 
      * @param returns <code>true</code> if function returns
      */
-    public void call(boolean returns) {
+    public void call(boolean returns, int params) {
         // stackOp(false, FUNC_REG); // pop function label
         stackOp(true, FRAME_PTR); // save this function frame
         curr.add(new Code(new Command("CALL", Param.aReg(1))));
         stackOp(false, FRAME_PTR); // restore frame
+        removeFromStack(params);
         if (returns) {
             stackOp(true, RET_REG); // push return value onto stack
         }
@@ -408,9 +411,9 @@ public class CodeGen {
 
         // r0 = 0
         curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(0))));
-        // while (r1 > r2)
+        // while (r1 >= r2)
         curr.add(new Code(check, new Command("CMP", Param.reg(1), Param.reg(2))));
-        curr.add(new Code(new Command("JR_SLE", Param.label(finish))));
+        curr.add(new Code(new Command("JR_SLT", Param.label(finish))));
         // r1 -= r2
         curr.add(new Code(new Command("SUB", Param.reg(1), Param.reg(2), Param.reg(1))));
         // r0 ++
@@ -459,7 +462,7 @@ public class CodeGen {
 
         curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(use))));
         curr.add(new Code(new Command("CMP", Param.reg(reg), Param.num(0))));
-        curr.add(new Code(new Command("JR_SLT", Param.label(next))));
+        curr.add(new Code(new Command("JR_SGE", Param.label(next))));
         curr.add(new Code(new Command("SUB", Param.reg(use), Param.reg(reg), Param.reg(reg))));
         curr.add(new Code(new Command("MOVE", Param.num(1), Param.reg(use))));
         curr.add(
@@ -474,7 +477,7 @@ public class CodeGen {
         curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(0))));
         // while (r1 > r2)
         curr.add(new Code(check, new Command("CMP", Param.reg(1), Param.reg(2))));
-        curr.add(new Code(new Command("JR_SLE", Param.label(end))));
+        curr.add(new Code(new Command("JR_SLT", Param.label(end))));
         // r1 -= r2
         curr.add(new Code(new Command("SUB", Param.reg(1), Param.reg(2), Param.reg(1))));
         // jump to condition

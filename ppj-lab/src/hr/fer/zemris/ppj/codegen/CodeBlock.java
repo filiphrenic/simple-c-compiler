@@ -36,7 +36,9 @@ public class CodeBlock {
     }
 
     public void labelNext(String label) {
+        if(nextLabel != null) codes.add(new Code(nextLabel, new Command("")));
         nextLabel = label;
+        
     }
 
     public void consume(CodeBlock block) {
