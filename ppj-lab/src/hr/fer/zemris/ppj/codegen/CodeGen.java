@@ -83,12 +83,19 @@ public class CodeGen {
                 "var " + varName));
     }
 
-    public void arrayAlloc(String arrName, int size, boolean oneByte) {
+    public void arrayAlloc(int size, boolean oneByte) {
         if (!oneByte) size *= 4;
-        String varLabel = dataLabel(arrName);
+        String varLabel = dataLabel("");
         data.add(new Code(varLabel, new Command("`DS", Param.num(size))));
-        stackOp(false, 1);
-        curr.add(new Code(new Command("MOVE", Param.label(varLabel), Param.reg(1))));
+
+        stackOp(false, 1); // adresa od pointera na niz
+        curr.add(new Code(new Command("MOVE", Param.label(varLabel), Param.reg(2))));
+
+        // r1 = adresa(a)
+        // r2 = labela_podaci(a)
+        addMemoryCode(false, oneByte, Param.reg(2), Param.aReg(1));
+
+        // return address
         stackOp(true, 1);
     }
 
@@ -360,8 +367,8 @@ public class CodeGen {
         curr.add(new Code(new Command("MOVE", Param.num(1), Param.reg(3))));
         // cmp r2, 0
         curr.add(new Code(new Command("CMP", Param.reg(2), Param.num(0))));
-        // r2 > 0 ? go to multiplication
-        curr.add(new Code(new Command("JR_SGT", Param.label(multi))));
+        // r2 >= 0 ? go to multiplication
+        curr.add(new Code(new Command("JR_SGE", Param.label(multi))));
         // r2 = r3 - r2 = -r2
         curr.add(new Code(new Command("SUB", Param.reg(3), Param.reg(2), Param.reg(2))));
         // r3 = 1
@@ -498,6 +505,9 @@ public class CodeGen {
         stackOp(false, 1); // idx
         stackOp(false, 2); // a
 
+        // deref a
+        addMemoryCode(true, oneByte, Param.reg(2), Param.aReg(2));
+
         if (!oneByte) {
             // multiply by 4 to get offset
             curr.add(new Code(new Command("SHL", Param.reg(1), Param.num(2), Param.reg(1))));
@@ -554,8 +564,8 @@ public class CodeGen {
         curr.add(new Code(new Command("MOVE", Param.num(1), Param.reg(1)))); // assume r1==0
         curr.add(new Code(new Command("JR_EQ", Param.label(label)))); // real comparing
         curr.add(new Code(new Command("MOVE", Param.num(0), Param.reg(1)))); // r1 != 0
-        curr.add(new Code(label, new Command("PUSH", Param.reg(1)))); // push register
-        stackOp(true, 1);
+        curr.labelNext(label);
+        stackOp(true, 1); // push register
     }
 
     public void arrayInitialization(int size, boolean oneByte) {
@@ -638,6 +648,11 @@ public class CodeGen {
 
     public void addLastValue() {
         stackOp(true, 1);
+    }
+
+    public void push1() {
+        curr.add(new Code(new Command("MOVE", Param.num(1), Param.reg(1))));
+        stackOp(true, 1, "adding default 1 to stack");
     }
 
     /**

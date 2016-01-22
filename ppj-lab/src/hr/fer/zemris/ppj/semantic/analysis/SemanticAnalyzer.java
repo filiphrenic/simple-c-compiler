@@ -344,10 +344,14 @@ public class SemanticAnalyzer {
             if (!(pi_type instanceof ArrayType)) {
                 throw new SemanticException("Array should be of array type", node);
             }
+
+            boolean old = forceAddress;
+            forceAddress = true;
             // 3. provjeri (<izraz>)
             check(izraz, table);
             // 4. <izraz>.tip ~ int
             checkImplicit2Int(izraz, node);
+            forceAddress = old;
 
             //tip <- X
             NumericType X = ((ArrayType) pi_type).getType();
@@ -505,6 +509,9 @@ public class SemanticAnalyzer {
             // 2. <cast_izraz>.tip ~ int
             checkImplicit2Int(cast_izraz, node);
 
+            check((SemNodeV) node.getChild(0), table);
+            //codegen.addLastValue();            codegen.addLastValue();            codegen.addLastValue();
+
             // tip <- int
             node.setType(Type.INT);
             // l-izraz <- 0
@@ -524,9 +531,13 @@ public class SemanticAnalyzer {
             // <unarni_operator> ::= OP_TILDA
             // nista ne treba u analizi
 
+            codegen.bitNot();
+
         } else if (pe == ProductionEnum.unarni_operator_4) {
             // <unarni_operator> ::= OP_NEG
             // nista ne treba u analizi
+
+            codegen.logicNot();
 
         } else if (pe == ProductionEnum.cast_izraz_1) {
             // <cast_izraz> ::= <unarni_izraz>
@@ -786,6 +797,9 @@ public class SemanticAnalyzer {
 
             // tip <- int
             node.setType(Type.INT);
+
+            codegen.push1();
+            codegen.discardOne();
 
         } else if (pe == ProductionEnum.izraz_naredba_2) {
             // <izraz_naredba> ::= <izraz> TOCKAZAREZ
@@ -1394,12 +1408,11 @@ public class SemanticAnalyzer {
             if (table.isGlobal()) {
                 codegen.allocGlobal(varName, oneByte);
                 codegen.globalRef(varName, oneByte, false);
-                codegen.arrayAlloc(varName, vrijednost, oneByte);
             } else {
                 codegen.allocLocal(varName);
                 codegen.localRef(ste.getOffset(), oneByte, false);
-                codegen.arrayAlloc(varName, vrijednost, oneByte);
             }
+            codegen.arrayAlloc(vrijednost, oneByte);
 
         } else if (pe == ProductionEnum.izravni_deklarator_3) {
             // <izravni_deklarator> ::= IDN L_ZAGRADA KR_VOID D_ZAGRADA
@@ -1423,6 +1436,8 @@ public class SemanticAnalyzer {
 
             // tip <- funkcija(void -> ntip)
             node.setType(ft);
+
+            codegen.addLastValue(); // because a pop will occur on ZAREZ/TOCKA_ZAREZ
 
         } else if (pe == ProductionEnum.izravni_deklarator_4) {
             // <izravni_deklarator> ::= IDN L_ZAGRADA <lista_parametara> D_ZAGRADA
@@ -1451,6 +1466,8 @@ public class SemanticAnalyzer {
 
             // tip <- funkcija(<lista_parametara>.tipovi -> ntip)
             node.setType(ft);
+
+            codegen.addLastValue(); // because a pop will occur on ZAREZ/TOCKA_ZAREZ
 
         } else if (pe == ProductionEnum.inicijalizator_1) {
             // <inicijalizator> ::= <izraz_pridruzivanja>
