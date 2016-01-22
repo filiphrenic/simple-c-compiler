@@ -510,7 +510,6 @@ public class SemanticAnalyzer {
             checkImplicit2Int(cast_izraz, node);
 
             check((SemNodeV) node.getChild(0), table);
-            //codegen.addLastValue();            codegen.addLastValue();            codegen.addLastValue();
 
             // tip <- int
             node.setType(Type.INT);
@@ -732,6 +731,9 @@ public class SemanticAnalyzer {
 
             // 1. provjeri (<izraz>)
             check(izraz, table);
+
+            codegen.discardOne();
+
             // 2. provjeri (<izraz_pridruzivanja>)
             check(izraz_pridruzivanja, table);
 

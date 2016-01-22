@@ -1,4 +1,4 @@
-int x[20] = {0, 1};
+/* int x[20] = {0, 1};
 int len = 2;
 
 int fib(int n){
@@ -54,3 +54,10 @@ int main(void){
 	 int a = aaa(5); // 5
 	  return f + d + t + l + x + a; // 30 = 0x1E
 }
+
+*/
+
+int main(void){
+	int i,j;
+	for(i=0,j=1;;) return 0;
+	}

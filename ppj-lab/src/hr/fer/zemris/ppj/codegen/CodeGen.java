@@ -290,12 +290,9 @@ public class CodeGen {
      * @param leftByValue left operand is represented by value (could be by reference)
      * @param rightByValue the same as for the left operand
      */
-    public void binaryOp(String operator) { //, boolean leftByValue, boolean rightByValue) {
-        stackOp(false, 2); // right operand
-        // if (!rightByValue) addMemoryCode(true, false, Param.reg(2), Param.aReg(2));
-
-        stackOp(false, 1); // left operand
-        //  if (!leftByValue) addMemoryCode(true, false, Param.reg(1), Param.aReg(1));
+    public void binaryOp(String operator) {
+        stackOp(false, 2);
+        stackOp(false, 1);
 
         String cmpName = CMP_NAMES.get(operator);
         if (cmpName != null) {
