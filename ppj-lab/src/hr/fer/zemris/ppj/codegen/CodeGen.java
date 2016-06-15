@@ -226,10 +226,9 @@ public class CodeGen {
      * @param s string
      */
     public void stringCode(String s) {
-        if (s.isEmpty()) return;
         String label = tmpLabel();
-        data.add(new Code(label, new Command("DB", Param.num(s.charAt(0)))));
-        for (int i = 1; i < s.length(); i++) {
+        data.labelNext(label);
+        for (int i = 0; i < s.length(); i++) {
             data.add(new Code(new Command("DB", Param.num(s.charAt(i)))));
         }
         data.add(new Code(new Command("DB", Param.num('\0'))));

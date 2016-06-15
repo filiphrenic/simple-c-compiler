@@ -48,6 +48,7 @@ public class Code {
             spacesLeft -= label.length();
         }
         sb.append(Util.spaces(spacesLeft));
+        if (spacesLeft <= 0) sb.append(' ');
 
         // command
         String scommand = command.toString();

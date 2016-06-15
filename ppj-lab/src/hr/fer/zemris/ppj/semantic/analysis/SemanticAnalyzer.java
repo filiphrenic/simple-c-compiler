@@ -40,7 +40,7 @@ public class SemanticAnalyzer {
     private String error;
 
     private CodeGen codegen;
-    private boolean forceAddress = true; // when false forces reference by address
+    private boolean forceValue = true; // when false forces reference by address
 
     /**
      * Creates a new {@link SemanticAnalyzer} that will do semantic analysis and code generation.
@@ -252,7 +252,7 @@ public class SemanticAnalyzer {
             // l-izraz <- IDN.l-izraz
             node.setLExpr(idnSte.isLExpression());
 
-            boolean byValue = idnSte.isLExpression() & forceAddress;
+            boolean byValue = idnSte.isLExpression() & forceValue;
 
             if (idnTip instanceof FunctionType) {
                 codegen.prepareForFunctionCall(idn.getValue());
@@ -345,13 +345,13 @@ public class SemanticAnalyzer {
                 throw new SemanticException("Array should be of array type", node);
             }
 
-            boolean old = forceAddress;
-            forceAddress = true;
+            boolean old = forceValue;
+            forceValue = true;
             // 3. provjeri (<izraz>)
             check(izraz, table);
             // 4. <izraz>.tip ~ int
             checkImplicit2Int(izraz, node);
-            forceAddress = old;
+            forceValue = old;
 
             //tip <- X
             NumericType X = ((ArrayType) pi_type).getType();
@@ -359,7 +359,7 @@ public class SemanticAnalyzer {
             //l-izraz <- X != const(T)
             node.setLExpr(!X.isConst());
 
-            codegen.arrayAccess(X.bytes() == 1, forceAddress);
+            codegen.arrayAccess(X.bytes() == 1, forceValue);
 
         } else if (pe == ProductionEnum.postfiks_izraz_3) {
             // <postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA D_ZAGRADA
@@ -429,10 +429,10 @@ public class SemanticAnalyzer {
             // <postfiks_izraz> ::= <postfiks_izraz> (OP_INC | OP_DEC)
             SemNodeV postfiks_izraz = (SemNodeV) node.getChild(0);
 
-            forceAddress = false;
+            forceValue = false;
             //1. provjeri (<postfiks_izraz>)
             check(postfiks_izraz, table);
-            forceAddress = true;
+            forceValue = true;
 
             // 2. <postfiks_izraz>.l-izraz = 1 i <postfiks_izraz>.tip ~ int
             if (!postfiks_izraz.getLExpr()) {
@@ -481,10 +481,10 @@ public class SemanticAnalyzer {
             // <unarni_izraz> ::= (OP_INC | OP_DEC) <unarni_izraz>
             SemNodeV unarni_izraz = (SemNodeV) node.getChild(1);
 
-            forceAddress = false;
+            forceValue = false;
             // 1. provjeri (<unarni_izraz>)
             check(unarni_izraz, table);
-            forceAddress = true;
+            forceValue = true;
             // 2. <unarni_izraz>.l-izraz = 1 i <unarni_izraz>.tip ~ int
             if (!unarni_izraz.getLExpr()) {
                 throw new SemanticException("Not an L-expression", node);
@@ -694,14 +694,14 @@ public class SemanticAnalyzer {
             SemNodeV postfiks_izraz = (SemNodeV) node.getChild(0);
             SemNodeV izraz_pridruzivanja = (SemNodeV) node.getChild(2);
 
-            forceAddress = false;
+            forceValue = false;
             // 1. provjeri (<postfiks_izraz>)
             check(postfiks_izraz, table);
             // 2. <postfiks_izraz>.l-izraz = 1
             if (!postfiks_izraz.getLExpr()) {
                 throw new SemanticException("Not an L-expression", node);
             }
-            forceAddress = true;
+            forceValue = true;
             // 3. provjeri (<izraz_pridruzivanja>)
             check(izraz_pridruzivanja, table);
             // 4. <izraz_pridruzivanja>.tip ~ <postfiks_izraz>.tip
@@ -1291,12 +1291,12 @@ public class SemanticAnalyzer {
             SemNodeV izravni_deklarator = (SemNodeV) node.getChild(0);
             SemNodeV inicijalizator = (SemNodeV) node.getChild(2);
 
-            forceAddress = false;
+            forceValue = false;
             // 1. provjeri (<izravni_deklarator>) uz nasljedno svojstvo
             // <izravni_deklarator>.ntip <- <init_deklarator>.ntip
             izravni_deklarator.setAttribute(Attribute.NTYPE, node.getAttribute(Attribute.NTYPE));
             check(izravni_deklarator, table);
-            forceAddress = true;
+            forceValue = true;
             // 2. provjeri (<incijalizator>)
             check(inicijalizator, table);
 

@@ -41,13 +41,6 @@ public class CodeBlock {
         
     }
 
-    public void consume(CodeBlock block) {
-        for (Code code : block.codes) {
-            add(code);
-        }
-        block.codes.clear();
-    }
-
     public void addLabel(String name, String label) {
         labels.put(name, label);
         lastLabel = label;
